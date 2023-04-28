@@ -3,6 +3,7 @@ package com.rs.game.content.combat.special_attacks;
 import com.rs.game.World;
 import com.rs.game.content.Effect;
 import com.rs.game.content.combat.*;
+import com.rs.game.content.combat.special_attacks.SpecialAttack.Type;
 import com.rs.game.model.WorldProjectile;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
@@ -22,7 +23,6 @@ import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
 import com.rs.plugin.annotations.PluginEventHandler;
 import com.rs.plugin.annotations.ServerStartupEvent;
-import com.rs.game.content.combat.special_attacks.SpecialAttack.Type;
 import com.rs.utils.Ticks;
 
 import java.util.Arrays;
@@ -30,16 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.rs.game.content.combat.PlayerCombat.delayNormalHit;
-import static com.rs.game.content.combat.PlayerCombat.delayMagicHit;
-import static com.rs.game.content.combat.PlayerCombat.delayHit;
-import static com.rs.game.content.combat.PlayerCombat.dropAmmo;
-import static com.rs.game.content.combat.PlayerCombat.calculateHit;
-import static com.rs.game.content.combat.PlayerCombat.getMaxHit;
-import static com.rs.game.content.combat.PlayerCombat.getMultiAttackTargets;
-import static com.rs.game.content.combat.PlayerCombat.addXp;
-import static com.rs.game.content.combat.PlayerCombat.attackTarget;
-import static com.rs.game.content.combat.PlayerCombat.getMeleeCombatDelay;
+import static com.rs.game.content.combat.PlayerCombat.*;
 
 @PluginEventHandler
 public class SpecialAttacks {
@@ -155,12 +146,12 @@ public class SpecialAttacks {
          * RANGED WEAPONS
          */
         addSpec(RangedWeapon.QUICK_BOW.getIds(), new SpecialAttack(Type.RANGE, 75, (player, target) -> {
-            player.setNextAnimation(new Animation(426));
-            player.setNextSpotAnim(new SpotAnim(97));
-            WorldProjectile p = World.sendProjectile(player, target, 1099, 20, 50, 1, proj -> target.setNextSpotAnim(new SpotAnim(1100, 0, 100)));
-            WorldProjectile p2 = World.sendProjectile(player, target, 1099, 30, 50, 1.5, proj -> target.setNextSpotAnim(new SpotAnim(1100, 0, 100)));
-            delayHit(target, p.getTaskDelay(), Hit.range(player, 25));
-            delayHit(target, p2.getTaskDelay(), Hit.range(player, 25));
+            player.setNextAnimation(new Animation(1074));
+            player.setNextSpotAnim(new SpotAnim(250, 10, 100));
+            WorldProjectile p = World.sendProjectile(player, target, 249, 20, 50, 1.5);
+            WorldProjectile p2 = World.sendProjectile(player, target, 249, 30, 50, 1.5);
+            delayHit(target, p.getTaskDelay(), Hit.range(player, 25).setMaxHit(25));
+            delayHit(target, p2.getTaskDelay(), Hit.range(player, 25).setMaxHit(25));
             return PlayerCombat.getRangeCombatDelay(player);
         }));
 
@@ -443,7 +434,7 @@ public class SpecialAttacks {
 
         //Keenblade
         addSpec(new int[] { 23042 }, new SpecialAttack(Type.MELEE, 75, (player, target) -> {
-            player.setNextAnimation(new Animation(12019));
+            player.setNextAnimation(new Animation(16067));
             player.setNextSpotAnim(new SpotAnim(2109));
             delayNormalHit(target, new Hit(player, 50, HitLook.MELEE_DAMAGE).setMaxHit(50));
             return getMeleeCombatDelay(player, player.getEquipment().getWeaponId());
