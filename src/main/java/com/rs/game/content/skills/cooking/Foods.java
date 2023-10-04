@@ -40,7 +40,7 @@ public class Foods {
 
     public static final Animation EAT_ANIM = new Animation(829);
 
-    public static ItemClickHandler eat = new ItemClickHandler(Food.foods.keySet().toArray(), new String[] { "Eat" }, e -> eat(e.getPlayer(), e.getItem(), e.getSlotId(), null));
+    public static ItemClickHandler eat = new ItemClickHandler(Food.foods.keySet().toArray(), new String[] { "Eat", "Heal" }, e -> eat(e.getPlayer(), e.getItem(), e.getSlotId(), null));
 
     public static boolean eat(final Player player, Item item, int slot, Player givenFrom) {
         Food food = Food.forId(item.getId());
@@ -87,7 +87,7 @@ public class Foods {
         return true;
     }
 
-    public static enum Food {
+    public enum Food {
         ACAI(20270, 50),
         ADMIRAL_PIE(new int[] { 7198, 7200 }, 2313, 80, p -> p.getSkills().adjustStat(5, 0.0, Constants.FISHING)),
         AMPHIBIOUS_FRUIT(21381, 150),
@@ -340,6 +340,7 @@ public class Foods {
         ROAST_POTATOES(15429, 100),
         ROAST_RABBIT(7223, 70),
         ROCKTAIL(15272, 0, p -> p.heal(230, 100)),
+        BANDAGE(4049, 0, p -> p.heal(230, 100)),
         ROE(11324, 30),
         ROLL(6963, 20),
         ROTTEN_APPLE(1984, -1),

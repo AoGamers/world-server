@@ -1082,7 +1082,20 @@ public final class TutorialIslandController extends Controller {
 	}
 
 	@Override
+	public boolean processNPCClick2(NPC npc) {
+		if (npc.getId() == SKIPPY) {
+			player.startConversation(new Skippy(player, npc, this));
+			return false;
+		}
+		return true;
+	}
+
+	@Override
 	public boolean processObjectClick1(GameObject object) {
+		if (object.getId() == 36773) {
+			player.sendMessage("I should continue what I was doing.");
+			return false;
+		}
 		if (object.getId() == 3014 && pastStage(Stage.LEAVE_GUIDE_ROOM)) {
 			nextStage(Stage.TALK_TO_SURVIVAL_EXPERT);
 			player.handleOneWayDoor(object);
@@ -1228,17 +1241,17 @@ public final class TutorialIslandController extends Controller {
 		} else if (itemId == Fish.SHRIMP.getId()) {
 			if (getStage() == Stage.CATCH_SHRIMP)
 				nextStage(Stage.BURN_SHRIMP);
-		} else if (itemId == Cooking.Cookables.RAW_SHRIMP.getBurntId().getId()) {
+		} else if (itemId == Cooking.Cookables.RAW_SHRIMP.getBurntItem().getId()) {
 			if (getStage() == Stage.COOK_SHRIMP) {
-				player.getInventory().addItem(Cooking.Cookables.RAW_SHRIMP.getProduct());
+				player.getInventory().addItem(Cooking.Cookables.RAW_SHRIMP.getProductItem());
 				return false;
 			}
 			nextStage(Stage.COOK_SHRIMP);
 		} else if (itemId == 2309 && getStage() == Stage.COOK_DOUGH)
 			nextStage(Stage.OPEN_MUSIC);
-		else if (itemId == Cooking.Cookables.RAW_SHRIMP.getProduct().getId()) {
+		else if (itemId == Cooking.Cookables.RAW_SHRIMP.getProductItem().getId()) {
 			if (getStage() == Stage.BURN_SHRIMP) {
-				player.getInventory().addItem(Cooking.Cookables.RAW_SHRIMP.getBurntId());
+				player.getInventory().addItem(Cooking.Cookables.RAW_SHRIMP.getBurntItem());
 				return false;
 			}
 			nextStage(Stage.LEAVE_SURVIVAL_EXPERT);

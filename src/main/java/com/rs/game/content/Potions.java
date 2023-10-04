@@ -49,6 +49,7 @@ public class Potions {
 	public static final int EMPTY_KEG = 5769;
 	private static int EMPTY_CUP = 4244;
 	private static int BOWL = 1923;
+	private static int EMPTY_JUG = 1935;
 
 	public enum Potion {
 		CUP_OF_TEA_CLAY(7728, 7730, p -> {
@@ -95,7 +96,7 @@ public class Potions {
 
 		STRENGTH_POTION(VIAL, new int[] { 113, 115, 117, 119 }, p -> p.getSkills().adjustStat(3, 0.1, Constants.STRENGTH)),
 		STRENGTH_FLASK(-1, new int[] { 23207, 23209, 23211, 23213, 23215, 23217 }, p -> p.getSkills().adjustStat(3, 0.1, Constants.STRENGTH)),
-		STRENGTH_MIX(VIAL, new int[] { 11441, 11443 }, p -> {
+		STRENGTH_MIX(VIAL, new int[] { 11443, 11441 }, p -> {
 			p.getSkills().adjustStat(3, 0.1, Constants.STRENGTH);
 			p.heal(30);
 		}),
@@ -116,7 +117,11 @@ public class Potions {
 
 		SUPER_ATTACK(VIAL, new int[] { 2436, 145, 147, 149 }, p -> p.getSkills().adjustStat(5, 0.15, Constants.ATTACK)),
 		SUPER_ATTACK_FLASK(-1, new int[] { 23255, 23257, 23259, 23261, 23263, 23265 }, p -> p.getSkills().adjustStat(5, 0.15, Constants.ATTACK)),
-		CW_SUPER_ATTACK_POTION(-1, new int[] { 18715, 18716, 18717, 18718 }, p -> p.getSkills().adjustStat(5, 0.15, Constants.ATTACK)),
+		CW_SUPER_ATTACK_POTION(-1, new int[] { 18715, 18716, 18717, 18718 }, p -> {
+			p.getSkills().adjustStat(5, 0.15, Constants.ATTACK, Constants.STRENGTH, Constants.DEFENSE);
+			p.getSkills().adjustStat(4, 0.10, Constants.RANGE);
+			p.getSkills().adjustStat(5, 0, Constants.MAGIC);
+		}),
 		SUPER_ATTACK_MIX(VIAL, new int[] { 11469, 11471 }, p -> {
 			p.getSkills().adjustStat(5, 0.15, Constants.ATTACK);
 			p.heal(30);
@@ -248,7 +253,9 @@ public class Potions {
 
 		SUPER_ENERGY(VIAL, new int[] { 3016, 3018, 3020, 3022 }, p -> p.restoreRunEnergy(40)),
 		SUPER_ENERGY_FLASK(-1, new int[] { 23387, 23389, 23391, 23393, 23395, 23397 }, p -> p.restoreRunEnergy(40)),
-		CW_SUPER_ENERGY_POTION(-1, new int[] { 18727, 18728, 18729, 18730 }, p -> p.restoreRunEnergy(40)),
+		CW_SUPER_ENERGY_POTION(-1, new int[] { 18727, 18728, 18729, 18730 }, p -> {
+			p.restoreRunEnergy(40);
+		}),
 		SUPER_ENERGY_MIX(VIAL, new int[] { 11481, 11483 }, p -> {
 			p.restoreRunEnergy(40);
 			p.heal(30);
@@ -384,7 +391,7 @@ public class Potions {
 
 		SUPER_PRAYER(VIAL, new int[] { 15328, 15329, 15330, 15331 }, p -> p.getPrayer().restorePrayer(((int) (70 + (p.getSkills().getLevelForXp(Constants.PRAYER) * 3.43))))),
 		SUPER_PRAYER_FLASK(-1, new int[] { 23525, 23526, 23527, 23528, 23529, 23530 }, p -> p.getPrayer().restorePrayer(((int) (70 + (p.getSkills().getLevelForXp(Constants.PRAYER) * 3.43))))),
-		DOM_SUPER_PRAYER(-1, new int[] { 22375, 22376 }),
+		DOM_SUPER_PRAYER(-1, new int[] { 22375, 22376 }, p -> p.getPrayer().restorePrayer(((int) (70 + (p.getSkills().getLevelForXp(Constants.PRAYER) * 3.43))))),
 
 		OVERLOAD(VIAL, new int[] { 15332, 15333, 15334, 15335 }, true, p -> {
 			p.addEffect(Effect.OVERLOAD, 500);
@@ -801,9 +808,17 @@ public class Potions {
 		OLIVE_OIL(VIAL, new int[] { 3422, 3424, 3426, 3428 }),
 		SACRED_OIL(VIAL, new int[] { 3430, 3432, 3434, 3436 }),
 
+		JUG_OF_BAD_WINE(EMPTY_JUG, 1991, p -> {
+			p.getSkills().lowerStat(Constants.ATTACK, 3);
+		}),
+		JUG_OF_WINE(EMPTY_JUG, 1993, p -> {
+			p.heal(110, 0);
+			p.getSkills().lowerStat(Constants.ATTACK, 2);
+		}),
+
 		;
 
-		private static Map<Integer, Potion> POTS = new HashMap<>();
+		public static Map<Integer, Potion> POTS = new HashMap<>();
 
 		static {
 			for (Potion pot : Potion.values())

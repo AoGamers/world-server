@@ -11,6 +11,7 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.interactions.PlayerCombatInteraction;
 import com.rs.game.model.entity.npc.NPC;
+import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.entity.player.Skills;
@@ -95,23 +96,8 @@ public class SpecialAttacks {
             player.setNextSpotAnim(new SpotAnim(247));
             player.setNextForceTalk(new ForceTalk("For Camelot!"));
             final boolean enhanced = player.getEquipment().getWeaponId() == 14632;
-            player.getSkills().set(Constants.DEFENSE, enhanced ? (int) (player.getSkills().getLevelForXp(Constants.DEFENSE) * 1.15D) : (player.getSkills().getLevel(Constants.DEFENSE) + 8));
-            WorldTasks.schedule(new WorldTask() {
-                int count = 5;
-
-                @Override
-                public void run() {
-                    if (player.isDead() || player.hasFinished() || player.getHitpoints() >= player.getMaxHitpoints()) {
-                        stop();
-                        return;
-                    }
-                    player.heal(enhanced ? 80 : 40);
-                    if (count-- == 0) {
-                        stop();
-                        return;
-                    }
-                }
-            }, 4, 2);
+            player.getSkills().adjustStat(enhanced ? 0 : 8, enhanced ? 0.15 : 0, Skills.DEFENSE);
+            player.addEffect(Effect.EXCALIBUR_HEAL, enhanced ? 70 : 35);
             player.getCombatDefinitions().drainSpec(100);
             return 0;
         }));
@@ -137,10 +123,13 @@ public class SpecialAttacks {
 
         //Obliteration
         addSpec(new int[] { 24457 }, new SpecialAttack(Type.MAGIC, 20, (player, target) -> {
-            //TODO
             player.sync(16960, 3189);
-            delayMagicHit(target, 1, Hit.magic(player, 50).setMaxHit(50), () -> target.setNextSpotAnim(CombatSpell.WIND_RUSH.getHitSpotAnim()), null, null);
-            return 5;
+            WorldProjectile p =  World.sendProjectile(player, target, 3188, 15, 15, 15, 0.6, 0, 0);
+            for (Direction dir : Direction.values())
+                World.sendProjectile(Tile.of(target.getX() + (dir.getDx()*7), target.getY() + (dir.getDy()*7), target.getPlane()), target, 3188, 15, 15, 15, 0.6, 0, 0);
+            Hit hit = calculateMagicHit(player, target, 500, true);
+            delayMagicHit(target, p.getTaskDelay(), hit, () -> target.setNextSpotAnim(CombatSpell.WIND_RUSH.getHitSpotAnim()), null, null);
+            return 7;
         }));
 
         /**
@@ -350,7 +339,7 @@ public class SpecialAttacks {
             WorldProjectile p = World.sendProjectile(player, target, 3188, 20, 100, 0.6, proj -> target.spotAnim(3191));
             for (int i = 0;i < 4;i++)
                 delayHit(target, p.getTaskDelay(), calculateHit(player, target, true, true, 1.0, 1.0));
-            return 5;
+            return 6;
         }));
 
         /**
@@ -450,7 +439,7 @@ public class SpecialAttacks {
             player.setNextSpotAnim(new SpotAnim(2109));
             Hit hit = calculateHit(player, target, false, true, 2.0, 1.1);
             player.heal(hit.getDamage() / 2);
-            player.getPrayer().restorePrayer((hit.getDamage() / 4) * 10);
+            player.getPrayer().restorePrayer(hit.getDamage() / 4.0);
             delayNormalHit(target, hit);
             return getMeleeCombatDelay(player, player.getEquipment().getWeaponId());
         }));
@@ -790,8 +779,8 @@ public class SpecialAttacks {
         //Absorbing essence into it? (16962 43)
         addSpec(new int[] { 24455 }, new SpecialAttack(Type.MELEE, 20, (player, target) -> {
             player.sync(16961, 44);
-            delayNormalHit(target, calculateHit(player, target, false, true, 1.5, 1.2));
-            return getMeleeCombatDelay(player, player.getEquipment().getWeaponId());
+            delayNormalHit(target, calculateHit(player, target, false, true, 1.5, 1.5));
+            return 5;
         }));
     }
 

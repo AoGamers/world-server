@@ -378,7 +378,7 @@ public class DragonSlayer extends QuestOutline {
 	static final int BOWL = 1791;
 	static final int CAGE = 13431;
 
-	public static ItemOnObjectHandler itemOnMagicDoor = new ItemOnObjectHandler(true, new Object[] { 25115 }, e -> {
+	public static ItemOnObjectHandler itemOnMagicDoor = new ItemOnObjectHandler(new Object[] { 25115 }, new Object[] { SILK, BOMB, BOWL, CAGE, 301 }, e -> {
 		Player p = e.getPlayer();
 		GenericAttribMap attr = p.getQuestManager().getAttribs(Quest.DRAGON_SLAYER);
 		if (e.getItem().getId() == SILK)
@@ -467,9 +467,31 @@ public class DragonSlayer extends QuestOutline {
 	public void complete(Player player) {
 		player.getSkills().addXpQuest(Constants.STRENGTH, 18650);
 		player.getSkills().addXpQuest(Constants.DEFENSE, 18650);
-		getQuest().sendQuestCompleteInterface(player, 11279, "18,650 Strength XP", "18,650 Defence XP");
+		sendQuestCompleteInterface(player, 11279);
 	}
 
+	@Override
+	public String getStartLocationDescription() {
+		return "Talk to the Guildmaster inside the Champions' Guild, south of Varrock.";
+	}
+
+	@Override
+	public String getRequiredItemsString() {
+		return "An unfired bowl, a wizard's mind bomb, a crayfish cage or lobster pot, a piece of silk, 2,000-12,000 coins (less if you bring Telekenetic Grab runes and a non-melee weapon), 3 regular planks and 90 steel nails.";
+	}
+
+	@Override
+	public String getCombatInformationString() {
+		return "You will need to defeat a level 63 dragon, a level 56 demon, a level 39 mage, and various lesser foes. 50+ in combat skills and 37+ Prayer are recommended.";
+	}
+
+	@Override
+	public String getRewardsString() {
+		return "18,650 Strength XP<br>" +
+				"18,650 Defense XP<br>" +
+				"Anti-dragon shield<br>" +
+				"Access to Crandor, Melzar's Maze, and the dragon crest on herald capes";
+	}
 
 
 }

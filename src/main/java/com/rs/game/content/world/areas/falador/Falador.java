@@ -100,4 +100,24 @@ public class Falador {
 		if(p.getY() < obj.getY())
 			AgilityShortcuts.climbOver(p, Tile.of(obj.getX(), obj.getY()+1, obj.getPlane()));
 	});
+
+	public static ObjectClickHandler handleCowFieldStile = new ObjectClickHandler(new Object[] { 7527 }, e -> {
+		Player p = e.getPlayer();
+		WorldObject obj = e.getObject();
+		if(!obj.getTile().matches(Tile.of(3043, 3305, 0)))
+			return;
+		if(p.getX() > obj.getX())
+			AgilityShortcuts.climbOver(p, Tile.of(obj.getX()-1, obj.getY(), obj.getPlane()));
+		if(p.getX() < obj.getX())
+			AgilityShortcuts.climbOver(p, Tile.of(obj.getX()+1, obj.getY(), obj.getPlane()));
+	});
+
+	//falador
+	public static ObjectClickHandler handlefaladorcastlestairs = new ObjectClickHandler(new Object[] { 11736, 11737 }, e -> {
+		if (e.getObjectId() == 11736)
+			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 3 ? 0 : e.getObject().getRotation() == 0 ? -0 : 0, e.getObject().getRotation() == 3 ? -0 : e.getObject().getRotation() == 0 ? 4 : 0, 1));
+		else if (e.getObjectId() == 11737)
+			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 3 ? -0 : e.getObject().getRotation() == 0 ? -0 : 0, e.getObject().getRotation() == 3 ? 0 : e.getObject().getRotation() == 0 ? -4 : 0, -1));
+	});
+
 }

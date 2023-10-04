@@ -1049,8 +1049,9 @@ public class NPC extends Entity {
 		return forceAgressive;
 	}
 
-	public void setForceAgressive(boolean forceAgressive) {
+	public NPC setForceAgressive(boolean forceAgressive) {
 		this.forceAgressive = forceAgressive;
+		return this;
 	}
 
 	public void setForceAggroDistance(int forceAggroDistance) {
@@ -1399,4 +1400,9 @@ public class NPC extends Entity {
 	public boolean persistsBeyondCutscene() {
 		return getTempAttribs().getB("persistBeyondCutscene");
 	}
+
+    public void stopAll() {
+		getActionManager().forceStop();
+		getInteractionManager().forceStop();
+    }
 }

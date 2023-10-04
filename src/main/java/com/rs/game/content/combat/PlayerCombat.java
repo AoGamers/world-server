@@ -36,6 +36,7 @@ import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
+import com.rs.game.model.entity.player.Skills;
 import com.rs.game.model.entity.player.actions.PlayerAction;
 import com.rs.game.model.entity.player.managers.AuraManager.Aura;
 import com.rs.game.tasks.WorldTask;
@@ -186,7 +187,7 @@ public class PlayerCombat extends PlayerAction {
 
 			boolean manualCast = player.getCombatDefinitions().hasManualCastQueued();
 			Item gloves = player.getEquipment().getItem(Equipment.HANDS);
-			if (gloves != null && gloves.getDefinitions().getName().contains("Spellcaster glove") && player.getEquipment().getWeaponId() == -1 && new Random().nextInt(30) == 0)
+			if (gloves != null && gloves.getDefinitions().getName().contains("Spellcaster glove") && player.getEquipment().getWeaponId() == -1 && Utils.random(20) == 0)
 				player.getTempAttribs().setO("spellcasterProc", spell);
 			int delay = mageAttack(player, spell, !manualCast);
 			if (player.getNextAnimation() != null && player.getTempAttribs().getO("spellcasterProc") != null) {
@@ -346,7 +347,8 @@ public class PlayerCombat extends PlayerAction {
 	public boolean castSpellAtTarget(Player player, Entity target, CombatSpell spell, int hitDelay) {
 		Hit hit = calculateMagicHit(player, target, spell.getBaseDamage(player));
 		if (spell == CombatSpell.STORM_OF_ARMADYL && hit.getDamage() > 0) {
-			int minHit = (player.getSkills().getLevelForXp(Constants.MAGIC) - 77) * 5;
+			int minHit = (player.getSkills().getLevel(Constants.MAGIC) - 77) * 5;
+			minHit *= getMagicBonusBoost(player);
 			if (hit.getDamage() < minHit)
 				hit.setDamage(hit.getDamage() + minHit);
 		}
@@ -387,7 +389,7 @@ public class PlayerCombat extends PlayerAction {
 	}
 
 	public interface MultiAttack {
-		public boolean attack(Entity nextTarget);
+		boolean attack(Entity nextTarget);
 	}
 
 	public static void attackTarget(Entity target, Entity[] targets, MultiAttack perform) {
@@ -553,7 +555,7 @@ public class PlayerCombat extends PlayerAction {
 					}, null);
 					checkSwiftGlovesEffect(player, p.getTaskDelay(), attackStyle, weaponId, hit, p);
 				}
-				player.getEquipment().removeAmmo(Equipment.AMMO, 1);
+				dropAmmo(player, target, Equipment.AMMO, 1);
 			}
 			case HAND_CANNON -> {
 				if (Utils.getRandomInclusive(player.getSkills().getLevel(Constants.FIREMAKING) << 1) == 0) {
@@ -736,11 +738,10 @@ public class PlayerCombat extends PlayerAction {
 
 			if (target instanceof NPC n)
 				randomSeed -= (n.getBonus(Bonus.CRUSH_DEF) / 100) * 1.3;
-
-			if (new Random().nextInt(randomSeed) == 0) {
+			if (Utils.random(randomSeed) == 0) {
 				player.setNextAnimation(new Animation(14417));
 				final AttackStyle attack = attackStyle;
-				attackTarget(target, getMultiAttackTargets(player, target, 5, Integer.MAX_VALUE), new MultiAttack() {
+				attackTarget(target, getMultiAttackTargets(player, target, 6, Integer.MAX_VALUE, true), new MultiAttack() {
 					private boolean nextTarget;
 
 					@Override
@@ -851,23 +852,19 @@ public class PlayerCombat extends PlayerAction {
 			if (boostedMageLevelBonus > 1)
 				maxHit *= boostedMageLevelBonus;
 		}
-		double magicPerc = player.getCombatDefinitions().getBonus(Bonus.MAGIC_STR);
+		maxHit *= getMagicBonusBoost(player);
 		if (player.getTempAttribs().getO("spellcasterProc") != null) {
 			if (spellBaseDamage > 60) {
-				magicPerc += 17;
-				if (target instanceof Player p) {
-					p.getSkills().drainLevel(0, p.getSkills().getLevel(0) / 10);
-					p.getSkills().drainLevel(1, p.getSkills().getLevel(1) / 10);
-					p.getSkills().drainLevel(2, p.getSkills().getLevel(2) / 10);
+				maxHit *= 1.25;
+				target.lowerStat(Skills.ATTACK, 0.1, 0.9);
+				target.lowerStat(Skills.STRENGTH, 0.1, 0.9);
+				target.lowerStat(Skills.DEFENSE, 0.1, 0.9);
+				if (target instanceof Player p)
 					p.sendMessage("Your melee skills have been drained.");
-					player.sendMessage("Your spell weakened your enemy.");
-				}
+				player.sendMessage("Your spell weakened your enemy.");
 				player.sendMessage("Your magic surged with extra power.");
 			}
 		}
-		double mageBonusBoost = magicPerc / 100 + 1;
-		maxHit *= mageBonusBoost;
-
 		if (player.hasSlayerTask())
 			if (target instanceof NPC n && player.getSlayer().isOnTaskAgainst(n))
 				if (player.getEquipment().wearingHexcrest() || player.getEquipment().wearingSlayerHelmet())
@@ -876,6 +873,10 @@ public class PlayerCombat extends PlayerAction {
 		if (Settings.getConfig().isDebug() && player.getNSV().getB("hitChance"))
 			player.sendMessage("Your max hit: " + finalMaxHit);
 		return new Hit(player, finalMaxHit, HitLook.MAGIC_DAMAGE).setMaxHit(finalMaxHit);
+	}
+
+	public static double getMagicBonusBoost(Player player) {
+		return player.getCombatDefinitions().getBonus(Bonus.MAGIC_STR) / 100.0 + 1.0;
 	}
 
 	public static Hit calculateHit(Player player, Entity target, int weaponId, AttackStyle attackStyle, boolean ranging, boolean calcDefense, double accuracyModifier, double damageModifier) {
@@ -959,9 +960,16 @@ public class PlayerCombat extends PlayerAction {
 					if (p2.getFamiliarPouch() == Pouch.STEEL_TITAN)
 						def *= 1.15;
 			} else {
+				int wId = player.getEquipment().getWeaponId();
 				NPC n = (NPC) target;
+				if (wId == 15836 || wId == 17295 || wId == 21332) {
+					int mageLvl = Utils.clampI(n.getMagicLevel(), 0, 350);
+					double atkMul = (140.0 + Math.floor((3 * (double) mageLvl - 10.0) / 100.0) - Math.floor(Math.pow(0.3 * (double) mageLvl - 100.0, 2.0) / 100.0)) / 100.0;
+					atk *= Utils.clampD(atkMul, 1.0, 3.0);
+					double strMul = (250.0 + Math.floor((3 * (double) mageLvl - 14.0) / 100.0) - Math.floor(Math.pow(0.3 * (double) mageLvl - 140.0, 2.0) / 100.0)) / 100.0;
+					maxHit *= Utils.clampD(strMul, 1.0, 3.0);
+				}
 				if (n.getName().startsWith("Vyre")) {
-					int wId = player.getEquipment().getWeaponId();
 					if (wId == 21581 || wId == 21582) {
 						atk *= 2;
 						maxHit *= 2;
@@ -969,9 +977,38 @@ public class PlayerCombat extends PlayerAction {
 						maxHit = 0;
 				}
 				if (n.getName().equals("Turoth") || n.getName().equals("Kurask")) {
-					int wId = player.getEquipment().getWeaponId();
 					if (!(wId == 4158 || wId == 13290) && !(player.getEquipment().getWeaponName().indexOf("bow") > -1 && ItemDefinitions.getDefs(player.getEquipment().getAmmoId()).name.toLowerCase().indexOf("broad") > -1))
 						maxHit = 0;
+				}
+				RangedWeapon weapon = RangedWeapon.forId(weaponId);
+				AmmoType ammo = AmmoType.forId(player.getEquipment().getAmmoId());
+				if (ranging && weapon != null && weapon.getAmmos() != null && weapon.getAmmos().contains(ammo)) {
+					switch(ammo) {
+						case DRAGONBANE_ARROW, DRAGONBANE_BOLT -> {
+							if (n.getName().toLowerCase().contains("dragon")) {
+								atk *= 1.6;
+								maxHit *= 1.6;
+							}
+						}
+						case ABYSSALBANE_ARROW, ABYSSALBANE_BOLT -> {
+							if (n.getName().toLowerCase().contains("abyssal")) {
+								atk *= 1.6;
+								maxHit *= 1.6;
+							}
+						}
+						case BASILISKBANE_ARROW, BASILISKBANE_BOLT -> {
+							if (n.getName().toLowerCase().contains("basilisk")) {
+								atk *= 1.6;
+								maxHit *= 1.6;
+							}
+						}
+						case WALLASALKIBANE_ARROW, WALLASALKIBANE_BOLT -> {
+							if (n.getName().toLowerCase().contains("wallasalki")) {
+								atk *= 1.6;
+								maxHit *= 1.6;
+							}
+						}
+					}
 				}
 				double defLvl = n.getDefenseLevel();
 				double defBonus = player.getCombatDefinitions().getAttackStyle().getAttackType().getDefenseBonus(n);
@@ -986,6 +1023,8 @@ public class PlayerCombat extends PlayerAction {
 			if (prob <= Math.random() && !veracsProc)
 				return hit.setDamage(0);
 		}
+		if (Settings.getConfig().isDebug() && player.getNSV().getB("hitChance"))
+			player.sendMessage("Modified max hit: " + maxHit);
 		int finalHit = Utils.random(minHit, maxHit);
 		if (veracsProc)
 			finalHit += 1.0;
@@ -1281,7 +1320,7 @@ public class PlayerCombat extends PlayerAction {
 	}
 
 	public static void addXpFamiliar(Player player, Entity target, XPType xpType, Hit hit) {
-		if (hit.getLook() != HitLook.MAGIC_DAMAGE || hit.getLook() != HitLook.RANGE_DAMAGE || hit.getLook() != HitLook.MELEE_DAMAGE)
+		if (hit.getLook() != HitLook.MAGIC_DAMAGE && hit.getLook() != HitLook.RANGE_DAMAGE && hit.getLook() != HitLook.MELEE_DAMAGE)
 			return;
 		double combatXp;
 		int damage = Utils.clampI(hit.getDamage(), 0, target.getHitpoints());
@@ -1424,7 +1463,7 @@ public class PlayerCombat extends PlayerAction {
 					}
 				if (weaponName.contains("granite mace"))
 					return 400;
-				if (weaponName.contains("mace"))
+				if (weaponName.contains("mace") || weaponName.contains("annihilation"))
 					switch (attackStyle.getIndex()) {
 						case 2:
 							return 400;
@@ -1474,7 +1513,7 @@ public class PlayerCombat extends PlayerAction {
 						default:
 							return 13691;
 					}
-				if (weaponName.contains("halberd") || weaponName.contains("blisterwood polearm"))
+				if (weaponName.contains("halberd") || weaponName.contains("blisterwood polearm") || weaponName.contains("hasta"))
 					switch (attackStyle.getIndex()) {
 						case 1:
 							return 440;

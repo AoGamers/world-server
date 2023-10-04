@@ -98,6 +98,7 @@ public abstract class Entity {
 	private transient Tile lastTile;
 	private transient Tile tileBehind;
 	private transient Tile nextTile;
+	private transient boolean walkedThisTick;
 	private transient Direction nextWalkDirection;
 	private transient Direction nextRunDirection;
 	private transient Tile nextFaceTile;
@@ -511,8 +512,8 @@ public abstract class Entity {
 			Route route = RouteFinder.find(getX(), getY(), getPlane(), getSize(), target instanceof GameObject go ? new ObjectStrategy(go) : target instanceof Entity e ? new EntityStrategy(e) : new FixedTileStrategy(((Tile) target).getX(), ((Tile) target).getY()), true);
 			if (route.getStepCount() == -1)
 				return false;
-			if (route.getStepCount() == 0)
-				return DumbRouteFinder.addDumbPathfinderSteps(this, target, getClipType());
+//			if (route.getStepCount() == 0) //TODO why did I add this?
+//				return DumbRouteFinder.addDumbPathfinderSteps(this, target, getClipType());
 			for (int step = route.getStepCount() - 1; step >= 0; step--)
 				if (!addWalkSteps(route.getBufferX()[step], route.getBufferY()[step], maxStepsCount, true, true))
 					break;
@@ -583,8 +584,12 @@ public abstract class Entity {
 	}
 
 	public boolean hasWalkSteps() {
-		return !walkSteps.isEmpty();
+		return !walkSteps.isEmpty() || walkedThisTick;
 	}
+
+//	public boolean isMoving() {
+//		return hasWalkSteps() || walkedThisTick;
+//	}
 
 	public abstract void sendDeath(Entity source);
 
@@ -628,7 +633,7 @@ public abstract class Entity {
 		teleported = false;
 		if (walkSteps.isEmpty())
 			return;
-
+		walkedThisTick = true;
 		if (player != null) {
 			if (player.getEmotesManager().isAnimating())
 				return;
@@ -828,6 +833,7 @@ public abstract class Entity {
 	}
 
 	public boolean addWalkStep(int nextX, int nextY, int lastX, int lastY, boolean check, boolean force) {
+		//World.sendSpotAnim(Tile.of(nextX, nextY, getPlane()), new SpotAnim(2000));
 		Direction dir = Direction.forDelta(nextX - lastX, nextY - lastY);
 		if (dir == null)
 			return false;
@@ -849,7 +855,6 @@ public abstract class Entity {
 	}
 
 	private WalkStep getNextWalkStep() {
-
 		WalkStep step = walkSteps.poll();
 		if (step == null)
 			return null;
@@ -878,6 +883,7 @@ public abstract class Entity {
 	}
 
 	public void resetMasks() {
+		walkedThisTick = false;
 		nextBodyGlow = null;
 		nextAnimation = null;
 		nextSpotAnim1 = null;
@@ -1256,9 +1262,13 @@ public abstract class Entity {
 	}
 
 	public void forceMoveVisually(Tile destination, int animation, int startClientCycles, int speedClientCycles) {
+		forceMoveVisually(getTile(), destination, animation, startClientCycles, speedClientCycles);
+	}
+
+	public void forceMoveVisually(Tile start, Tile destination, int animation, int startClientCycles, int speedClientCycles) {
 		if (animation != -1)
 			anim(animation);
-		setNextForceMovement(new ForceMovement(getTile(), destination, startClientCycles, speedClientCycles));
+		setNextForceMovement(new ForceMovement(start, destination, startClientCycles, speedClientCycles));
 	}
 
 	public void forceMoveVisually(Direction dir, int distance, int animation, int startClientCycles, int speedClientCycles) {
@@ -1276,7 +1286,11 @@ public abstract class Entity {
 	}
 
 	public void forceMove(Tile destination, int animation, int startClientCycles, int speedClientCycles, boolean autoUnlock, Runnable afterComplete) {
-		ForceMovement movement = new ForceMovement(Tile.of(getTile()), destination, startClientCycles, speedClientCycles);
+		forceMove(Tile.of(getTile()), destination, animation, startClientCycles, speedClientCycles, autoUnlock, afterComplete);
+	}
+
+	public void forceMove(Tile start, Tile destination, int animation, int startClientCycles, int speedClientCycles, boolean autoUnlock, Runnable afterComplete) {
+		ForceMovement movement = new ForceMovement(start, destination, startClientCycles, speedClientCycles);
 		if (animation != -1)
 			anim(animation);
 		lock();
@@ -1293,6 +1307,10 @@ public abstract class Entity {
 
 	public void forceMove(Tile destination, int animation, int startClientCycles, int speedClientCycles, boolean autoUnlock) {
 		forceMove(destination, animation, startClientCycles, speedClientCycles, autoUnlock, null);
+	}
+
+	public void forceMove(Tile start, Tile destination, int animation, int startClientCycles, int speedClientCycles, boolean autoUnlock) {
+		forceMove(start, destination, animation, startClientCycles, speedClientCycles, autoUnlock, null);
 	}
 
 	public void forceMove(Tile destination, int startClientCycles, int speedClientCycles, boolean autoUnlock, Runnable afterComplete) {
@@ -1375,7 +1393,7 @@ public abstract class Entity {
 				x = object.getX();
 				y = object.getY() - 1;
 			}
-		} else if (object.getType() == ObjectType.WALL_DIAGONAL_CORNER || object.getType() == ObjectType.WALL_WHOLE_CORNER) { // corner and cornerwall
+		} else if (object.getType() == ObjectType.WALL_DIAGONAL_CORNER || object.getType() == ObjectType.WALL_WHOLE_CORNER) { // corner and corner wall
 			if (object.getRotation() == 0) { // nw
 				x = object.getX() - 1;
 				y = object.getY() + 1;
@@ -1473,9 +1491,10 @@ public abstract class Entity {
 		return forceMultiArea;
 	}
 
-	public void setForceMultiArea(boolean forceMultiArea) {
+	public Entity setForceMultiArea(boolean forceMultiArea) {
 		this.forceMultiArea = forceMultiArea;
 		checkMultiArea();
+		return this;
 	}
 
 	public Tile getLastTile() {
@@ -1565,6 +1584,10 @@ public abstract class Entity {
 
 	public Tile getNearestTeleTile(int size) {
 		return World.findAdjacentFreeSpace(this.getTile(), size);
+	}
+
+	public Tile getNearestTeleTile(Direction... blacklistedDirections) {
+		return World.findAdjacentFreeSpace(this.getTile(), blacklistedDirections);
 	}
 
 	public Tile getTile() {
@@ -1728,7 +1751,7 @@ public abstract class Entity {
 			return true;
 		if(target instanceof Familiar && this.isForceMultiArea())
 			return true;
-		if (target instanceof NPC npc && npc.isForceMultiAttacked())
+		if ((this instanceof NPC n && n.isForceMultiAttacked()) || (target instanceof NPC npc && npc.isForceMultiAttacked()))
 			return true;
 		if (target.isAtMultiArea() && isAtMultiArea())
 			return true;

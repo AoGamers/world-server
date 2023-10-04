@@ -37,14 +37,12 @@ import com.rs.game.content.skills.fletching.Fletching.Fletch;
 import com.rs.game.content.skills.fletching.FletchingD;
 import com.rs.game.content.skills.herblore.CoconutCracking;
 import com.rs.game.content.skills.herblore.HerbCleaning;
-import com.rs.game.content.skills.herblore.WeaponPoison;
 import com.rs.game.content.skills.magic.Lunars;
 import com.rs.game.content.skills.magic.Magic;
 import com.rs.game.content.skills.prayer.Burying.Bone;
 import com.rs.game.content.skills.prayer.PrayerBooks;
 import com.rs.game.content.skills.runecrafting.Runecrafting;
 import com.rs.game.content.skills.runecrafting.RunecraftingAltar.WickedHoodRune;
-import com.rs.game.content.skills.smithing.GodSwordCreation;
 import com.rs.game.content.skills.summoning.Pouch;
 import com.rs.game.content.transportation.ItemTeleports;
 import com.rs.game.content.world.unorganized_dialogue.DestroyItem;
@@ -426,19 +424,6 @@ public class InventoryOptionsHandler {
 		player.stopAll(false);
 		if (item.getDefinitions().isBindItem())
 			player.getDungManager().bind(item, slotId);
-		if (itemId >= 5509 && itemId <= 5514) {
-			int pouch = -1;
-			if (itemId == 5509)
-				pouch = 0;
-			if (itemId == 5510)
-				pouch = 1;
-			if (itemId == 5512)
-				pouch = 2;
-			if (itemId == 5514)
-				pouch = 3;
-			Runecrafting.checkPouch(player, pouch);
-			return;
-		}
 		else if (item.getDefinitions().containsOption("Teleport") && ItemTeleports.transportationDialogue(player, item))
 			return;
 		if (player.hasRights(Rights.DEVELOPER))
