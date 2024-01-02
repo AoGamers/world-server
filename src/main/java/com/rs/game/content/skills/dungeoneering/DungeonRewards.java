@@ -52,7 +52,7 @@ public class DungeonRewards {
 		FELLSTALK(Herbs.FELLSTALK, 47),
 		TORSTOL(Herbs.TORSTOL, 50);
 
-		private static Map<Integer, HerbicideSetting> BY_GRIMY = new HashMap<>();
+		private static final Map<Integer, HerbicideSetting> BY_GRIMY = new HashMap<>();
 
 		static {
 			for (HerbicideSetting setting : values())
@@ -63,10 +63,10 @@ public class DungeonRewards {
 			return BY_GRIMY.get(herbId);
 		}
 
-		private Herbs herb;
-		private int buttonId;
+		private final Herbs herb;
+		private final int buttonId;
 
-		private HerbicideSetting(Herbs herb, int buttonId) {
+		HerbicideSetting(Herbs herb, int buttonId) {
 			this.herb = herb;
 			this.buttonId = buttonId;
 		}
@@ -85,6 +85,9 @@ public class DungeonRewards {
 		HERBICIDE(19675, 5, 21, 34000),
 		SCROLL_OF_LIFE(18336, 15, 25, 10000),
 		SCROLL_OF_CLEANSING(19890, 40, 49, 20000),
+		LONGBOW_SIGHT(18330, 45, 45, 10000),
+		AMULET_OF_ZEALOTS(19892, 85, 48, 40000),
+		ANTI_POISON_TOTEM(18340, 110, 60, 44000),
 		SCROLL_OF_EFFICIENCY(19670, 105, 55, 20000),
 		SCROLL_OF_AUGURY(18344, 150, 77, 153000),
 		SCROLL_OF_RIGOUR(18839, 145, 74, 140000),
@@ -113,9 +116,10 @@ public class DungeonRewards {
 		DRAGONTOOTH_NECKLACE(19887, 115, 60, 17000),
 		DEMONHORN_NECKLACE(19888, 200, 90, 35000),
 		GEM_BAG(18338, 10, 25, 2000),
+		SPIRIT_CAPE(19893, 95, 50, 45000),
 		COAL_BAG(18339, 35, 35, 4000);
 
-		private static Map<Integer, DungeonReward> rewards = new HashMap<>();
+		private static final Map<Integer, DungeonReward> rewards = new HashMap<>();
 
 		public static DungeonReward forId(int id) {
 			return rewards.get(id);
@@ -126,18 +130,15 @@ public class DungeonRewards {
 				rewards.put(monster.slotId, monster);
 		}
 
-		private int id;
-		private int req;
-		private int cost;
-		private int slotId;
-		private String name;
+		private final int id, req, cost, slotId;
+		private final String name;
 
-		private DungeonReward(int id, int slotId, int req, int cost) {
+		DungeonReward(int id, int slotId, int req, int cost) {
 			this.id = id;
 			this.req = req;
 			this.cost = cost;
 			this.slotId = slotId;
-			name = ItemDefinitions.getDefs(id).getName();
+			this.name = ItemDefinitions.getDefs(id).getName();
 		}
 
 		public int getId() {

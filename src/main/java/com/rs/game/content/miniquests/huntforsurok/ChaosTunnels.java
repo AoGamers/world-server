@@ -1,14 +1,10 @@
 package com.rs.game.content.miniquests.huntforsurok;
 
-import com.rs.cache.loaders.ObjectDefinitions;
-import com.rs.cache.loaders.map.WorldMapDefinitions;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.miniquest.Miniquest;
 import com.rs.game.World;
-import com.rs.game.content.miniquests.huntforsurok.bork.Bork;
 import com.rs.game.content.miniquests.huntforsurok.bork.BorkController;
-import com.rs.game.content.quests.whatliesbelow.npcs.SurokMagis;
 import com.rs.game.content.skills.runecrafting.RunecraftingAltar;
 import com.rs.game.content.world.areas.wilderness.WildernessController;
 import com.rs.game.model.entity.Entity;
@@ -163,28 +159,28 @@ public class ChaosTunnels {
                 return;
             }
             if (e.objectAt(3058, 3550))
-                e.getPlayer().setNextTile(e.getPlayer().transform(125, 1920, 0));
+                e.getPlayer().tele(e.getPlayer().transform(125, 1920, 0));
             if (e.objectAt(3118, 3570))
-                e.getPlayer().setNextTile(e.getPlayer().transform(130, 1920, 0));
+                e.getPlayer().tele(e.getPlayer().transform(130, 1920, 0));
             if (e.objectAt(3129, 3587))
-                e.getPlayer().setNextTile(e.getPlayer().transform(105, 1972, 0));
+                e.getPlayer().tele(e.getPlayer().transform(105, 1972, 0));
             if (e.objectAt(3164, 3561))
-                e.getPlayer().setNextTile(e.getPlayer().transform(128, 1918, 0));
+                e.getPlayer().tele(e.getPlayer().transform(128, 1918, 0));
             if (e.objectAt(3176, 3585))
-                e.getPlayer().setNextTile(Tile.of(3290, 5539, 0));
+                e.getPlayer().tele(Tile.of(3290, 5539, 0));
     });
 
     public static ObjectClickHandler handleExitRopes = new ObjectClickHandler(new Object[] { 28782 }, e -> {
         if (e.objectAt(3183, 5470))
-            e.getPlayer().setNextTile(e.getPlayer().transform(-125, -1920, 0));
+            e.getPlayer().tele(e.getPlayer().transform(-125, -1920, 0));
         if (e.objectAt(3248, 5490))
-            e.getPlayer().setNextTile(e.getPlayer().transform(-130, -1920, 0));
+            e.getPlayer().tele(e.getPlayer().transform(-130, -1920, 0));
         if (e.objectAt(3234, 5559))
-            e.getPlayer().setNextTile(e.getPlayer().transform(-105, -1972, 0));
+            e.getPlayer().tele(e.getPlayer().transform(-105, -1972, 0));
         if (e.objectAt(3292, 5479))
-            e.getPlayer().setNextTile(e.getPlayer().transform(-128, -1918, 0));
+            e.getPlayer().tele(e.getPlayer().transform(-128, -1918, 0));
         if (e.objectAt(3291, 5538))
-            e.getPlayer().setNextTile(e.getPlayer().transform(-115, -1953, 0));
+            e.getPlayer().tele(e.getPlayer().transform(-115, -1953, 0));
         e.getPlayer().getControllerManager().startController(new WildernessController());
     });
 
@@ -403,7 +399,7 @@ public class ChaosTunnels {
                     player.getControllerManager().startController(new BorkController(player.getMiniquestStage(Miniquest.HUNT_FOR_SUROK) == 4));
                 return;
             }
-            if (this == CHAOS_ALTAR && !RunecraftingAltar.checkItems(player, RunecraftingAltar.Altar.CHAOS)) {
+            if (this == CHAOS_ALTAR && !RunecraftingAltar.checkItems(player, RunecraftingAltar.Ruins.CHAOS)) {
                 player.sendMessage("The portal doesn't respond without a tiara or talisman. This must be the Chaos Altar entrance.");
                 return;
             }

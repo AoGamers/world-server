@@ -15691,15 +15691,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2409,
-      "y": 4437
-    },
-    "comment": "Fairy Fixit",
-    "npcId": 4455
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2410,
       "y": 4456
     },
@@ -41712,8 +41703,8 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3057,
-      "y": 3342
+      "x": 3041,
+      "y": 3341
     },
     "comment": "Aksel",
     "npcId": 6665
@@ -62857,7 +62848,7 @@
       "y": 9902
     },
     "comment": "Cerberus",
-    "npcId": 7711
+    "npcId": 15255
   },
   {
     "tile": {
@@ -73568,24 +73559,6 @@
     },
     "comment": "Avan",
     "npcId": 663
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 1805,
-      "y": 3208
-    },
-    "comment": "Avatar of Creation",
-    "npcId": 8597
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 1965,
-      "y": 3249
-    },
-    "comment": "Avatar of Destruction",
-    "npcId": 8596
   },
   {
     "tile": {
@@ -134328,7 +134301,7 @@
     "tile": {
       "plane": 0,
       "x": 3059,
-      "y": 3344
+      "y": 3338
     },
     "comment": "Suak",
     "npcId": 6654

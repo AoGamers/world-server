@@ -41,6 +41,7 @@ import com.rs.game.content.skills.dungeoneering.skills.DungeoneeringRCD.DungRCSe
 import com.rs.game.content.skills.magic.Magic;
 import com.rs.game.content.skills.magic.Rune;
 import com.rs.game.content.skills.magic.RuneSet;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.summoning.Familiar;
 import com.rs.game.content.skills.summoning.Summoning;
 import com.rs.game.content.skills.util.Category;
@@ -53,13 +54,14 @@ import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Inventory;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.*;
@@ -71,7 +73,7 @@ import com.rs.utils.music.Music;
 
 public class DungeonController extends Controller {
 
-	private transient DungeonManager dungeon;
+	private final transient DungeonManager dungeon;
 	private Tile gatestone;
 	@SuppressWarnings("unused")
 	private int deaths;
@@ -106,7 +108,6 @@ public class DungeonController extends Controller {
 
 	/**
 	 * No unlocks, we can play and unlock room music in the Room class in a later commit...
-	 * @return
 	 */
 	@Override
 	public boolean playAmbientStrictlyBackgroundMusic() {
@@ -181,7 +182,7 @@ public class DungeonController extends Controller {
 					}
 				}
 			}
-		return dungeon != null && !dungeon.isAtRewardsScreen();
+		return !dungeon.isAtRewardsScreen();
 	}
 
 	public int getHealedDamage() {
@@ -220,9 +221,7 @@ public class DungeonController extends Controller {
 				int damage = hit.getDamage() / 10;
 				if (Utils.random(100) < procChance)
 					for (int i = 1;i <= 5;i++)
-						WorldTasks.delay(2*i, () -> {
-							target.applyHit(new Hit(player, damage, HitLook.MAGIC_DAMAGE).setData("blazerBleed", true));
-						});
+						WorldTasks.delay(2*i, () -> target.applyHit(new Hit(player, damage, HitLook.MAGIC_DAMAGE).setData("blazerBleed", true)));
 			}
 		}
 	}
@@ -280,7 +279,7 @@ public class DungeonController extends Controller {
 			player.getInventory().deleteItem(DungeonConstants.GATESTONE, 1);
 			player.sendMessage("Your gatestone drops to the floor as you die.");
 		}
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override
@@ -305,7 +304,7 @@ public class DungeonController extends Controller {
 							//npc.playSoundEffect(1928);
 						}
 						Tile startRoom = dungeon.getHomeTile();
-						player.setNextTile(startRoom);
+						player.tele(startRoom);
 						dungeon.playMusic(player, dungeon.getCurrentRoomReference(startRoom));
 						increaseDeaths();
 						player.reset();
@@ -343,17 +342,14 @@ public class DungeonController extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
+	public boolean processTeleport(Teleport tele) {
+		if (tele.type() == TeleType.ITEM)
+			return false;
+		if (tele.type() == TeleType.OBJECT)
+			return true;
 		if (dungeon == null || !player.getCombatDefinitions().isDungSpellbook() || !dungeon.hasStarted() || dungeon.isAtRewardsScreen())
 			return false;
-		if (Utils.getDistance(toTile, dungeon.getHomeTile()) > 500)
-			return false;
-		return true;
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		return false;
+		return !(Utils.getDistance(tele.destination(), dungeon.getHomeTile()) > 500);
 	}
 
 	@Override
@@ -423,7 +419,7 @@ public class DungeonController extends Controller {
 			player.setNextSpotAnim(new SpotAnim(fail ? s.getFailGfx() : s.getOpenGfx()));
 		if (s.getOpenObjectAnim() != -1 && !fail)
 			World.sendObjectAnimation(object, new Animation(s.getOpenObjectAnim()));
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 
 			@Override
 			public void run() {
@@ -526,9 +522,7 @@ public class DungeonController extends Controller {
 		if (dungeon == null || !dungeon.hasStarted() || dungeon.isAtRewardsScreen())
 			return false;
 		VisibleRoom room = dungeon.getVisibleRoom(dungeon.getCurrentRoomReference(player.getTile()));
-		if ((room == null) || !room.processNPCClick3(player, npc))
-			return false;
-		return true;
+		return (room != null) && room.processNPCClick3(player, npc);
 	}
 
 	public static NPC getNPC(Entity entity, int id) {
@@ -564,7 +558,7 @@ public class DungeonController extends Controller {
 		if (object.getId() >= 54439 && object.getId() <= 54456 && object.getDefinitions().containsOption(0, "Cleanse")) {
 			@SuppressWarnings("deprecation")
 			NPC boss = dungeon.getTemporaryBoss();//getNPC(player, 11708);
-			if (boss == null || !(boss instanceof Gravecreeper))
+			if (!(boss instanceof Gravecreeper))
 				return false;
 			return ((Gravecreeper) boss).cleanseTomb(player, object);
 		}
@@ -591,7 +585,7 @@ public class DungeonController extends Controller {
 			}
 			player.setNextAnimation(defs.getAnimation());
 			player.lock(4);
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 
 				@Override
 				public void run() {
@@ -639,7 +633,7 @@ public class DungeonController extends Controller {
 			room.setDoor(index, null);
 			World.removeObject(object);
 			return false;
-		} else if (object.getId() == DungeonConstants.DUNGEON_DOORS[floorType] || object.getId() == DungeonConstants.DUNGEON_GUARDIAN_DOORS[floorType] || object.getId() == DungeonConstants.DUNGEON_BOSS_DOORS[floorType] || DungeonUtils.isOpenSkillDoor(object.getId(), floorType) || (object.getId() >= KeyDoors.getLowestDoorId(floorType) && object.getId() <= KeyDoors.getMaxDoorId(floorType)) || (object.getDefinitions().getName().equals("Door") && object.getDefinitions().containsOption(0, "Enter")) //theres many ids for challenge doors
+		} else if (object.getId() == DungeonConstants.DUNGEON_DOORS[floorType] || object.getId() == DungeonConstants.DUNGEON_GUARDIAN_DOORS[floorType] || object.getId() == DungeonConstants.DUNGEON_BOSS_DOORS[floorType] || DungeonUtils.isOpenSkillDoor(object.getId(), floorType) || (object.getId() >= KeyDoors.getLowestDoorId(floorType) && object.getId() <= KeyDoors.getMaxDoorId(floorType)) || (object.getDefinitions().getName().equals("Door") && object.getDefinitions().containsOption(0, "Enter")) // there's many ids for challenge doors
 				) {
 			if (object.getId() == DungeonConstants.DUNGEON_BOSS_DOORS[floorType] && player.inCombat()) {
 				player.sendMessage("This door is too complex to unlock while in combat.");
@@ -814,7 +808,7 @@ public class DungeonController extends Controller {
 			return false;
 		case "spinning wheel":
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_SPINNING);
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_SPINNING, products, 883, 2));
 			return false;
@@ -873,23 +867,25 @@ public class DungeonController extends Controller {
 			return false;
 		}
 		String name = object.getDefinitions().getName().toLowerCase();
-		switch (name) {
-		case "runecrafting altar":
-			player.startConversation(new DungeoneeringRCD(player, DungRCSet.ELEMENTAL));
-			return false;
-		case "summoning obelisk":
-			if (player.getSkills().getLevel(Constants.SUMMONING) < player.getSkills().getLevelForXp(Constants.SUMMONING)) {
-				player.sendMessage("You touch the obelisk", true);
-				player.setNextAnimation(new Animation(8502));
-				World.sendSpotAnim(object.getTile(), new SpotAnim(1308));
-				WorldTasks.schedule(2, () -> {
-					player.getSkills().set(Constants.SUMMONING, player.getSkills().getLevelForXp(Constants.SUMMONING));
-					player.sendMessage("...and recharge your summoning points.", true);
-				});
+		return switch (name) {
+			case "runecrafting altar" -> {
+				player.startConversation(new DungeoneeringRCD(player, DungRCSet.ELEMENTAL));
+				yield false;
 			}
-			return false;
-		}
-		return true;
+			case "summoning obelisk" -> {
+				if (player.getSkills().getLevel(Constants.SUMMONING) < player.getSkills().getLevelForXp(Constants.SUMMONING)) {
+					player.sendMessage("You touch the obelisk", true);
+					player.setNextAnimation(new Animation(8502));
+					World.sendSpotAnim(object.getTile(), new SpotAnim(1308));
+					WorldTasks.schedule(2, () -> {
+						player.getSkills().set(Constants.SUMMONING, player.getSkills().getLevelForXp(Constants.SUMMONING));
+						player.sendMessage("...and recharge your summoning points.", true);
+					});
+				}
+				yield false;
+			}
+			default -> true;
+		};
 	}
 
 	@Override
@@ -904,8 +900,7 @@ public class DungeonController extends Controller {
 			return false;
 		}
 		String name = object.getDefinitions().getName().toLowerCase();
-		switch (name) {
-		case "runecrafting altar":
+		if (name.equals("runecrafting altar")) {
 			player.startConversation(new DungeoneeringRCD(player, DungRCSet.COMBAT));
 			return false;
 		}
@@ -917,8 +912,7 @@ public class DungeonController extends Controller {
 		if (dungeon == null || !dungeon.hasStarted() || dungeon.isAtRewardsScreen() || !dungeon.getVisibleRoom(dungeon.getCurrentRoomReference(player.getTile())).processObjectClick4(player, object))
 			return false;
 		String name = object.getDefinitions().getName().toLowerCase();
-		switch (name) {
-		case "runecrafting altar":
+		if (name.equals("runecrafting altar")) {
 			player.startConversation(new DungeoneeringRCD(player, DungRCSet.OTHER));
 			return false;
 		}
@@ -933,8 +927,7 @@ public class DungeonController extends Controller {
 		if (vr == null || !vr.processObjectClick5(player, object))
 			return false;
 		String name = object.getDefinitions().getName().toLowerCase();
-		switch (name) {
-		case "runecrafting altar":
+		if (name.equals("runecrafting altar")) {
 			player.startConversation(new DungeoneeringRCD(player, DungRCSet.STAVES));
 			return false;
 		}
@@ -975,7 +968,7 @@ public class DungeonController extends Controller {
 			return true;
 		case "spinning wheel":
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_SPINNING, item.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_SPINNING, item.getId(), 883, 2));
 			return false;
@@ -989,30 +982,30 @@ public class DungeonController extends Controller {
 			return false;
 		if (itemUsed.getId() == 17446 || usedWith.getId() == 17446) {
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_NEEDLE_CRAFTING, usedWith.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				products = ReqItem.getProducts(Category.DUNG_NEEDLE_CRAFTING, itemUsed.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_NEEDLE_CRAFTING, products[0].getMaterials()[0].getId(), -1, 2));
 		} else if (itemUsed.getId() == 17752 || usedWith.getId() == 17752) {
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_BOWSTRINGING, usedWith.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				products = ReqItem.getProducts(Category.DUNG_BOWSTRINGING, itemUsed.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_BOWSTRINGING, products[0].getMaterials()[0].getId(), -1, 2));
 		} else if (itemUsed.getId() == 17754 || usedWith.getId() == 17754) {
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_KNIFE_FLETCHING, usedWith.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				products = ReqItem.getProducts(Category.DUNG_KNIFE_FLETCHING, itemUsed.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_KNIFE_FLETCHING, products[0].getMaterials()[0].getId(), -1, 2));
 		} else if (itemUsed.getId() == 17742 || usedWith.getId() == 17742 || itemUsed.getId() == 17747 || usedWith.getId() == 17747) {
 			ReqItem[] products = ReqItem.getProducts(Category.DUNG_ARROW_COMBINING, usedWith.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				products = ReqItem.getProducts(Category.DUNG_ARROW_COMBINING, itemUsed.getId());
-			if (products == null || products.length <= 0)
+			if (products.length == 0)
 				return false;
 			player.startConversation(new CreationActionD(player, Category.DUNG_ARROW_COMBINING, products[0].getMaterials()[1].getId(), -1, 1));
 		}
@@ -1029,8 +1022,8 @@ public class DungeonController extends Controller {
 	 * called once teleport is performed
 	 */
 	@Override
-	public void magicTeleported(int type) {
-		dungeon.playMusic(player, dungeon.getCurrentRoomReference(player.getNextTile()));
+	public void onTeleported(TeleType type) {
+		dungeon.playMusic(player, dungeon.getCurrentRoomReference(player.getTile()));
 		hideBar();
 	}
 
@@ -1129,7 +1122,7 @@ public class DungeonController extends Controller {
 			return false;
 		} else if (interfaceId == 950) {
 			if (componentId == 24) {
-				if (dungeon == null || dungeon.getDungeon() == null)
+				if (dungeon.getDungeon() == null)
 					return false;
 				if (player.inCombat()) {
 					player.sendMessage("You cannot do that while in combat.");
@@ -1224,11 +1217,11 @@ public class DungeonController extends Controller {
 		}
 		if (!Magic.checkRunes(player, true, new RuneSet(Rune.LAW, 3)))
 			return;
-		Magic.sendTeleportSpell(player, 13288, 13285, 2516, 2517, group ? 64 : 32, 0, tile, 3, false, Magic.MAGIC_TELEPORT, null);
+		Magic.sendTeleportSpell(player, 13288, 13285, 2516, 2517, group ? 64 : 32, 0, tile, 3, false, TeleType.MAGIC, null);
 		if (!group) {
 			player.setCantWalk(true);
 			player.getEmotesManager().setNextEmoteEnd(3); //prevents dropping etc
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				@Override
 				public void run() {
 					player.setCantWalk(false);
@@ -1241,7 +1234,7 @@ public class DungeonController extends Controller {
 		Tile tile = dungeon.getGroupGatestone();
 		if (tile == null) //cant happen
 			return;
-		Magic.sendTeleportSpell(player, 14279, 13285, 2518, 2517, 1, 0, tile, 1, false, Magic.OBJECT_TELEPORT, null);
+		Magic.sendTeleportSpell(player, 14279, 13285, 2518, 2517, 1, 0, tile, 1, false, TeleType.OBJECT, null);
 	}
 
 	private boolean canCreateGatestone() {
@@ -1255,9 +1248,8 @@ public class DungeonController extends Controller {
 		}
 		if (!Magic.checkSpellLevel(player, 32))
 			return false;
-		else if (!Magic.checkRunes(player, true, new RuneSet(Rune.COSMIC, 3)))
-			return false;
-		return true;
+		else
+			return Magic.checkRunes(player, true, new RuneSet(Rune.COSMIC, 3));
 	}
 
 	public void leaveDungeonPermanently() {
@@ -1302,7 +1294,7 @@ public class DungeonController extends Controller {
 	@Override
 	public boolean login() {
 		removeController();
-		player.setNextTile(Tile.of(DungeonConstants.OUTSIDE, 2));
+		player.tele(Tile.of(DungeonConstants.OUTSIDE, 2));
 		return false;
 	}
 

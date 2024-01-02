@@ -19,7 +19,7 @@ package com.rs.game.content.transportation;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
@@ -237,7 +237,7 @@ public class TravelMethods {
 
 		if(getComponentForMap(ship, returning) == -1)
 			FadingScreen.fade(player, () -> {// 9
-				player.setNextTile(tile);
+				player.tele(tile);
 				player.lock(1);
 				player.closeInterfaces();
 				if (isFare)
@@ -247,7 +247,7 @@ public class TravelMethods {
 		else {
 			player.lock();
 			if(getComponentForMap(ship, returning) == 54 || getComponentForMap(ship, returning) == 46)
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					int tick;
 					@Override
 					public void run() {
@@ -260,7 +260,7 @@ public class TravelMethods {
 							player.getInterfaceManager().sendInterface(TRAVEL_INTERFACE);
 							player.getPackets().setIFHidden(299, getComponentForMap(ship, returning), false);
 						} else if (tick == 11) {
-							player.setNextTile(tile);
+							player.tele(tile);
 							player.closeInterfaces();
 							player.getInterfaceManager().setFadingInterface(170);
 							player.getPackets().setBlockMinimapState(0);
@@ -273,7 +273,7 @@ public class TravelMethods {
 					}
 				}, 0, 1);
 			else
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					int tick;
 					@Override
 					public void run() {
@@ -285,7 +285,7 @@ public class TravelMethods {
 							player.getInterfaceManager().sendInterface(TRAVEL_INTERFACE);
 							player.getPackets().setIFHidden(299, getComponentForMap(ship, returning), false);
 						} else if (tick == 7) {
-							player.setNextTile(tile);
+							player.tele(tile);
 							player.closeInterfaces();
 							player.getInterfaceManager().setFadingInterface(170);
 							player.getPackets().setBlockMinimapState(0);

@@ -22,14 +22,16 @@ import com.rs.game.content.ItemConstants;
 import com.rs.game.content.Potions.Potion;
 import com.rs.game.content.combat.PlayerCombat;
 import com.rs.game.content.skills.cooking.Foods.Food;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
@@ -109,7 +111,7 @@ public class DuelArenaController extends Controller {
 		Player oldTarget = target;
 		if (duelStage != DuelStage.DONE) {
 			target = null;
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 
 				@Override
 				public void run() {
@@ -305,7 +307,7 @@ public class DuelArenaController extends Controller {
 		startEndingTeleport(loser);
 		loser.sendMessage("Oh dear, it seems you have lost to " + victor.getDisplayName() + ".");
 		victor.sendMessage("Congratulations! You easily defeated " + loser.getDisplayName() + ".");
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 
 			@Override
 			public void run() {
@@ -324,7 +326,7 @@ public class DuelArenaController extends Controller {
 				break;
 			teleTile = tile;
 		}
-		player.setNextTile(teleTile);
+		player.tele(teleTile);
 	}
 
 	private void removeEquipment() {
@@ -344,8 +346,8 @@ public class DuelArenaController extends Controller {
 		if (started) {
 			Tile[] teleports = getPossibleTiles();
 			int random = Utils.getRandomInclusive(1);
-			player.setNextTile(random == 0 ? teleports[0] : teleports[1]);
-			target.setNextTile(random == 0 ? teleports[1] : teleports[0]);
+			player.tele(random == 0 ? teleports[0] : teleports[1]);
+			target.tele(random == 0 ? teleports[1] : teleports[0]);
 		}
 		player.stopAll();
 		player.lock(2); // fixes mass click steps
@@ -355,7 +357,7 @@ public class DuelArenaController extends Controller {
 		player.getTempAttribs().setB("canFight", false);
 		player.setCanPvp(true);
 		player.getHintIconsManager().addHintIcon(target, 1, -1, false);
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int count = 3;
 
 			@Override
@@ -408,20 +410,17 @@ public class DuelArenaController extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		player.simpleDialogue("A magical force prevents you from teleporting from the arena.");
-		return false;
+	public boolean processTeleport(Teleport tele) {
+		if (tele.type() != TeleType.OBJECT) {
+			player.simpleDialogue("A magical force prevents you from teleporting from the arena.");
+			return false;
+		}
+		return true;
 	}
 
 	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		player.simpleDialogue("A magical force prevents you from teleporting from the arena.");
-		return false;
-	}
-
-	@Override
-	public void magicTeleported(int type) {
-		if (type != -1)
+	public void onTeleported(TeleType type) {
+		if (type != TeleType.BYPASS_HOOKS)
 			return;
 	}
 
@@ -438,7 +437,7 @@ public class DuelArenaController extends Controller {
 	public boolean sendDeath() {
 		endDuel(target, player);
 		player.lock(7);
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override

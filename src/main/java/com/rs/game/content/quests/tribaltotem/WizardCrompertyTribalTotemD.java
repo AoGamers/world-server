@@ -9,7 +9,7 @@ import com.rs.game.World;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Tile;
 import com.rs.plugin.annotations.PluginEventHandler;
@@ -33,10 +33,10 @@ public class WizardCrompertyTribalTotemD extends Conversation {
 				npc.setNextForceTalk(new ForceTalk("Dipsolum sentento sententi!"));
 				World.sendProjectile(npc, p, 50, 5, 5, 5, 1, 5, 0);
 				p.lock(3);
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					@Override
 					public void run() {
-						p.setNextTile(Tile.of(2642, 3321, 0));//Mansion in ardy
+						p.tele(Tile.of(2642, 3321, 0));//Mansion in ardy
 					}
 				}, 2);
 			});
@@ -74,13 +74,13 @@ public class WizardCrompertyTribalTotemD extends Conversation {
 												wizard.setNextForceTalk(new ForceTalk("Dipsolum sentento sententi!"));
 												World.sendProjectile(wizard, p, 50, 5, 5, 5, 1, 5, 0);
 												p.lock(3);
-												WorldTasks.schedule(new WorldTask() {
+												WorldTasks.schedule(new Task() {
 													@Override
 													public void run() {
 														if(p.getQuestManager().getStage(Quest.TRIBAL_TOTEM) >= GET_TOTEM)
-															p.setNextTile(Tile.of(2642, 3321, 0)); //Mansion in ardy
+															p.tele(Tile.of(2642, 3321, 0)); //Mansion in ardy
 														else
-															p.setNextTile(Tile.of(2649, 3271, 0)); //RPDT crates in ardy
+															p.tele(Tile.of(2649, 3271, 0)); //RPDT crates in ardy
 													}
 												}, 2);
 											}));

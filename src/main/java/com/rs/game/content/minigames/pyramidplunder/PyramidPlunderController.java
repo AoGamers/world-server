@@ -19,6 +19,7 @@ package com.rs.game.content.minigames.pyramidplunder;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.WorldTasks;
@@ -107,7 +108,7 @@ public class PyramidPlunderController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		forceClose();
 	}
 
@@ -118,20 +119,20 @@ public class PyramidPlunderController extends Controller {
 	}
 
 	public void exitMinigame() {
-		player.setNextTile(PyramidPlunder.EXIT_TILE);
+		player.tele(PyramidPlunder.EXIT_TILE);
 		forceClose();
 	}
 
 	public void nextRoom() {
 		switch(currentRoom) {
-			case 0 -> player.setNextTile(Tile.of(1927, 4477, 0));
-			case 1 -> player.setNextTile(Tile.of(1977, 4471, 0));
-			case 2 -> player.setNextTile(Tile.of(1954, 4477, 0));
-			case 3 -> player.setNextTile(Tile.of(1927, 4453, 0));
-			case 4 -> player.setNextTile(Tile.of(1965, 4444, 0));
-			case 5 -> player.setNextTile(Tile.of(1927, 4424, 0));
-			case 6 -> player.setNextTile(Tile.of(1943, 4421, 0));
-			case 7 -> player.setNextTile(Tile.of(1974, 4420, 0));
+			case 0 -> player.tele(Tile.of(1927, 4477, 0));
+			case 1 -> player.tele(Tile.of(1977, 4471, 0));
+			case 2 -> player.tele(Tile.of(1954, 4477, 0));
+			case 3 -> player.tele(Tile.of(1927, 4453, 0));
+			case 4 -> player.tele(Tile.of(1965, 4444, 0));
+			case 5 -> player.tele(Tile.of(1927, 4424, 0));
+			case 6 -> player.tele(Tile.of(1943, 4421, 0));
+			case 7 -> player.tele(Tile.of(1974, 4420, 0));
 			case 8 -> {
 				player.startConversation(new Dialogue()
 						.addSimple("Opening this door will cause you to leave the pyramid.")

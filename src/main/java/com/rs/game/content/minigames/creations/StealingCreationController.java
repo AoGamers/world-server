@@ -19,8 +19,10 @@ package com.rs.game.content.minigames.creations;
 import com.rs.game.content.Effect;
 import com.rs.game.content.combat.AttackStyle;
 import com.rs.game.content.combat.PlayerCombat;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.summoning.Familiar;
 import com.rs.game.model.entity.Entity;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.pathing.RouteEvent;
@@ -30,7 +32,7 @@ import com.rs.game.model.entity.player.Inventory;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.entity.player.actions.PlayerAction;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.*;
@@ -109,7 +111,7 @@ public class StealingCreationController extends Controller {
 			player.getAppearance().transformIntoNPC(-1);
 			player.getAppearance().setHidden(false);
 			if (!player.getRun())
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					@Override
 					public void run() {
 						player.setRunHidden(true);
@@ -231,9 +233,12 @@ public class StealingCreationController extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile tile) {
-		player.simpleDialogue("You can't leave just like that!");
-		return false;
+	public boolean processTeleport(Teleport tele) {
+		if (tele.type() != TeleType.OBJECT) {
+			player.simpleDialogue("You can't leave just like that!");
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -250,7 +255,7 @@ public class StealingCreationController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		player.getControllerManager().forceStop();
 	}
 
@@ -482,7 +487,7 @@ public class StealingCreationController extends Controller {
 				return false;
 			player.getActionManager().addActionDelay(combatDelay);
 			player.setNextAnimation(new Animation(PlayerCombat.getWeaponAttackEmote(weaponId, attackStyle)));
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				@Override
 				public void run() {
 					game.damageBarrier(x, y);
@@ -682,7 +687,7 @@ public class StealingCreationController extends Controller {
 				otherPlayer.lock(3);
 			}
 			player.lock(2);
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				private int step = 0;
 
 				@Override
@@ -746,7 +751,7 @@ public class StealingCreationController extends Controller {
 					return false;
 				}
 				player.lock(2);
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					private int step = 0;
 
 					@Override
@@ -782,7 +787,7 @@ public class StealingCreationController extends Controller {
 			player.unlock();
 		final Player p = player;
 		final GameObject o = object;
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			private int step = 0;
 
 			@Override
@@ -798,7 +803,7 @@ public class StealingCreationController extends Controller {
 				if (step == 0) {
 					Tile faceTile = Helper.getFaceTile(o, p);
 					p.sendMessage("You pass through the barrier.");
-					p.setNextTile(faceTile);
+					p.tele(faceTile);
 					p.forceMove(faceTile, 10584, 5, 30);
 					p.setNextSpotAnim(new SpotAnim(red ? 1871 : 1870));
 					step++;
@@ -812,7 +817,7 @@ public class StealingCreationController extends Controller {
 
 	@Override
 	public boolean sendDeath() {
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override
@@ -836,7 +841,7 @@ public class StealingCreationController extends Controller {
 					}
 					player.getEquipment().deleteSlot(Equipment.CAPE);
 					player.sendPVEItemsOnDeath(killer, true);
-					player.setNextTile(Helper.getNearestRespawnPoint(player, game.getArea(), getTeam()));
+					player.tele(Helper.getNearestRespawnPoint(player, game.getArea(), getTeam()));
 					player.stopAll();
 					player.reset();
 					if (score != null) {

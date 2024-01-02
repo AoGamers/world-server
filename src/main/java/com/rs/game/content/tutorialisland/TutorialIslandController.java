@@ -27,6 +27,7 @@ import com.rs.game.content.skills.cooking.Cooking;
 import com.rs.game.content.skills.fishing.Fish;
 import com.rs.game.content.skills.fishing.Fishing;
 import com.rs.game.content.skills.fishing.FishingSpot;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.mining.Mining;
 import com.rs.game.content.skills.mining.RockType;
 import com.rs.game.content.skills.smithing.Smelting;
@@ -36,6 +37,7 @@ import com.rs.game.content.world.doors.Doors;
 import com.rs.game.map.Chunk;
 import com.rs.game.map.ChunkManager;
 import com.rs.game.model.entity.Hit;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Inventory;
@@ -1184,7 +1186,7 @@ public final class TutorialIslandController extends Controller {
 	public boolean processItemOnObject(GameObject object, Item item) {
 		if ((item.getId() == 438 || item.getId() == 436) && object.getId() == 3044)
 			player.getActionManager().setAction(new Smelting(Smelting.SmeltingBar.BRONZE, object, 1));
-		else if (item.getId() == Fish.SHRIMP.getId() || item.getId() == 2307)
+		else if (item.getId() == Fish.SHRIMP.getFishId() || item.getId() == 2307)
 			return true;
 		return false;
 	}
@@ -1211,14 +1213,14 @@ public final class TutorialIslandController extends Controller {
 
 	@Override
 	public boolean gainXP(int skillId, double exp) {
+		if (skillId == Skills.HITPOINTS || player.getSkills().getLevelForXp(skillId) >= 3)
+			return false;
 		double currXp = player.getSkills().getXp(skillId);
 		int levelPost = Skills.getLevelForXp(skillId, (long) (currXp + exp));
 		if (levelPost > 3) {
 			player.getSkills().set(skillId, 3);
 			return false;
 		}
-		if (player.getSkills().getLevelForXp(skillId) >= 3)
-			return false;
 		return true;
 	}
 
@@ -1238,7 +1240,7 @@ public final class TutorialIslandController extends Controller {
 		if (getStage() == Stage.CHOP_TREE && itemId == TreeType.NORMAL.getLogsId()[0]) {
 			nextStage(Stage.MAKE_A_FIRE);
 			player.startConversation(new Dialogue().addItem(itemId, "You get some logs."));
-		} else if (itemId == Fish.SHRIMP.getId()) {
+		} else if (itemId == Fish.SHRIMP.getFishId()) {
 			if (getStage() == Stage.CATCH_SHRIMP)
 				nextStage(Stage.BURN_SHRIMP);
 		} else if (itemId == Cooking.Cookables.RAW_SHRIMP.getBurntItem().getId()) {
@@ -1296,7 +1298,7 @@ public final class TutorialIslandController extends Controller {
 	@Override
 	public void start() {
 		if (getStage() == Stage.TALK_TO_GUIDE)
-			player.setNextTile(Tile.of(3094, 3107, 0));
+			player.tele(Tile.of(3094, 3107, 0));
 		sendInterfaces();
 	}
 
@@ -1373,13 +1375,10 @@ public final class TutorialIslandController extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		return false;
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		return false;
+	public boolean processTeleport(Teleport tele) {
+		if (tele.type() != TeleType.OBJECT)
+			return false;
+		return true;
 	}
 
 	public void removeHint() {

@@ -20,13 +20,14 @@ import com.rs.game.content.minigames.sorcgarden.SqirkFruitSqueeze.SqirkFruit;
 import com.rs.game.content.skills.herblore.HerbCleaning;
 import com.rs.game.content.skills.herblore.HerbCleaning.Herbs;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.transportation.FadingScreen;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
@@ -110,7 +111,7 @@ public class SorceressGardenController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		removeController();
 
 	}
@@ -127,17 +128,9 @@ public class SorceressGardenController extends Controller {
 		}
 		boolean teleport;
 		if (!broomstick)
-			teleport = Magic.sendNormalTeleportSpell(player, 0, 0, MIDDLE);
+			Magic.sendNormalTeleportSpell(player, 0, 0, MIDDLE, () -> player.getControllerManager().startController(new SorceressGardenController()));
 		else
-			teleport = Magic.sendTeleportSpell(player, 10538, 10537, -1, -1, 0, 0, MIDDLE, 4, true, Magic.MAGIC_TELEPORT, null);
-		if (teleport)
-			WorldTasks.schedule(new WorldTask() {
-
-				@Override
-				public void run() {
-					player.getControllerManager().startController(new SorceressGardenController());
-				}
-			}, 4);
+			Magic.sendTeleportSpell(player, 10538, 10537, -1, -1, 0, 0, MIDDLE, 4, true, TeleType.MAGIC, () -> player.getControllerManager().startController(new SorceressGardenController()));
 	}
 
 	@Override
@@ -166,7 +159,7 @@ public class SorceressGardenController extends Controller {
 		if (object.getId() == 21764) {
 			player.lock();
 			player.setNextAnimation(new Animation(5796));
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 
 				@Override
 				public void run() {
@@ -222,7 +215,7 @@ public class SorceressGardenController extends Controller {
 		player.lock();
 		player.sendMessage("An elemental force enamating from the garden teleports you away.");
 		FadingScreen.fade(player, () -> {
-			player.setNextTile(Tile.of(2913, 5467, 0));
+			player.tele(Tile.of(2913, 5467, 0));
 			player.lock(3);
 		});
 	}

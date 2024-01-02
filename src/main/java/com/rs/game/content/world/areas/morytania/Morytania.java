@@ -28,13 +28,14 @@ import com.rs.game.content.achievements.AchievementSystemDialogue;
 import com.rs.game.content.achievements.SetReward;
 import com.rs.game.content.skills.agility.Agility;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.world.AgilityShortcuts;
 import com.rs.game.content.world.doors.Doors;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
@@ -176,10 +177,6 @@ public class Morytania  {
 		e.getPlayer().ladder(Tile.of(3405, 3506, 0));
 	});
 
-	public static ObjectClickHandler handleHolyBarrier = new ObjectClickHandler(new Object[] { 3443 }, e -> {
-		e.getPlayer().ladder(Tile.of(3423, 3484, 0));
-	});
-
 	public static ObjectClickHandler handleSwampTrapdoorShortcut = new ObjectClickHandler(new Object[] { 5055, 5054 }, e -> {
 		e.getPlayer().ladder(e.getObjectId() == 5055 ? Tile.of(3477, 9845, 0) : Tile.of(3495, 3466, 0));
 	});
@@ -200,11 +197,11 @@ public class Morytania  {
 	});
 
 	public static ObjectClickHandler handleSwampBoatFromMorton = new ObjectClickHandler(new Object[] { 6969 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3500, 3380, 0));
+		e.getPlayer().tele(Tile.of(3500, 3380, 0));
 	});
 
 	public static ObjectClickHandler handleSwampBoatToMorton = new ObjectClickHandler(new Object[] { 6970 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3521, 3284, 0));
+		e.getPlayer().tele(Tile.of(3521, 3284, 0));
 	});
 
 	public static ObjectClickHandler handleGrottoTree = new ObjectClickHandler(new Object[] { 3517 }, e -> {
@@ -222,18 +219,18 @@ public class Morytania  {
 		e.getPlayer().lock();
 		e.getPlayer().setNextFaceTile(endTile);
 		e.getPlayer().setNextAnimation(new Animation(769));
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			@Override
 			public void run() {
 				e.getPlayer().unlockNextTick();
-				e.getPlayer().setNextTile(endTile);
+				e.getPlayer().tele(endTile);
 				e.getPlayer().setNextAnimation(new Animation(-1));
 			}
 		}, 1);
 	});
 
 	public static ItemClickHandler handleBonesackTele = new ItemClickHandler(new Object[] { 15215 }, new String[] { "Teleport" }, e -> {
-		Magic.sendTeleportSpell(e.getPlayer(), 12055, 12057, 2133, 2134, 0, 0, Tile.of(3362, 3504, 0), 3, true, Magic.MAGIC_TELEPORT, null);
+		Magic.sendTeleportSpell(e.getPlayer(), 12055, 12057, 2133, 2134, 0, 0, Tile.of(3362, 3504, 0), 3, true, TeleType.ITEM, null);
 	});
 
 	private static void drakanTeleport(Player player, Item item, Tile location) {
@@ -241,11 +238,12 @@ public class Morytania  {
 			player.sendMessage("The medallion seems unresponsive. It probably needs recharging.");
 			return;
 		}
-		if (Magic.sendTeleportSpell(player, 8939, 8941, 1864, 1864, 0, 0, location, 2, true, Magic.MAGIC_TELEPORT, null))
+		Magic.sendTeleportSpell(player, 8939, 8941, 1864, 1864, 0, 0, location, 2, true, TeleType.ITEM, () -> {
 			if (player.getX() >= 3398 && player.getX() <= 3841 && player.getY() >= 3161 && player.getY() <= 3586)
 				player.sendMessage("Due to the short nature of your teleport, the medallion does not use a charge.");
 			else
 				player.sendMessage("Your medallion has " + item.decMetaDataI("drakanCharges") + " charges left.");
+		});
 	}
 
 	public static ItemClickHandler handleDrakansMedallion = new ItemClickHandler(new Object[] { 21576 }, new String[] { "Teleport", "Check-charges" }, e -> {
@@ -288,7 +286,7 @@ public class Morytania  {
 		if (!e.getPlayer().isQuestComplete(Quest.BRANCHES_OF_DARKMEYER, "to enter the cave."))
 			return;
 		e.getPlayer().fadeScreen(() -> {
-			e.getPlayer().setNextTile(e.getObjectId() == 59921 ? Tile.of(2273, 5152, 0) : Tile.of(3498, 3204, 0));
+			e.getPlayer().tele(e.getObjectId() == 59921 ? Tile.of(2273, 5152, 0) : Tile.of(3498, 3204, 0));
 		});
 	});
 
@@ -370,32 +368,29 @@ public class Morytania  {
 	//Fenkenstraincastle
 	public static ObjectClickHandler handleFenkenstraincastlestairs = new ObjectClickHandler(new Object[] { 5206, 5207 }, e -> {
 		if (e.getObjectId() == 5206)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 0 ? -0 : e.getObject().getRotation() == 1 ? -0 : 0, e.getObject().getRotation() == 0 ? 4 : e.getObject().getRotation() == 1 ? -0 : 0,  1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 0 ? -0 : e.getObject().getRotation() == 1 ? -0 : 0, e.getObject().getRotation() == 0 ? 4 : e.getObject().getRotation() == 1 ? -0 : 0,  1));
 		else if (e.getObjectId() == 5207)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 0 ? 0 : e.getObject().getRotation() == 1 ? -0 : 0, e.getObject().getRotation() == 0 ? -4 : e.getObject().getRotation() == 1 ? -0 : 0, -1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 0 ? 0 : e.getObject().getRotation() == 1 ? -0 : 0, e.getObject().getRotation() == 0 ? -4 : e.getObject().getRotation() == 1 ? -0 : 0, -1));
 	});
 	public static ObjectClickHandler experimentcavegraveentrance = new ObjectClickHandler(new Object[] { 5167 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3577, 9927, 0));
-	});
-	public static ObjectClickHandler experimentcavegraveexit = new ObjectClickHandler(new Object[] { 1757 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3578, 3527, 0));
+		e.getPlayer().tele(Tile.of(3577, 9927, 0));
 	});
 
 	//TakenTemple
 	public static ObjectClickHandler handleTemplespiralstairsup = new ObjectClickHandler(new Object[] { 30722 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3415, 3485, 1));
+		e.getPlayer().tele(Tile.of(3415, 3485, 1));
 	});
 
 	public static ObjectClickHandler handleTemplespiralstairsdown = new ObjectClickHandler(new Object[] { 30723 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3414, 3486, 0));
+		e.getPlayer().tele(Tile.of(3414, 3486, 0));
 	});
 
 	public static ObjectClickHandler handleTemplespiralstairsup2 = new ObjectClickHandler(new Object[] { 30724 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3415, 3492, 1));
+		e.getPlayer().tele(Tile.of(3415, 3492, 1));
 	});
 
 	public static ObjectClickHandler handleTemplespiralstairsdown2 = new ObjectClickHandler(new Object[] { 30725  }, e -> {
-		e.getPlayer().setNextTile(Tile.of(3414, 3491, 0));
+		e.getPlayer().tele(Tile.of(3414, 3491, 0));
 	});
 
 }

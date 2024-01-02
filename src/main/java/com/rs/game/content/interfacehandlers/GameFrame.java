@@ -21,6 +21,7 @@ import com.rs.game.content.world.Rest;
 import com.rs.game.model.entity.player.managers.InterfaceManager;
 import com.rs.game.model.entity.player.managers.InterfaceManager.Sub;
 import com.rs.game.model.entity.player.managers.PriceChecker;
+import com.rs.lib.game.Animation;
 import com.rs.lib.net.ClientPacket;
 import com.rs.net.LobbyCommunicator;
 import com.rs.plugin.annotations.PluginEventHandler;
@@ -74,15 +75,15 @@ public class GameFrame {
 		if (e.getComponentId() == 5)
 			e.getPlayer().getInterfaceManager().sendSubDefault(Sub.TAB_SETTINGS);
 		else if (e.getComponentId() == 41)
-			e.getPlayer().setPrivateChatSetup(e.getPlayer().getPrivateChatSetup() == 0 ? 1 : 0);
+			e.getPlayer().getVars().saveVar(287, e.getPlayer().getVars().getVar(287) == 0 ? 1 : 0);
 		else if (e.getComponentId() >= 17 && e.getComponentId() <= 36)
-			e.getPlayer().setClanChatSetup(e.getComponentId() - 17);
+			e.getPlayer().getVars().saveVarBit(3612, e.getComponentId() - 17);
 		else if (e.getComponentId() >= 97 && e.getComponentId() <= 116)
-			e.getPlayer().setGuestChatSetup(e.getComponentId() - 97);
+			e.getPlayer().getVars().saveVarBit(9191, e.getComponentId() - 97);
 		else if (e.getComponentId() >= 49 && e.getComponentId() <= 66)
-			e.getPlayer().setPrivateChatSetup(e.getComponentId() - 48);
+			e.getPlayer().getVars().saveVar(287, e.getComponentId() - 48);
 		else if (e.getComponentId() >= 72 && e.getComponentId() <= 91)
-			e.getPlayer().setFriendChatSetup(e.getComponentId() - 72);
+			e.getPlayer().getVars().saveVarBit(9188, e.getComponentId() - 72);
 	});
 
 	public static ButtonClickHandler handleSettingsTab = new ButtonClickHandler(261, e -> {
@@ -153,8 +154,10 @@ public class GameFrame {
 	});
 
 	public static ButtonClickHandler handleWorldMap = new ButtonClickHandler(755, e -> {
-		if (e.getComponentId() == 44)
+		if (e.getComponentId() == 44) {
 			e.getPlayer().getInterfaceManager().setWindowsPane(e.getPlayer().resizeable() ? 746 : 548);
+			e.getPlayer().setNextAnimation(new Animation(-1));
+		}
 		else if (e.getComponentId() == 42) {
 			e.getPlayer().getHintIconsManager().removeAll(); //TODO find hintIcon index
 			e.getPlayer().getVars().setVar(1159, 1);
@@ -193,6 +196,7 @@ public class GameFrame {
 				return;
 			}
 			e.getPlayer().getInterfaceManager().setTopInterface(755, false);
+			e.getPlayer().setNextAnimation(new Animation(840));
 			int posHash = e.getPlayer().getX() << 14 | e.getPlayer().getY();
 			e.getPlayer().getPackets().sendVarc(622, posHash); // map open center pos
 			e.getPlayer().getPackets().sendVarc(674, posHash); // player position

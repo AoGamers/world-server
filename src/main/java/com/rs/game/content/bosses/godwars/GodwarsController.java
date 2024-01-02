@@ -19,12 +19,12 @@ package com.rs.game.content.bosses.godwars;
 import com.rs.game.World;
 import com.rs.game.content.bosses.godwars.zaros.NexArena;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.world.unorganized_dialogue.NexEntrance;
 import com.rs.game.model.entity.pathing.RouteEvent;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Skills;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
@@ -121,7 +121,7 @@ public class GodwarsController extends Controller {
 
 		if (object.getId() == 26427 && player.getX() >= 2908) {
 			if (killcount[SARADOMIN] >= 40) {
-				player.setNextTile(Tile.of(2907, 5265, 0));
+				player.tele(Tile.of(2907, 5265, 0));
 				killcount[SARADOMIN] -= 40;
 				updateKillcount();
 			} else
@@ -134,7 +134,7 @@ public class GodwarsController extends Controller {
 				boolean withinArmadyl = player.getY() < 5276;
 				final Tile tile = Tile.of(2871, withinArmadyl ? 5279 : 5269, 2);
 				player.lock();
-				WorldTasks.scheduleTimer(tick -> {
+				player.getTasks().scheduleTimer(tick -> {
 					switch(tick) {
 					case 1 -> {
 						player.setNextFaceTile(tile);
@@ -142,10 +142,10 @@ public class GodwarsController extends Controller {
 					}
 					case 3 -> player.setNextAnimation(new Animation(16635));
 					case 4 -> {
-						player.getAppearance().transformIntoNPC(266);
+						player.getAppearance().setHidden(true);
 						World.sendProjectile(Tile.of(player.getTile()), tile, 605, 18, 18, 20, 0.6, 30, 0).getTaskDelay();
 						player.forceMove(tile, 0, 180, false, () -> {
-							player.getAppearance().transformIntoNPC(-1);
+							player.getAppearance().setHidden(false);
 							player.setNextAnimation(new Animation(16672));
 							player.unlock();
 							player.resetReceivedHits();
@@ -163,7 +163,7 @@ public class GodwarsController extends Controller {
 
 		if (object.getId() == 26426 && player.getY() <= 5295) {
 			if (killcount[ARMADYL] >= 40) {
-				player.setNextTile(Tile.of(2839, 5296, 2));
+				player.tele(Tile.of(2839, 5296, 2));
 				killcount[ARMADYL] -= 40;
 				updateKillcount();
 			} else
@@ -173,7 +173,7 @@ public class GodwarsController extends Controller {
 
 		if (object.getId() == 26428 && player.getY() >= 5332) {
 			if (killcount[ZAMORAK] >= 40) {
-				player.setNextTile(Tile.of(2925, 5331, 2));
+				player.tele(Tile.of(2925, 5331, 2));
 				killcount[ZAMORAK] -= 40;
 				updateKillcount();
 			} else
@@ -183,7 +183,7 @@ public class GodwarsController extends Controller {
 
 		if (object.getId() == 26425 && player.getX() <= 2863) {
 			if (killcount[BANDOS] >= 40) {
-				player.setNextTile(Tile.of(2864, 5354, 2));
+				player.tele(Tile.of(2864, 5354, 2));
 				killcount[BANDOS] -= 40;
 				updateKillcount();
 			} else
@@ -237,9 +237,9 @@ public class GodwarsController extends Controller {
 
 		if (object.getId() == 57234) {
 			if (player.getX() == 2859)
-				player.setNextTile(Tile.of(player.getX() + 3, player.getY(), player.getPlane()));
+				player.tele(Tile.of(player.getX() + 3, player.getY(), player.getPlane()));
 			else if (player.getX() == 2862)
-				player.setNextTile(Tile.of(player.getX() - 3, player.getY(), player.getPlane()));
+				player.tele(Tile.of(player.getX() - 3, player.getY(), player.getPlane()));
 			return false;
 		}
 
@@ -247,7 +247,7 @@ public class GodwarsController extends Controller {
 			if (killcount[ZAROS] >= 40 || player.getEquipment().wearingFullCeremonial()) {
 				if (player.getEquipment().wearingFullCeremonial())
 					player.sendMessage("The door somehow recognizes your relevance to the area and allows you to pass through.");
-				player.setNextTile(Tile.of(2900, 5204, 0));
+				player.tele(Tile.of(2900, 5204, 0));
 			} else
 				player.sendMessage("This door is locked by the power of Zaros. You will need to kill at least 40 of his followers before the door will open.");
 			return false;
@@ -287,7 +287,7 @@ public class GodwarsController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		remove();
 		removeController();
 	}

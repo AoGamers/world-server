@@ -18,7 +18,7 @@ package com.rs.game.content.minigames.pest.npcs;
 
 import com.rs.game.content.minigames.pest.PestControl;
 import com.rs.game.model.entity.Entity;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
@@ -40,9 +40,9 @@ public class Shifter extends PestMonsters {
 	}
 
 	private void teleportSpinner(Tile tile) { // def 3902, death 3903
-		setNextTile(Tile.of(tile));
+		tele(Tile.of(tile));
 		setNextAnimation(new Animation(3904));
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 
 			@Override
 			public void run() {

@@ -16,11 +16,13 @@
 //
 package com.rs.game.content.minigames.pest;
 
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Hit;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Controller;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -78,20 +80,17 @@ public class PestControlGameController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int teleType) {
+	public void onTeleported(TeleType teleType) {
 		player.getControllerManager().forceStop();
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		player.simpleDialogue("You can't leave the pest control area like this.");
-		return false;
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		player.simpleDialogue("You can't leave the pest control area like this.");
-		return false;
+	public boolean processTeleport(Teleport tele) {
+		if (tele.type() != TeleType.OBJECT) {
+			player.simpleDialogue("You can't leave the pest control area like this.");
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -120,7 +119,7 @@ public class PestControlGameController extends Controller {
 
 	@Override
 	public boolean sendDeath() {
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override
@@ -131,7 +130,8 @@ public class PestControlGameController extends Controller {
 					player.sendMessage("Oh dear, you have died.");
 				else if (loop == 3) {
 					player.reset();
-					player.setNextTile(control.getTile(35 - Utils.random(4), 54 - (Utils.random(3))));
+					Tile tile = control.getTile(35 - Utils.random(4), 54 - (Utils.random(3)));
+					player.tele(tile == null ? Tile.of(2658, 2660, 0) : tile);
 					player.setNextAnimation(new Animation(-1));
 				} else if (loop == 4) {
 					player.jingle(90);

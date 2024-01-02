@@ -98,6 +98,7 @@ public enum Effect {
 	AGGRESSION_POTION("aggression potion", false),
 
 	OVERLOAD_PVP_REDUCTION(true),
+	MELEE_IMMUNE(true),
 
 	BONFIRE("bonfire boost", false) {
 		@Override
@@ -189,7 +190,9 @@ public enum Effect {
 		}
 	},
 
-	FARMERS_AFFINITY("Farmer's affinity");
+	FARMERS_AFFINITY("Farmer's affinity"),
+
+	SHOOTING_STAR_MINING_BUFF("star sprite's power", false);
 
 	private boolean removeOnDeath = true;
 	private String name;

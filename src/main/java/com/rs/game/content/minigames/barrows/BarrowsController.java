@@ -24,6 +24,7 @@ import com.rs.game.content.achievements.AchievementDef.Difficulty;
 import com.rs.game.content.achievements.SetReward;
 import com.rs.game.content.items.LootInterface;
 import com.rs.game.content.minigames.barrows.npcs.BarrowsBrother;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.world.doors.Doors;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
@@ -34,7 +35,7 @@ import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.item.ItemsContainer;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Item;
@@ -78,7 +79,7 @@ public final class BarrowsController extends Controller {
 		for (Hills hill : Hills.values())
 			if (player.getPlane() == hill.outBound.getPlane() && player.getX() >= hill.outBound.getX() && player.getY() >= hill.outBound.getY() && player.getX() <= hill.outBound.getX() + 3 && player.getY() <= hill.outBound.getY() + 3) {
 				player.useStairs(-1, hill.inside, 1, 2, "You've broken into a crypt.");
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					@Override
 					public void run() {
 						player.getControllerManager().startController(new BarrowsController());
@@ -99,7 +100,7 @@ public final class BarrowsController extends Controller {
 	}
 
 	private void exit(Tile outside) {
-		player.setNextTile(outside);
+		player.tele(outside);
 		leave(false);
 	}
 
@@ -123,7 +124,7 @@ public final class BarrowsController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		leave(false);
 	}
 
@@ -316,7 +317,7 @@ public final class BarrowsController extends Controller {
 			removeDarkness = (removeDarkness == 1 ? 0 : 1);
 			player.getVars().setVar(1270, removeDarkness);
 			if (Utils.random(10) == 0)
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					@Override
 					public void run() {
 						if (player.getHiddenBrother() != -1) {

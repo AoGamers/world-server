@@ -23,9 +23,10 @@ import com.rs.engine.quest.Quest;
 import com.rs.game.World;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.OwnedNPC;
+import com.rs.game.model.entity.pathing.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -70,6 +71,7 @@ public class CountDraynorBoss extends OwnedNPC {
 
 	public CountDraynorBoss(Player owner, Tile tile) {
 		super(owner, COUNT_DRAYNOR_ID, tile, false);
+        setAutoDespawnAtDistance(false);
 	}
 
 	@Override
@@ -80,7 +82,7 @@ public class CountDraynorBoss extends OwnedNPC {
 		setLocked(true);
 		faceEntity(source);
 
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int tick = 0;
 			int finalTick = Ticks.fromSeconds(12);
 
@@ -113,7 +115,7 @@ public class CountDraynorBoss extends OwnedNPC {
             player.sendMessage("This is not your vampyre to kill!");
             return;
         }
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int tick = 0;
 
 			@Override
@@ -172,9 +174,9 @@ public class CountDraynorBoss extends OwnedNPC {
 
 		countDraynor.setLocked(true);
 		countDraynor.faceTile(Tile.of(coffin.getX()+1, coffin.getY() - 5, coffin.getPlane()));
-		countDraynor.transformIntoNPC(266);
+		countDraynor.setHidden(true);
 
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			@Override
 			public void run() {
 				World.removeObject(coffin);
@@ -183,7 +185,7 @@ public class CountDraynorBoss extends OwnedNPC {
 			}
 		}, Ticks.fromMinutes(3));
 
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int tick = 0;
 
 			@Override
@@ -191,7 +193,7 @@ public class CountDraynorBoss extends OwnedNPC {
 				if(tick == 0)
 					p.getInterfaceManager().setFadingInterface(115);
 				if(tick == 3) {
-					p.setNextTile(Tile.of(3079, 9786, 0));
+					p.tele(Tile.of(3079, 9786, 0));
 					p.getPackets().sendCameraPos(coffin.getTile().getXInScene(p.getSceneBaseChunkId())-4, coffin.getTile().getYInScene(p.getSceneBaseChunkId())-8, 3000);
 					p.getPackets().sendCameraLook(coffin.getTile().getXInScene(p.getSceneBaseChunkId()), coffin.getTile().getYInScene(p.getSceneBaseChunkId()), 300);
 				}
@@ -202,17 +204,17 @@ public class CountDraynorBoss extends OwnedNPC {
 				if(tick == 6) {
 					p.setNextAnimation(new Animation(OPEN_COFFIN));
 					p.getPackets().sendObjectAnimation(coffin, new Animation(COFFIN_OPEN));
-					countDraynor.transformIntoNPC(COUNT_DRAYNOR_ID);
+					countDraynor.setHidden(false);
 					countDraynor.setNextAnimation(new Animation(ASLEEP_IN_COFFIN));
 				}
 				if(tick == 8) {
 					p.getInventory().deleteItem(STAKE, 1);
 					p.setNextAnimation(new Animation(MISSING_STAKE_IN_COFFIN));
 					countDraynor.setNextAnimation(new Animation(AWAKEN));
+                    countDraynor.setAutoDespawnAtDistance(true);
 				}
-				if(tick == 9) {
-					p.forceMove(Tile.of(p.getX()-1, p.getY(), p.getPlane()), PUSHED_BACK, 0, 30);
-				}
+				if(tick == 9)
+					p.forceMove(Tile.of(p.getX()-1, p.getY(), p.getPlane()), Direction.EAST, PUSHED_BACK, 0, 30);
 				if(tick == 10) {
 					p.setNextAnimation(new Animation(ON_FLOOR));
 					p.getPackets().sendCameraPos(coffin.getTile().getXInScene(p.getSceneBaseChunkId())-4, coffin.getTile().getYInScene(p.getSceneBaseChunkId())-16, 2200, 0, 5);
@@ -221,7 +223,7 @@ public class CountDraynorBoss extends OwnedNPC {
 				if(tick == 14)
 					countDraynor.faceTile(Tile.of(countDraynor.getX(), countDraynor.getY()+3, countDraynor.getPlane()));
 				if(tick == 16) {
-					countDraynor.setNextTile(Tile.of(3082, 9776, 0));
+					countDraynor.tele(Tile.of(3082, 9776, 0));
 					countDraynor.setNextAnimation(new Animation(SPAWN));
 				}
 

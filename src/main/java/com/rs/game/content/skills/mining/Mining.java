@@ -16,8 +16,10 @@
 //
 package com.rs.game.content.skills.mining;
 
+import com.rs.game.content.Effect;
 import com.rs.game.content.achievements.AchievementSetRewards;
 import com.rs.game.content.achievements.SetReward;
+import com.rs.game.content.dnds.shootingstar.Star;
 import com.rs.game.map.ChunkManager;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.actions.Action;
@@ -177,6 +179,8 @@ public class Mining extends Action {
 					int[] range = VARROCK_ARMOR_ORE_TIERS.get(ore);
 					if (range != null && Arrays.stream(SetReward.VARROCK_ARMOR.getItemIds(), range[0], range[1]).anyMatch(x -> x == player.getEquipment().getChestId()) && Utils.random(100) <= 10)
 						ore.giveOre(player);
+					if (player.hasEffect(Effect.SHOOTING_STAR_MINING_BUFF) && Utils.random(4) == 0)
+						ore.giveOre(player);
 				}
 				success = true;
 				if (ore.getRollGem() == 1 && entity instanceof Player player)
@@ -184,14 +188,16 @@ public class Mining extends Action {
 				break;
 			}
 		}
-		if (success && depleteOre(entity)) {
+		if (rockObj != null && rockObj instanceof Star star && success)
+			star.minedThisTick = true;
+		if (success && depleteOre()) {
 			entity.setNextAnimation(new Animation(-1));
 			return -1;
 		}
 		return ((pick == Pickaxe.DRAGON || pick == Pickaxe.DRAGON_G) && Utils.random(2) == 0) ? pick.getTicks() - 2 : pick.getTicks() - 1;
 	}
 
-	public boolean depleteOre(Entity entity) {
+	public boolean depleteOre() {
 		if (type.depletes()) {
 			if (rockObj != null)
 				rockObj.setIdTemporary(DepletedOres.get(rockObj.getId()), type.getRespawnTime());
@@ -241,7 +247,7 @@ public class Mining extends Action {
 	}
 
 	public boolean checkRock() {
-		return rockObj != null ? ChunkManager.getChunk(rockObj.getTile().getChunkId()).objectExists(new GameObject(rockObj).setIdNoRefresh(rockId)) : !rockNPC.hasFinished();
+		return rockObj != null ? ChunkManager.getChunk(rockObj.getTile().getChunkId()).objectExists(new GameObject(rockObj, rockId)) : !rockNPC.hasFinished();
 	}
 
 	public static double getXPMultiplier(Player player) {

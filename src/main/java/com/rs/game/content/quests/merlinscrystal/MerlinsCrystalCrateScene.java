@@ -21,7 +21,7 @@ import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.Options;
 import com.rs.game.map.instance.Instance;
 import com.rs.game.model.entity.player.Controller;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -60,7 +60,7 @@ public class MerlinsCrystalCrateScene extends Controller {
 	private void playCutscene() {
 		instance.copyMapAllPlanes(347, 1229).thenAccept(e -> {
 			insideCrate = instance.getLocalTile(2, 7);
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				int tick;
 				static final int CROUCH_CRATE_ANIM = 14592;
 				@Override
@@ -70,7 +70,7 @@ public class MerlinsCrystalCrateScene extends Controller {
 					else if (tick == 3) {// setup p2, move player
                         player.musicTrack(-1);
 						player.getPackets().setBlockMinimapState(2);
-						player.setNextTile(insideCrate);
+						player.tele(insideCrate);
 					} else if (tick == 4) {
 						player.setNextAnimation(new Animation(CROUCH_CRATE_ANIM));
 						player.getPackets().sendCameraPos(player.getXInScene(player.getSceneBaseChunkId())-3, player.getYInScene(player.getSceneBaseChunkId())-3, 4000);
@@ -136,7 +136,7 @@ public class MerlinsCrystalCrateScene extends Controller {
 						player.getInterfaceManager().setFadingInterface(115);
 					else if(tick == 30) {
 						player.getPackets().setBlockMinimapState(0);
-						player.setNextTile(destination);
+						player.tele(destination);
 						player.getPackets().sendResetCamera();
 						player.setNextAnimation(new Animation(-1));
 					} else if(tick == 31)
@@ -170,7 +170,7 @@ public class MerlinsCrystalCrateScene extends Controller {
 
 	@Override
 	public void forceClose() {
-		player.setNextTile(locationBeforeCutscene);
+		player.tele(locationBeforeCutscene);
 		removeInstance();
 		player.unlock();
 		player.getPackets().setBlockMinimapState(0);

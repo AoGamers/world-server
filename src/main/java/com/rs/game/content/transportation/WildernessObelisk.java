@@ -18,9 +18,10 @@ package com.rs.game.content.transportation;
 
 import com.rs.game.World;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
@@ -47,7 +48,7 @@ public class WildernessObelisk {
 		World.sendObjectAnimation(World.getObjectWithId(center.transform(4, 0, 0), id), new Animation(2226));
 		World.sendObjectAnimation(World.getObjectWithId(center.transform(0, 4, 0), id), new Animation(2226));
 		World.sendObjectAnimation(World.getObjectWithId(center.transform(4, 4, 0), id), new Animation(2226));
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 
 			@Override
 			public void run() {
@@ -60,7 +61,7 @@ public class WildernessObelisk {
 							continue;
 						int offsetX = p.getX() - center.getX();
 						int offsetY = p.getY() - center.getY();
-						Magic.sendTeleportSpell(p, 8939, 8941, 1690, -1, 0, 0, Tile.of(newCenter.getX() + offsetX, newCenter.getY() + offsetY, 0), 3, false, Magic.OBJECT_TELEPORT, null);
+						Magic.sendTeleportSpell(p, 8939, 8941, 1690, -1, 0, 0, Tile.of(newCenter.getX() + offsetX, newCenter.getY() + offsetY, 0), 3, false, TeleType.OBJECT, null);
 					}
 				IS_ACTIVE[index] = false;
 			}

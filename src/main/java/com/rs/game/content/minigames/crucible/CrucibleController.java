@@ -4,6 +4,7 @@ import com.rs.game.content.Effect;
 import com.rs.game.content.Potions;
 import com.rs.game.content.minigames.MinigameUtil;
 import com.rs.game.model.entity.Entity;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
@@ -69,7 +70,7 @@ public class CrucibleController extends Controller {
                     player.getInventory().init();
                 }
                 player.reset();
-                player.setNextTile(getRespawnTile());
+                player.tele(getRespawnTile());
                 player.setNextAnimation(new Animation(-1));
                 if (dangerous) {
                     Potions.checkOverloads(player);
@@ -95,19 +96,7 @@ public class CrucibleController extends Controller {
     }
 
     @Override
-    public boolean processMagicTeleport(Tile toTile) {
-        player.sendMessage("A mysterious force prevents you from teleporting.");
-        return false;
-    }
-
-    @Override
-    public boolean processItemTeleport(Tile toTile) {
-        player.sendMessage("A mysterious force prevents you from teleporting.");
-        return false;
-    }
-
-    @Override
-    public boolean processObjectTeleport(Tile toTile) {
+    public boolean processTeleport(Teleport tele) {
         player.sendMessage("A mysterious force prevents you from teleporting.");
         return false;
     }

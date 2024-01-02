@@ -530,7 +530,8 @@ public final class Familiar extends NPC {
 		if (isDead() || isCantInteract())
 			return;
 		Familiar.sendLeftClickOption(owner);
-		ticks--;
+		if (!owner.getNSV().getB("infSpecialAttack"))
+			ticks--;
 		if (ticks % 50 == 0) {
 			if (trackDrain)
 				owner.getSkills().drainSummoning(1);
@@ -697,7 +698,7 @@ public final class Familiar extends NPC {
 		}
 		sentRequestMoveMessage = false;
 		spotAnim(getSize() > 1 ? 1315 : 1314);
-		setNextTile(teleTile);
+		tele(teleTile);
 		getActionManager().forceStop();
 	}
 

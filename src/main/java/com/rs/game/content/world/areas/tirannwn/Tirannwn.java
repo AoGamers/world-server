@@ -148,7 +148,7 @@ public class Tirannwn {
 	});
 
 	public static ObjectClickHandler handleEnterUndergroundPass = new ObjectClickHandler(new Object[] { 4006 }, e -> {
-		e.getPlayer().setNextTile(Tile.of(2438, 3315, 0));
+		e.getPlayer().tele(Tile.of(2438, 3315, 0));
 	});
 
 	public static ObjectClickHandler handleLletyaTreePass = new ObjectClickHandler(new Object[] { 8742 }, e -> {
@@ -173,9 +173,9 @@ public class Tirannwn {
 		WorldObject obj = e.getObject();
 
 		if (p.getY() > obj.getY())
-			p.setNextTile(Tile.of(obj.getX(), obj.getY() - 1, obj.getPlane()));
+			p.tele(Tile.of(obj.getX(), obj.getY() - 1, obj.getPlane()));
 		if (p.getY() < obj.getY())
-			p.setNextTile(Tile.of(obj.getX(), obj.getY() + 1, obj.getPlane()));
+			p.tele(Tile.of(obj.getX(), obj.getY() + 1, obj.getPlane()));
 	});
 
 	public static ObjectClickHandler handleAdvancedElvenCliffside = new ObjectClickHandler(new Object[] { 9297, 9296 }, e -> {
@@ -321,10 +321,10 @@ public class Tirannwn {
 	});
 
 	public static ItemClickHandler handleTeleportCrystal = new ItemClickHandler(new Object[] { 6099, 6100, 6101, 6102 }, new String[] { "Activate" }, e -> {
-		if (Magic.sendNormalTeleportSpell(e.getPlayer(), Tile.of(2340, 3172, 0))) {
+		Magic.sendNormalTeleportSpell(e.getPlayer(), Tile.of(2340, 3172, 0), () -> {
 			e.getItem().setId(e.getItem().getId() + 1);
 			e.getPlayer().getInventory().refresh(e.getItem().getSlot());
-		}
+		});
 	});
 
 }

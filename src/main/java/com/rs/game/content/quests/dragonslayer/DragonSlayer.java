@@ -8,7 +8,7 @@ import com.rs.engine.quest.QuestOutline;
 import com.rs.game.World;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
@@ -300,7 +300,7 @@ public class DragonSlayer extends QuestOutline {
 
 		if(attr.getB(DOOR_BOMB_ATTR) && attr.getB(DOOR_BOWL_ATTR) && attr.getB(DOOR_SILK_ATTR) && attr.getB(DOOR_CAGE_ATTR)) {
 			obj.animate(new Animation(6636));
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				int tick;
 				@Override
 				public void run() {
@@ -416,7 +416,7 @@ public class DragonSlayer extends QuestOutline {
 	});
 
 	public static void introduceElvarg(Player p) {
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int tick;
 			@Override
 			public void run() {
@@ -426,8 +426,8 @@ public class DragonSlayer extends QuestOutline {
 					p.getPackets().setBlockMinimapState(2);
 				}
 				if (tick == 3) {// setup p2, move p
-					p.getAppearance().transformIntoNPC(266);
-					p.setNextTile(Tile.of(2845, 9636, 0));
+					p.getAppearance().setHidden(true);
+					p.tele(Tile.of(2845, 9636, 0));
 				}
 				if (tick == 5) {// setup p3, camera
 					p.getPackets().sendCameraPos(p.getXInScene(p.getSceneBaseChunkId()), p.getYInScene(p.getSceneBaseChunkId()), 1300);
@@ -447,11 +447,11 @@ public class DragonSlayer extends QuestOutline {
 				if(tick == 15)
 					p.getInterfaceManager().setFadingInterface(115);
 				if(tick==18) {
-					p.setNextTile(Tile.of(2834, 9657, 0));
+					p.tele(Tile.of(2834, 9657, 0));
 					p.getPackets().sendResetCamera();
 				}
 				if (tick == 21) {// closing p2
-					p.getAppearance().transformIntoNPC(-1);
+					p.getAppearance().setHidden(false);
 					p.getInterfaceManager().setFadingInterface(170);
 					p.getPackets().setBlockMinimapState(0);
 					p.getQuestManager().getAttribs(Quest.DRAGON_SLAYER).setB(INTRODUCED_ELVARG_ATTR, true);

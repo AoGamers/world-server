@@ -25,6 +25,7 @@ import com.rs.engine.dialogue.statements.PlayerStatement;
 import com.rs.game.World;
 import com.rs.game.content.minigames.pyramidplunder.SimonTempleton;
 import com.rs.game.content.skills.agility.Agility;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
@@ -32,7 +33,7 @@ import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
@@ -128,7 +129,7 @@ public class AgilityPyramidController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		removeController();
 	}
 
@@ -152,7 +153,7 @@ public class AgilityPyramidController extends Controller {
 
 	public void finishCourse() {
 		if (grabbedTop) {
-			player.setNextTile(Tile.of(3364, 2830, 0));
+			player.tele(Tile.of(3364, 2830, 0));
 			//player.getSkills().addXp(Constants.AGILITY, 300+(player.getSkills().getLevelForXp(Constants.AGILITY)*8)); //osrs rates?
 			player.getSkills().addXp(Constants.AGILITY, 500);
 			grabbedTop = false;
@@ -165,7 +166,7 @@ public class AgilityPyramidController extends Controller {
 	private void grabTop(GameObject object) {
 		player.setNextFaceTile(player.transform(1, 0, 0));
 		player.lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int ticks;
 			@Override
 			public void run() {
@@ -227,7 +228,7 @@ public class AgilityPyramidController extends Controller {
 		final boolean running = player.getRun();
 		player.setRunHidden(false);
 		player.lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int ticks;
 			@Override
 			public void run() {
@@ -241,7 +242,7 @@ public class AgilityPyramidController extends Controller {
 					player.resetWalkSteps();
 				} else if (ticks >= 4) {
 					if (fail) {
-						player.setNextTile(World.findClosestAdjacentFreeTile(player.transform(0, 0, -1), 2));
+						player.tele(World.findClosestAdjacentFreeTile(player.transform(0, 0, -1), 2));
 						player.applyHit(new Hit(null, 100, HitLook.TRUE_DAMAGE));
 					} else {
 						player.setNextAnimation(new Animation(endAnim));
@@ -263,7 +264,7 @@ public class AgilityPyramidController extends Controller {
 			player.setRunHidden(false);
 			player.lock();
 			player.addWalkSteps(player.transform(-4, 0, 0), -1, false);
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				boolean secondloop;
 				@Override
 				public void run() {
@@ -295,7 +296,7 @@ public class AgilityPyramidController extends Controller {
 		player.setRunHidden(false);
 		player.lock();
 		player.addWalkSteps(toTile.getX(), toTile.getY(), -1, false);
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			boolean secondloop;
 			@Override
 			public void run() {

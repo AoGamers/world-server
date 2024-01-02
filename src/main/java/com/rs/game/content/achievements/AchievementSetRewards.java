@@ -18,12 +18,13 @@ package com.rs.game.content.achievements;
 
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.Options;
-import com.rs.game.content.DropCleaners;
+import com.rs.game.content.DropCleanersKt;
 import com.rs.game.content.SkillCapeCustomizer;
 import com.rs.game.content.achievements.AchievementDef.Area;
 import com.rs.game.content.achievements.AchievementDef.Difficulty;
 import com.rs.game.content.skills.magic.Alchemy;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.world.areas.rellekka.Rellekka;
 import com.rs.game.content.world.doors.Doors;
 import com.rs.game.model.entity.player.Player;
@@ -45,7 +46,8 @@ public class AchievementSetRewards {
 		if (e.getPlayer().getEquipment().getBootsId() == 19766)
 			e.getItem().setId(e.getItem().getDefinitions().getCertId());
 		else
-			DropCleaners.Companion.getBonecrusher().getHandler().accept(e);
+			if (DropCleanersKt.bonecrush(e.getPlayer(), e.getItem()))
+				e.deleteItem();
 	});
 
 	public static ItemClickHandler handleArdougneCloak = new ItemClickHandler(new Object[] { 15345, 15347, 15349, 19748, 20767, 20769, 20771 }, new String[] { "Teleports", "Teleport", "Kandarin Monastery", "Summoning-restore", "Ardougne Farm", "Customise", "Features" }, e -> {
@@ -56,21 +58,19 @@ public class AchievementSetRewards {
 						e.getPlayer().sendMessage("You already used your teleport for today.");
 						return;
 					}
-					if (Magic.sendTeleportSpell(e.getPlayer(), 4454, 12438, 761, 762, 0, 0, ARDY_FARM, 4, true, Magic.MAGIC_TELEPORT, null))
-						e.getPlayer().setDailyB("ardyCloakFarmTele", true);
+					Magic.sendTeleportSpell(e.getPlayer(), 4454, 12438, 761, 762, 0, 0, ARDY_FARM, 4, true, TeleType.ITEM, () -> e.getPlayer().setDailyB("ardyCloakFarmTele", true));
 				});
-				ops.add("Kandarin Monastery", () -> Magic.sendTeleportSpell(e.getPlayer(), 12441, 12442, 2172, 2173, 0, 0, KANDARIN_MONASTERY, 3, true, Magic.MAGIC_TELEPORT, null));
+				ops.add("Kandarin Monastery", () -> Magic.sendTeleportSpell(e.getPlayer(), 12441, 12442, 2172, 2173, 0, 0, KANDARIN_MONASTERY, 3, true, TeleType.ITEM, null));
 				ops.add("Nowhere.");
 			});
 		} else if (e.getOption().contains("Kandarin Monastery") || e.getOption().equals("Teleport"))
-			Magic.sendTeleportSpell(e.getPlayer(), 12441, 12442, 2172, 2173, 0, 0, KANDARIN_MONASTERY, 3, true, Magic.MAGIC_TELEPORT, null);
+			Magic.sendTeleportSpell(e.getPlayer(), 12441, 12442, 2172, 2173, 0, 0, KANDARIN_MONASTERY, 3, true, TeleType.ITEM, null);
 		else if (e.getOption().contains("Ardougne Farm")) {
 			if (e.getPlayer().getDailyB("ardyCloakFarmTele") && (e.getItem().getId() == 15345 || e.getItem().getId() == 15347 || e.getItem().getId() == 15349)) {
 				e.getPlayer().sendMessage("You already used your teleport for today.");
 				return;
 			}
-			if (Magic.sendTeleportSpell(e.getPlayer(), 4454, 12438, 761, 762, 0, 0, ARDY_FARM, 4, true, Magic.MAGIC_TELEPORT, null))
-				e.getPlayer().setDailyB("ardyCloakFarmTele", true);
+			Magic.sendTeleportSpell(e.getPlayer(), 4454, 12438, 761, 762, 0, 0, ARDY_FARM, 4, true, TeleType.ITEM, () -> e.getPlayer().setDailyB("ardyCloakFarmTele", true));
 		} else if (e.getOption().equals("Summoning-restore")) {
 			if (e.getPlayer().getDailyB("ardyCloakSumm")) {
 				e.getPlayer().sendMessage("You've already restored your summoning points today.");
@@ -78,6 +78,7 @@ public class AchievementSetRewards {
 			}
 			e.getPlayer().getSkills().set(Constants.SUMMONING, e.getPlayer().getSkills().getLevelForXp(Constants.SUMMONING));
 			e.getPlayer().setDailyB("ardyCloakSumm", true);
+			e.getPlayer().setNextSpotAnim(new SpotAnim(7));
 			e.getPlayer().sendMessage("You restore your summoning points.");
 		} else if (e.getOption().equals("Customise"))
 			SkillCapeCustomizer.startCustomizing(e.getPlayer(), e.getItem().getId());
@@ -86,7 +87,7 @@ public class AchievementSetRewards {
 	public static ItemClickHandler handleExplorersRing = new ItemClickHandler(new Object[] { 13560, 13561, 13562, 19760 }, new String[] { "Cabbage-port", "Run-replenish", "Low-alchemy", "Low-Alchemy", "High-Alchemy", "Superheat", "Alchemy-or-superheat" }, e -> {
 		switch(e.getOption()) {
 		case "Cabbage-port":
-			Magic.sendTeleportSpell(e.getPlayer(), 9984, 9986, 1731, 1732, 0, 0, Tile.of(3053, 3291, 0), 4, true, Magic.MAGIC_TELEPORT, null);
+			Magic.sendTeleportSpell(e.getPlayer(), 9984, 9986, 1731, 1732, 0, 0, Tile.of(3053, 3291, 0), 4, true, TeleType.ITEM, null);
 			break;
 		case "Run-replenish":
 			if ((e.getItem().getId() == 13560 && e.getPlayer().getDailyI("eRingRunRep") >= 1) || (e.getItem().getId() == 13561 && e.getPlayer().getDailyI("eRingRunRep") >= 2)) {
@@ -101,6 +102,7 @@ public class AchievementSetRewards {
 			e.getPlayer().setNextAnimation(new Animation(9988));
 			e.getPlayer().setNextSpotAnim(new SpotAnim(1733));
 			e.getPlayer().restoreRunEnergy(50);
+			e.getPlayer().soundEffect(5035);
 			e.getPlayer().sendMessage("The ring replenishes your run energy.");
 			break;
 		case "Low-alchemy":
@@ -223,6 +225,7 @@ public class AchievementSetRewards {
 				break;
 			}
 			e.getPlayer().incDailyI("fallyShieldPrayer");
+			e.getPlayer().setNextSpotAnim(new SpotAnim(1964));
 			e.getPlayer().sendMessage("The shield replenishes your prayer points.");
 		}
 	});
@@ -238,25 +241,19 @@ public class AchievementSetRewards {
 			e.getPlayer().sendMessage("You already used your teleports for today.");
 			return;
 		}
-		if (Magic.sendTeleportSpell(e.getPlayer(), 8939, 8941, 1678, 1679, 0, 0, Tile.of(3683, 9888, 0), 3, false, Magic.MAGIC_TELEPORT, null))
-			e.getPlayer().incDailyI("moryLegSlimeTeles");
+		Magic.sendTeleportSpell(e.getPlayer(), 8939, 8941, 1678, 1679, 0, 0, Tile.of(3683, 9888, 0), 3, false, TeleType.ITEM, () -> e.getPlayer().incDailyI("moryLegSlimeTeles"));
 	}
 	});
 	
 	public static ItemClickHandler handleFremmyBoots = new ItemClickHandler(new Object[] { 14571, 14572, 14573, 19766 }, new String[] { "Operate", "Contact the Fossegrimen", "Free lyre teleport" }, e -> {
-		if (e.getOption().equals("Operate")) {
-			e.getPlayer().startConversation(new Dialogue().addOptions(new Options() {
-				@Override
-				public void create() {
-					option("Contact the Fossegrimen", new Dialogue().addNext(() -> Rellekka.rechargeLyre(e.getPlayer())));
-					if (e.getItem().getId() > 14571)
-						option("Free lyre teleport", new Dialogue().addNext(() -> e.getPlayer().startConversation(Rellekka.getLyreTeleOptions(e.getPlayer(), null, true))));
-				}
-			}));
-		} else if (e.getOption().equals("Free lyre teleport")) {
-			e.getPlayer().startConversation(Rellekka.getLyreTeleOptions(e.getPlayer(), null, true));
-		} else if (e.getOption().equals("Contact the Fossegrimen")) {
-			Rellekka.rechargeLyre(e.getPlayer());
+		switch(e.getOption()) {
+			case "Operate" -> e.getPlayer().sendOptionDialogue(ops -> {
+				ops.add("Contact the Fossegrimen", () -> Rellekka.rechargeLyre(e.getPlayer()));
+				ops.add("Free lyre teleport", () -> e.getPlayer().startConversation(Rellekka.getLyreTeleOptions(e.getPlayer(), null, true)));
+			});
+
+			case "Free lyre teleport" -> e.getPlayer().startConversation(Rellekka.getLyreTeleOptions(e.getPlayer(), null, true));
+			case "Contact the Fossegrimen" -> Rellekka.rechargeLyre(e.getPlayer());
 		}
 	});
 }

@@ -23,7 +23,7 @@ import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
@@ -47,7 +47,7 @@ public class NoEscape implements NexAttack {
 		final int idx = Utils.random(NO_ESCAPE_TELEPORTS.length);
 		final Tile dir = NO_ESCAPE_TELEPORTS[idx];
 		final Tile center = Tile.of(2924, 5202, 0);
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			private int count;
 
 			@Override
@@ -56,7 +56,7 @@ public class NoEscape implements NexAttack {
 					nex.setNextAnimation(new Animation(6321));
 					nex.setNextSpotAnim(new SpotAnim(1216));
 				} else if (count == 1) {
-					nex.setNextTile(dir);
+					nex.tele(dir);
 					nex.setNextForceTalk(new ForceTalk("NO ESCAPE!"));
 					nex.voiceEffect(3292);
 					nex.forceMove(center, 25, 90);
@@ -67,7 +67,7 @@ public class NoEscape implements NexAttack {
 							player.forceMove(player.getTile(), 10070, 0, 30);
 						}
 				} else if (count == 3)
-					nex.setNextTile(center);
+					nex.tele(center);
 				else if (count == 4) {
 					nex.setTarget(target);
 					nex.setCantInteract(false);

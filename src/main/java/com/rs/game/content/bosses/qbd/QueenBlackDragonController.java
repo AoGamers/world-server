@@ -23,6 +23,7 @@ import com.rs.game.World;
 import com.rs.game.content.bosses.qbd.npcs.QueenBlackDragon;
 import com.rs.game.content.death.DeathOfficeController;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.map.instance.Instance;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
@@ -30,13 +31,12 @@ import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.entity.player.managers.InterfaceManager.Sub;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
-import com.rs.lib.net.ClientPacket;
 import com.rs.plugin.annotations.PluginEventHandler;
 import com.rs.plugin.handlers.ObjectClickHandler;
 
@@ -93,7 +93,7 @@ public final class QueenBlackDragonController extends Controller {
 			player.fadeScreen(() -> {
 				player.resetReceivedHits();
 				npc = new QueenBlackDragon(player, bossBase.transform(31, 37, 0), bossBase);
-				player.setNextTile(bossBase.transform(33, 28, 0));
+				player.tele(bossBase.transform(33, 28, 0));
 				player.setLargeSceneView(true);
 				player.setForceMultiArea(true);
 				player.unlock();
@@ -123,7 +123,7 @@ public final class QueenBlackDragonController extends Controller {
 				rewardRegion.copyMapAllPlanes(160, 760).thenAccept(e -> {
 					player.resetReceivedHits();
 					rewardBase = rewardRegion.getTileBase().transform(0, 0, 0);
-					player.setNextTile(rewardBase.transform(31, 36, 0));
+					player.tele(rewardBase.transform(31, 36, 0));
 					player.setForceNextMapLoadRefresh(true);
 					player.loadMapRegions();
 					player.getInterfaceManager().removeSub(Sub.FULL_GAMESPACE_BG);
@@ -230,7 +230,7 @@ public final class QueenBlackDragonController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		end(0);
 	}
 
@@ -238,7 +238,7 @@ public final class QueenBlackDragonController extends Controller {
 	public boolean sendDeath() {
 		player.lock(7);
 		player.stopAll();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override

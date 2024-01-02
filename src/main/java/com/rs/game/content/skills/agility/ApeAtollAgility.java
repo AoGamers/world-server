@@ -21,7 +21,7 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
@@ -53,7 +53,7 @@ public class ApeAtollAgility {
 		player.lock(3);
 		WorldTasks.schedule(1, () -> {
 			player.setNextAnimation(new Animation(1381));
-			player.setNextTile(Tile.of(player.getX(), player.getY(), 0));
+			player.tele(Tile.of(player.getX(), player.getY(), 0));
 			player.getSkills().addXp(Constants.AGILITY, 36);
 		});
 	}
@@ -81,7 +81,7 @@ public class ApeAtollAgility {
 		player.lock(3);
 		WorldTasks.schedule(1, () -> {
 			player.setNextAnimation(new Animation(1382));
-			player.setNextTile(Tile.of(2752, 2742, 2));
+			player.tele(Tile.of(2752, 2742, 2));
 			player.getSkills().addXp(Constants.AGILITY, 25);
 		});
 	}
@@ -96,7 +96,7 @@ public class ApeAtollAgility {
 		player.lock(4);
 		player.getAppearance().setBAS(744);
 		player.forceMove(Tile.of(2747, 2741, 2), 10, 4*30, () -> {
-			player.setNextTile(Tile.of(2747, 2741, 0));
+			player.tele(Tile.of(2747, 2741, 0));
 			player.getSkills().addXp(Constants.AGILITY, 35);
 			player.getAppearance().setBAS(-1);
 		});
@@ -114,13 +114,13 @@ public class ApeAtollAgility {
 		final Tile toTile2 = Tile.of(player.getX() == 2755 ? 2753 : 2755, 2742, object.getPlane());
 		final Tile WaterTile = Tile.of(2756, 2746, object.getPlane());
 		final Tile Land = Tile.of(2757, 2746, object.getPlane());
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 
 			@Override
 			public void run() {
 				player.setNextAnimation(new Animation(1381));
-				player.setNextTile(toTile);
-				WorldTasks.schedule(new WorldTask() {
+				player.tele(toTile);
+				WorldTasks.schedule(new Task() {
 
 					@Override
 					public void run() {
@@ -130,12 +130,12 @@ public class ApeAtollAgility {
 							player.getAppearance().setBAS(741);
 							player.forceMove(WaterTile, 10, 90, () -> {
 								player.getAppearance().setBAS(-1);
-								player.setNextTile(Land);
+								player.tele(Land);
 							});
 							stop();
 						} else {
 							player.setNextAnimation(new Animation(1381));
-							player.setNextTile(toTile2);
+							player.tele(toTile2);
 							player.getSkills().addXp(Constants.AGILITY, 15);
 							stop();
 						}

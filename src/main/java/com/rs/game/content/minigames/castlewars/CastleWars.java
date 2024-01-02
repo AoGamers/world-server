@@ -22,7 +22,7 @@ import com.rs.game.content.skills.cooking.Foods.Food;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
@@ -105,7 +105,7 @@ public final class CastleWars {
 		setCape(player, new Item(team == ZAMORAK ? 4042 : 4041));
 		setHood(player, new Item(team == ZAMORAK ? 4515 : 4513));
 		player.getControllerManager().startController(new CastleWarsWaitingController(team));
-		player.setNextTile(Tile.of(team == ZAMORAK ? ZAMO_WAITING : SARA_WAITING, 1));
+		player.tele(Tile.of(team == ZAMORAK ? ZAMO_WAITING : SARA_WAITING, 1));
 		player.getMusicsManager().playSongAndUnlock(318); // 5 players to start a game
 		if (playingGame == null && waiting[team].size() >= 5)
 			createPlayingGame();
@@ -155,7 +155,7 @@ public final class CastleWars {
 				player.lock(7);
 				player.stopAll();
 			}
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			@Override
 			public void run() {
 				for (int i = 0; i < playing.length; i++)
@@ -184,7 +184,7 @@ public final class CastleWars {
 		waiting[team].remove(player);
 		setCape(player, null);
 		setHood(player, null);
-		player.setNextTile(Tile.of(LOBBY, 2));
+		player.tele(Tile.of(LOBBY, 2));
 		if (playingGame != null && waiting[team].size() == 0 && playing[team].size() == 0)
 			destroyPlayingGame(); // cancels if 0 players playing/waiting on any
 		// of the tea
@@ -222,7 +222,7 @@ public final class CastleWars {
 
 		player.getHintIconsManager().removeUnsavedHintIcon();
 		player.getMusicsManager().reset();
-		player.setNextTile(Tile.of(LOBBY, 2));
+		player.tele(Tile.of(LOBBY, 2));
 		if (playingGame != null && waiting[team].size() == 0 && playing[team].size() == 0)
 			destroyPlayingGame(); // cancels if 0 players playing/waiting on any
 		// of the tea
@@ -236,7 +236,7 @@ public final class CastleWars {
 		playing[team].add(player);
 		player.setCanPvp(true);
 		player.getControllerManager().startController(new CastleWarsPlayingController(team));
-		player.setNextTile(Tile.of(team == ZAMORAK ? ZAMO_BASE : SARA_BASE, 1));
+		player.tele(Tile.of(team == ZAMORAK ? ZAMO_BASE : SARA_BASE, 1));
 	}
 
 	public static void endGame(int winner) {
@@ -308,7 +308,7 @@ public final class CastleWars {
 		return playingGame.isBarricadeAt(tile);
 	}
 
-	private static class PlayingGame extends WorldTask {
+	private static class PlayingGame extends Task {
 
 		private static final int SAFE = 0, TAKEN = 1, DROPPED = 2;
 		private int minutesLeft;

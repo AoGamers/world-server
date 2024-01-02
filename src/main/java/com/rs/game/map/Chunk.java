@@ -346,11 +346,13 @@ public class Chunk {
         GameObject spawned = getSpawnedObjectWithSlot(toRemove.getTile(), toRemove.getSlot());
         if (spawned != null) {
             spawnedObjects.remove(toRemove);
+            unflagForProcess(toRemove);
             WorldCollision.unclip(toRemove);
             if (baseObject != null)
                 WorldCollision.clip(baseObject);
             replace = true;
         } else if (toRemove.equals(baseObject)) {
+            unflagForProcess(toRemove);
             WorldCollision.unclip(toRemove);
             addRemovedObject(baseObject);
         } else {
@@ -467,9 +469,10 @@ public class Chunk {
             for (int y = 0; y < 8; y++) {
                 if (baseObjects[x][y] == null)
                     continue;
-                for (GameObject o : baseObjects[x][y])
-                    if (o != null && (ignoreRemoved || getRemovedObject(o) != null))
+                for (GameObject o : baseObjects[x][y]) {
+                    if (o != null && (ignoreRemoved || getRemovedObject(o) == null))
                         list.add(o);
+                }
             }
         return list;
     }
@@ -680,9 +683,10 @@ public class Chunk {
             initUpdates.add(new AddObject(object.getTile().getChunkLocalHash(), object));
         for (GameObject object : flaggedObjectsForTickProcessing)
             initUpdates.add(new AddObject(object.getTile().getChunkLocalHash(), object));
-        for (GameObject object : getAllObjects())
+        for (GameObject object : getAllObjects()) {
             if (object.getMeshModifier() != null)
                 initUpdates.add(new CustomizeObject(object.getTile().getChunkLocalHash(), object.getMeshModifier().getObject(), object.getMeshModifier().getModelIds(), object.getMeshModifier().getModifiedColors(), object.getMeshModifier().getModifiedTextures()));
+        }
         if (!initUpdates.isEmpty()) {
             player.getSession().writeToQueue(new UpdateZoneFull(player.getSceneBaseChunkId(), getId()));
             for (UpdateZonePacketEncoder packet : initUpdates)

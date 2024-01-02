@@ -22,7 +22,7 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
@@ -53,12 +53,12 @@ public final class FightPits {
 
 	public static ButtonClickHandler handleFightPitsViewingOrbButtons = new ButtonClickHandler(374, e -> {
 		if (e.getComponentId() >= 5 && e.getComponentId() <= 9)
-			e.getPlayer().setNextTile(Tile.of(FightPitsViewingOrb.ORB_TELEPORTS[e.getComponentId() - 5]));
+			e.getPlayer().tele(Tile.of(FightPitsViewingOrb.ORB_TELEPORTS[e.getComponentId() - 5]));
 		else if (e.getComponentId() == 15)
 			e.getPlayer().stopAll();
 	});
 
-	private static class GameTask extends WorldTask {
+	private static class GameTask extends Task {
 
 		private int minutes;
 		private List<NPC> spawns;
@@ -87,7 +87,7 @@ public final class FightPits {
 								spawns.add(new FightPitsNPC(2739, Tile.of(GAME_TELEPORTS[Utils.random(GAME_TELEPORTS.length)], 3)));
 						else if (minutes == 10)
 							// alot hits appears on players
-							WorldTasks.schedule(new WorldTask() {
+							WorldTasks.schedule(new Task() {
 
 								@Override
 								public void run() {
@@ -157,7 +157,7 @@ public final class FightPits {
 	public static void enterArena(Player player) {
 		player.lock(5);
 		player.getControllerManager().startController(new FightPitsController());
-		player.setNextTile(Tile.of(GAME_TELEPORTS[Utils.random(GAME_TELEPORTS.length)], 3));
+		player.tele(Tile.of(GAME_TELEPORTS[Utils.random(GAME_TELEPORTS.length)], 3));
 		player.npcDialogue(THHAAR_MEJ_KAH, HeadE.T_CALM_TALK, "Please wait for the signal before fight.");
 		player.setCanPvp(true);
 		player.setCantTrade(true);
@@ -195,7 +195,7 @@ public final class FightPits {
 					player.lock(5);
 					player.addWalkSteps(4585, 5076, 5, false);
 				} else if (type == 2)
-					player.setNextTile(Tile.of(Tile.of(4592, 5073, 0), 2));
+					player.tele(Tile.of(Tile.of(4592, 5073, 0), 2));
 			}
 			refreshFoes();
 			checkPlayersAmmount();

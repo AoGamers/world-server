@@ -17,7 +17,7 @@
 package com.rs.game.content.world.areas.dungeons;
 
 import com.rs.game.content.skills.agility.Agility;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
@@ -51,7 +51,7 @@ public class TaverlyDungeon {
 		e.getPlayer().setRun(true);
 		e.getPlayer().addWalkSteps(isSouth ? 2881 : 2877, isSouth ? 9814 : 9812);
 		e.getPlayer().lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int ticks = 0;
 
 			@Override
@@ -73,7 +73,7 @@ public class TaverlyDungeon {
 	});
 
 	public static ObjectClickHandler handleEntrance = new ObjectClickHandler(new Object[] { 66991, 66992 }, e -> {
-		e.getPlayer().setNextTile(e.getObjectId() == 66991 ? Tile.of(2885, 9795, 0) : Tile.of(2885, 3395, 0));
+		e.getPlayer().tele(e.getObjectId() == 66991 ? Tile.of(2885, 9795, 0) : Tile.of(2885, 3395, 0));
 	});
 
 }

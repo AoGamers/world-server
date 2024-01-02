@@ -21,7 +21,7 @@ import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
@@ -60,7 +60,7 @@ public class GiantMole extends NPC {
 		if (player != null)
 			player.getInterfaceManager().sendOverlay(226);
 		final Tile middle = getMiddleTile();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			@Override
 			public void run() {
 				if (player != null)
@@ -77,7 +77,7 @@ public class GiantMole extends NPC {
 				World.sendSpotAnim(Tile.of(middle.getX() + 1, middle.getY() + 1, middle.getPlane()), new SpotAnim(571));
 				World.sendSpotAnim(Tile.of(middle.getX() - 1, middle.getY(), middle.getPlane()), new SpotAnim(571));
 				World.sendSpotAnim(Tile.of(middle.getX() + 1, middle.getY(), middle.getPlane()), new SpotAnim(571));
-				setNextTile(Tile.of(COORDS[Utils.random(COORDS.length)]));
+				tele(Tile.of(COORDS[Utils.random(COORDS.length)]));
 				setNextAnimation(new Animation(3315));
 
 			}

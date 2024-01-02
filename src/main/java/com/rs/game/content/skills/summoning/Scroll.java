@@ -23,13 +23,14 @@ import com.rs.game.content.Effect;
 import com.rs.game.content.combat.PlayerCombat;
 import com.rs.game.content.minigames.creations.Score;
 import com.rs.game.content.minigames.creations.StealingCreationController;
-import com.rs.game.content.skills.crafting.Jewelry;
+import com.rs.game.content.skills.crafting.JewelryCraftingKt;
 import com.rs.game.content.skills.dungeoneering.FamiliarSpecs;
 import com.rs.game.content.skills.farming.FarmPatch;
 import com.rs.game.content.skills.farming.PatchLocation;
 import com.rs.game.content.skills.farming.PatchType;
 import com.rs.game.content.skills.farming.ProduceType;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.runecrafting.Runecrafting;
 import com.rs.game.content.skills.summoning.Summoning.ScrollTarget;
 import com.rs.game.content.skills.summoning.combat.impl.BarkerToad;
@@ -151,7 +152,7 @@ public enum Scroll {
 			familiar.freeze(3);
 			familiar.sync(8040, 1440);
 			delayHit(familiar, 2, target, getMeleeHit(familiar, getMaxHit(familiar, 90, AttackStyle.MELEE, target)), () -> {
-				familiar.setNextTile(target.getNearestTeleTile(familiar));
+				familiar.tele(target.getNearestTeleTile(familiar));
 				familiar.sync(8041, 1442);
 			});
 			return true;
@@ -285,7 +286,7 @@ public enum Scroll {
 		@Override
 		public boolean object(Player owner, Familiar familiar, GameObject object) {
 			TreeType type = TreeType.forObject(owner, object);
-			if (type == null || !object.getDefinitions().containsOption(0, "Chop down")) {
+			if (type == null || (!object.getDefinitions().containsOption(0, "Chop down") && !object.getDefinitions().containsOption(0, "Cut down"))) {
 				owner.sendMessage("You can't chop that down.");
 				return false;
 			}
@@ -303,15 +304,16 @@ public enum Scroll {
 	CALL_TO_ARMS(12443, ScrollTarget.CLICK, "Teleports the player to the landers at Pest Control.", 0.7, 3) {
 		@Override
 		public boolean use(Player player, Familiar familiar) {
-			if (!Magic.sendTeleportSpell(player, -1, -1, 1503, 1502, 0, 0.0, Tile.of(2662, 2654, 0), 1, true, 1, null))
-				return false;
-			familiar.sync(switch(familiar.getPouch()) {
-			default -> 8097;
-			case VOID_SPINNER -> 8181;
-			case VOID_TORCHER -> 8243;
-			case VOID_SHIFTER -> 8139;
-			}, 1506);
-			return true;
+			Magic.sendTeleportSpell(player, -1, -1, 1503, 1502, 0, 0.0, Tile.of(2662, 2654, 0), 1, true, TeleType.MAGIC, () -> {
+				familiar.decrementScroll();
+				familiar.sync(switch(familiar.getPouch()) {
+					default -> 8097;
+					case VOID_SPINNER -> 8181;
+					case VOID_TORCHER -> 8243;
+					case VOID_SHIFTER -> 8139;
+				}, 1506);
+			}, null);
+			return false;
 		}
 	},
 	BRONZE_BULL(12461, ScrollTarget.COMBAT, "Fires a magic based attack at the opponent hitting for up to 80 damage.", 3.6, 6) {
@@ -402,11 +404,11 @@ public enum Scroll {
 	IMMENSE_HEAT(12829, ScrollTarget.ITEM, "Allows the player to craft a single peice of jewelry without a furnace.", 2.3, 6) {
 		@Override
 		public boolean item(Player owner, Familiar familiar, Item item) {
-			if (item.getId() != Jewelry.GOLD_BAR) {
+			if (item.getId() != JewelryCraftingKt.GOLD_BAR) {
 				owner.sendMessage("This must be cast on a gold bar.");
 				return false;
 			}
-			Jewelry.openJewelryInterface(owner, true);
+			JewelryCraftingKt.openInterface(owner, true);
 			return false;
 		}
 	},
@@ -504,7 +506,7 @@ public enum Scroll {
 				return false;
 			familiar.freeze(2);
 			delayHit(familiar, 0, target, getMeleeHit(familiar, getMaxHit(familiar, 224, AttackStyle.MELEE, target)), () -> {
-				familiar.setNextTile(target.getNearestTeleTile(familiar));
+				familiar.tele(target.getNearestTeleTile(familiar));
 				familiar.sync(7914, 1366);
 			});
 			return true;

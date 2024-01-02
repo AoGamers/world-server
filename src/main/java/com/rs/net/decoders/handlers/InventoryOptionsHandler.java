@@ -39,6 +39,7 @@ import com.rs.game.content.skills.herblore.CoconutCracking;
 import com.rs.game.content.skills.herblore.HerbCleaning;
 import com.rs.game.content.skills.magic.Lunars;
 import com.rs.game.content.skills.magic.Magic;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.prayer.Burying.Bone;
 import com.rs.game.content.skills.prayer.PrayerBooks;
 import com.rs.game.content.skills.runecrafting.Runecrafting;
@@ -51,7 +52,7 @@ import com.rs.game.content.world.unorganized_dialogue.LeatherCraftingD;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.*;
@@ -314,7 +315,7 @@ public class InventoryOptionsHandler {
 			final int flowerId = flower;
 			World.spawnObjectTemporary(flowerObject, Ticks.fromSeconds(45));
 			player.lock();
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				int step;
 
 				@Override
@@ -395,7 +396,7 @@ public class InventoryOptionsHandler {
 		if (ItemTeleports.transportationDialogue(player, item))
 			return;
 		if (itemId == 19967) {
-			if (Magic.sendTeleportSpell(player, 7082, 7084, 1229, 1229, 1, 0, Tile.of(2952, 2933, 0), 4, true, Magic.ITEM_TELEPORT, null))
+			if (Magic.sendTeleportSpell(player, 7082, 7084, 1229, 1229, 1, 0, Tile.of(2952, 2933, 0), 4, true, TeleType.ITEM, null))
 				player.getInventory().deleteItem(19967, 1);
 			return;
 		}

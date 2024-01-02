@@ -20,11 +20,12 @@ import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.map.instance.Instance;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -69,7 +70,7 @@ public class FightArenaFightCutsceneController extends Controller {
 		instance.copyMapAllPlanes(320, 391).thenAccept(e -> {
 			spawn = instance.getLocalTile(57, 39);
 
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				int tick;
 				NPC jeremy;
 				NPC ogre;
@@ -89,7 +90,7 @@ public class FightArenaFightCutsceneController extends Controller {
 						player.getInterfaceManager().setFadingInterface(115);
 					if (tick == 2) {// setup player
 						player.getPackets().setBlockMinimapState(2);
-						player.setNextTile(spawn);
+						player.tele(spawn);
 					}
 					if (tick == 3) {
 						addAllFightArenaNPCs();
@@ -141,8 +142,8 @@ public class FightArenaFightCutsceneController extends Controller {
 						player.getPackets().sendCameraLook(Tile.of(instance.getLocalX(44), instance.getLocalY(26), 0), 0);
 						player.faceNorth();
 						jeremy.faceNorth();
-						player.setNextTile(Tile.of(instance.getLocalX(43), instance.getLocalY(26), player.getPlane()));
-						jeremy.setNextTile(Tile.of(instance.getLocalX(42), instance.getLocalY(26), 0));
+						player.tele(Tile.of(instance.getLocalX(43), instance.getLocalY(26), player.getPlane()));
+						jeremy.tele(Tile.of(instance.getLocalX(42), instance.getLocalY(26), 0));
 					}
 					if(tick == 15) {
 						player.faceEntity(jeremy);
@@ -156,7 +157,7 @@ public class FightArenaFightCutsceneController extends Controller {
 						);
 					}
 					if(tick == 17) {
-						ogre.setNextTile(Tile.of(instance.getLocalX(42), instance.getLocalY(40), 0));
+						ogre.tele(Tile.of(instance.getLocalX(42), instance.getLocalY(40), 0));
 						ogre.setRandomWalk(false);
 						ogre.faceEntity(father);
 						father.faceEntity(ogre);
@@ -227,7 +228,7 @@ public class FightArenaFightCutsceneController extends Controller {
 					}
 					if(tick == 36) {
 						player.getPackets().setBlockMinimapState(2);
-						bouncer.setNextTile(Tile.of(instance.getLocalX(45), instance.getLocalY(34), 0));
+						bouncer.tele(Tile.of(instance.getLocalX(45), instance.getLocalY(34), 0));
 					}
 					if(tick == 38) {
 						player.getPackets().setBlockMinimapState(0);
@@ -280,7 +281,7 @@ public class FightArenaFightCutsceneController extends Controller {
 
 	public boolean processObjectClick1(GameObject object) {
 		if(object.getId() == 82 && canLeave) {
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				int tick;
 				@Override
 				public void run() {
@@ -289,7 +290,7 @@ public class FightArenaFightCutsceneController extends Controller {
 					}
 					if (tick == 2) {// setup player
 						player.getPackets().setBlockMinimapState(2);
-						player.setNextTile(locationOnVictory);
+						player.tele(locationOnVictory);
 						player.getQuestManager().setStage(Quest.FIGHT_ARENA, FightArena.RETURN_TO_LADY_SERVIL);
 					}
 					if(tick == 5) {
@@ -331,7 +332,7 @@ public class FightArenaFightCutsceneController extends Controller {
 		player.stopAll();
 		player.reset();
 		player.sendMessage("You have been defeated!");
-		player.setNextTile(locationOnFail);
+		player.tele(locationOnFail);
 		player.getVars().setVarBit(2569, 0);
 		forceClose();
 		return false;
@@ -339,7 +340,7 @@ public class FightArenaFightCutsceneController extends Controller {
 
 	@Override
 	public boolean login() {
-		player.setNextTile(locationOnFail);
+		player.tele(locationOnFail);
 		forceClose();
 		return false;
 	}
@@ -408,7 +409,7 @@ public class FightArenaFightCutsceneController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		forceClose();
 	}
 }

@@ -18,8 +18,10 @@ package com.rs.game.content.holidayevents.halloween.hw07;
 
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
+import com.rs.game.content.skills.magic.TeleType;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.player.Controller;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -43,7 +45,7 @@ public class Halloween2007Controller extends Controller {
 	@Override
 	public void start() {
 		player.startConversation(new Dialogue().addPlayer(HeadE.CONFUSED, "Well, I'm still in one peice. A good start.."));
-		player.setNextTile(Halloween2007.START_LOCATION);
+		player.tele(Halloween2007.START_LOCATION);
 	}
 
 	@Override
@@ -52,10 +54,10 @@ public class Halloween2007Controller extends Controller {
 			player.setNextAnimation(new Animation(1950));
 			player.lock();
 
-			WorldTasks.schedule(new WorldTask() {
+			WorldTasks.schedule(new Task() {
 				@Override
 				public void run() {
-					player.setNextTile(Tile.of(1698, 4822, 0));
+					player.tele(Tile.of(1698, 4822, 0));
 					player.setNextAnimation(new Animation(3640));
 					player.fadeScreen(() -> {
 						player.unlock();
@@ -76,7 +78,7 @@ public class Halloween2007Controller extends Controller {
 	public boolean sendDeath() {
 		player.lock(7);
 		player.stopAll();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int loop;
 
 			@Override
@@ -86,7 +88,7 @@ public class Halloween2007Controller extends Controller {
 				else if (loop == 1)
 					player.sendMessage("Oh dear, you have died.");
 				else if (loop == 3) {
-					player.setNextTile(player.getHw07Stage() < 10 ? Halloween2007.START_LOCATION : Tile.of(3211, 3424, 0));
+					player.tele(player.getHw07Stage() < 10 ? Halloween2007.START_LOCATION : Tile.of(3211, 3424, 0));
 					player.reset();
 					player.setNextAnimation(new Animation(-1));
 				} else if (loop == 4) {
@@ -117,7 +119,7 @@ public class Halloween2007Controller extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		removeItems();
 	}
 
@@ -133,19 +135,7 @@ public class Halloween2007Controller extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		player.sendMessage("A mysterious force prevents you from teleporting.");
-		return false;
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		player.sendMessage("A mysterious force prevents you from teleporting.");
-		return false;
-	}
-
-	@Override
-	public boolean processObjectTeleport(Tile toTile) {
+	public boolean processTeleport(Teleport tele) {
 		player.sendMessage("A mysterious force prevents you from teleporting.");
 		return false;
 	}

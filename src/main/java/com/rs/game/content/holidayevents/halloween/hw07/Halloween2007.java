@@ -24,7 +24,7 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
@@ -47,7 +47,7 @@ import java.util.Set;
 @PluginEventHandler
 public class Halloween2007 {
 
-	public static String STAGE_KEY = "hw2022";
+	public static String STAGE_KEY = "hw2024";
 	public static boolean ENABLED = false;
 
 	public static Tile START_LOCATION = Tile.of(1697, 4814, 0);
@@ -171,7 +171,7 @@ public class Halloween2007 {
 			e.getPlayer().getControllerManager().startController(new Halloween2007Controller());
 		Halloween2007Controller ctrl = (Halloween2007Controller) e.getPlayer().getControllerManager().getController();
 		e.getPlayer().lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int stage = 0;
 			@Override
 			public void run() {
@@ -434,7 +434,7 @@ public class Halloween2007 {
 			} else if (stage == 1)
 				e.getPlayer().setNextAnimation(new Animation(7274));
 			else if (stage == 9) {
-				e.getPlayer().setNextTile(e.getPlayer().transform(0, -1, 0));
+				e.getPlayer().tele(e.getPlayer().transform(0, -1, 0));
 				e.getPlayer().forceMove(Tile.of(1642, 4819, 0), 1, 60, () -> {
 					e.getPlayer().getPackets().sendResetCamera();
 					ctrl.setRodeSlide(true);
@@ -490,7 +490,7 @@ public class Halloween2007 {
 					handleDenyGargoyleEntry(e.getPlayer(), e.getObject());
 				} else
 					handleDenyGargoyleEntry(e.getPlayer(), e.getObject(), () -> {
-						e.getPlayer().setNextTile(Tile.of(1641, 4828, 0));
+						e.getPlayer().tele(Tile.of(1641, 4828, 0));
 						e.getPlayer().save(Halloween2007.STAGE_KEY, 8);
 						e.getPlayer().startConversation(new Dialogue()
 								.addPlayer(HeadE.CONFUSED, "Huh? What happened there?")
@@ -503,7 +503,7 @@ public class Halloween2007 {
 				handleDenyGargoyleEntry(e.getPlayer(), e.getObject());
 			} else
 				handleDenyGargoyleEntry(e.getPlayer(), e.getObject(), () -> {
-					e.getPlayer().setNextTile(Tile.of(1641, 4840, 0));
+					e.getPlayer().tele(Tile.of(1641, 4840, 0));
 					e.getPlayer().save(Halloween2007.STAGE_KEY, 9);
 					e.getPlayer().startConversation(new Dialogue()
 							.addNPC(8867, HeadE.CALM_TALK, "That is sufficient.")
@@ -554,7 +554,7 @@ public class Halloween2007 {
 					.addNPC(6389, HeadE.CAT_CALM_TALK2, "Who said you could come in here? See the Grim Reaper if you don't know where to go.")
 					.addPlayer(HeadE.NERVOUS, "Oops."));
 		player.lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int stage = 0;
 			@Override
 			public void run() {
@@ -599,7 +599,7 @@ public class Halloween2007 {
 	public static void passWeb(Player player, GameObject object) {
 		Tile toTile = object.getRotation() % 2 != 0 ? player.transform(player.getX() >= object.getX() ? -2 : 2, 0, 0) : player.transform(0, player.getY() >= object.getY() ? -2 : 2, 0);
 		player.lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int stage = 0;
 			@Override
 			public void run() {
@@ -617,7 +617,7 @@ public class Halloween2007 {
 
 	public static void failWeb(Player player, GameObject object) {
 		player.lock();
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			int stage = 0;
 			@Override
 			public void run() {

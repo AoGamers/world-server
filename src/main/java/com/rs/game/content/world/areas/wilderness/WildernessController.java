@@ -19,8 +19,10 @@ package com.rs.game.content.world.areas.wilderness;
 import com.rs.Settings;
 import com.rs.game.content.Effect;
 import com.rs.game.content.Potions;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.thieving.Thieving;
 import com.rs.game.model.entity.Entity;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
@@ -90,40 +92,13 @@ public class WildernessController extends Controller {
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		if (getWildLevel() > 20 || player.hasEffect(Effect.TELEBLOCK)) {
+	public boolean processTeleport(Teleport tele) {
+		if ((tele.type() != TeleType.OBJECT && getWildLevel() > (player.getTempAttribs().getB("glory") ? 30 : 20)) || player.hasEffect(Effect.TELEBLOCK)) {
 			player.sendMessage("A mysterious force prevents you from teleporting.");
 			return false;
 		}
 		return true;
 
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		if (player.hasEffect(Effect.TELEBLOCK)) {
-			player.sendMessage("A mysterious force prevents you from teleporting.");
-			return false;
-		}
-		if (getWildLevel() <= 30 && player.getTempAttribs().getB("glory")) {
-			player.getTempAttribs().setB("glory", false);
-			return true;
-		}
-		if (getWildLevel() > 20) {
-			player.getTempAttribs().setB("glory", false);
-			player.sendMessage("A mysterious force prevents you from teleporting.");
-			return false;
-		}
-		return true;
-	}
-
-	@Override
-	public boolean processObjectTeleport(Tile toTile) {
-		if (player.hasEffect(Effect.TELEBLOCK)) {
-			player.sendMessage("A mysterious force prevents you from teleporting."); //10
-			return false;
-		}
-		return true;
 	}
 
 	public void showSkull() {
@@ -194,9 +169,9 @@ public class WildernessController extends Controller {
 				player.getInventory().init();
 				player.reset();
 				if (player.get("customspawn") instanceof Tile spawn)
-					player.setNextTile(spawn);
+					player.tele(spawn);
 				else
-					player.setNextTile(Tile.of(Settings.getConfig().getPlayerRespawnTile()));
+					player.tele(Tile.of(Settings.getConfig().getPlayerRespawnTile()));
 				player.setNextAnimation(new Animation(-1));
 			} else if (loop == 4) {
 				removeIcon();

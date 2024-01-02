@@ -25,7 +25,7 @@ import com.rs.game.World;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Inventory;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
@@ -207,7 +207,7 @@ public class SirPrysinDemonSlayerD extends Conversation {
 						.addPlayer(HeadE.CALM_TALK, "Where does the wizard live?")
 						.addNPC(SIR_PRYSIN, HeadE.HAPPY_TALKING, "Wizard Traiborn?")
 						.addNPC(SIR_PRYSIN, HeadE.HAPPY_TALKING, "He is one of the wizards who lives in the tower on the little island just off the south coast. " +
-								"I believe his quarters are on the first floor of the tower.", ()->{
+								"I believe his quarters are on the third floor of the tower.", ()->{
 									p.getQuestManager().getAttribs(Quest.DEMON_SLAYER).setB("KEY2_WIZARD_LOC_KNOWN", true);
 								})
 						.addNext(()->{p.startConversation(new SirPrysinDemonSlayerD(p, KEY_LOCATIONS_OPTIONS).getStart());}));
@@ -257,11 +257,11 @@ public class SirPrysinDemonSlayerD extends Conversation {
 	private void cutscene(Player p) {
 		for(NPC npc : World.getNPCsInChunkRange(p.getChunkId(), 2))
 			if(npc.getId() == SIR_PRYSIN) {
-				npc.transformIntoNPC(266);
+				npc.setHidden(true);
 				NPC dummy = World.spawnNPC(SIR_PRYSIN, Tile.of(3204, 3470, 0), -1, false, true);
 				dummy.setRandomWalk(false);
 				dummy.faceTile(Tile.of(3204, 3469, 0));
-				WorldTasks.schedule(new WorldTask() {
+				WorldTasks.schedule(new Task() {
 					int tick;
 					Tile playerTile;
 					@Override
@@ -269,7 +269,7 @@ public class SirPrysinDemonSlayerD extends Conversation {
 						if (tick == 0) {
 							p.lock();
 							playerTile = p.getTile();
-							p.setNextTile(Tile.of(3204, 3471, 0));
+							p.tele(Tile.of(3204, 3471, 0));
 							p.faceEntity(dummy);
 						} else if (tick == 1) {
 							dummy.setNextAnimation(new Animation(2579));
@@ -295,9 +295,9 @@ public class SirPrysinDemonSlayerD extends Conversation {
 							p.getInventory().deleteItem(2400, 1);
 						} else if(tick == 9) {
 							p.unlock();
-							p.setNextTile(playerTile);
+							p.tele(playerTile);
 							dummy.finish();
-							npc.transformIntoNPC(SIR_PRYSIN);
+							npc.setHidden(false);
 							stop();
 						}
 						tick++;

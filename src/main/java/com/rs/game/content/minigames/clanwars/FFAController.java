@@ -19,6 +19,7 @@ package com.rs.game.content.minigames.clanwars;
 import com.rs.game.content.Effect;
 import com.rs.game.content.Potions;
 import com.rs.game.content.minigames.MinigameUtil;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
@@ -37,7 +38,7 @@ public final class FFAController extends Controller {
 		WorldTasks.delay(0, () -> {
 			e.getPlayer().getVars().setVarBit(5279, e.getObjectId() == 38699 ? 1 : 0);
 			if (e.getPlayer().getVars().getVarBit(5294 + e.getPlayer().getVars().getVarBit(5279)) == 1) {
-				e.getPlayer().setNextTile(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
+				e.getPlayer().tele(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
 				e.getPlayer().getControllerManager().startController(new FFAController(e.getPlayer().getVars().getVarBit(5279) == 1));
 				return;
 			}
@@ -53,7 +54,7 @@ public final class FFAController extends Controller {
 			if (e.getPlayer().getVars().getVarBit(5294 + e.getPlayer().getVars().getVarBit(5279)) == 1)
 				e.getPlayer().getVars().saveVarBit(5294 + e.getPlayer().getVars().getVarBit(5279), 1);
 			e.getPlayer().closeInterfaces();
-			e.getPlayer().setNextTile(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
+			e.getPlayer().tele(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
 			e.getPlayer().getControllerManager().startController(new FFAController(e.getPlayer().getVars().getVarBit(5279) == 1));
 		}
 		}
@@ -101,7 +102,7 @@ public final class FFAController extends Controller {
 					player.getInventory().init();
 				}
 				player.reset();
-				player.setNextTile(Tile.of(2993, 9679, 0));
+				player.tele(Tile.of(2993, 9679, 0));
 				remove(true);
 				player.setNextAnimation(new Animation(-1));
 			} else if (loop == 4) {
@@ -114,7 +115,7 @@ public final class FFAController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		remove(true);
 	}
 

@@ -35,10 +35,6 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import oshi.SystemInfo;
-import oshi.hardware.CentralProcessor;
-import oshi.hardware.GlobalMemory;
-import oshi.hardware.HardwareAbstractionLayer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -106,6 +102,27 @@ public final class WorldThread extends Thread {
 				WorldTasks.processTasks();
 				Logger.trace(WorldThread.class, "tick", "processTasks() - " + timerTask.stop());
 				OwnedObject.processAll();
+				Timer timerNpcProcTasks = new Timer().start();
+				for (NPC npc : World.getNPCs()) {
+					try {
+						if (npc == null || npc.hasFinished())
+							continue;
+						npc.processTasks();
+					} catch (Throwable e) {
+						Logger.handle(WorldThread.class, "run:npcProcessEntityTasks", "Error processing NPC: " + (npc == null ? "NULL NPC" : npc.getId()), e);
+					}
+				}
+				Logger.trace(WorldThread.class, "tick", "npcProcessEntityTasks() - " + timerNpcProcTasks.stop());
+
+				Timer timerPlayerProcTasks = new Timer().start();
+				for (Player player : World.getPlayers()) {
+					try {
+						player.processTasks();
+					} catch (Throwable e) {
+						Logger.handle(WorldThread.class, "run:playerProcessEntityTasks", "Error processing player: " + (player == null ? "NULL PLAYER" : player.getUsername()), e);
+					}
+				}
+				Logger.trace(WorldThread.class, "tick", "playerProcessEntityTasks() - " + timerPlayerProcTasks.stop());
 				NAMES.clear();
 				Timer timerNpcProc = new Timer().start();
 				for (NPC npc : World.getNPCs()) {
@@ -221,6 +238,7 @@ public final class WorldThread extends Thread {
 					content.append("NPC move: " + timerNpcMove.getFormattedTime() + "\n");
 					content.append("Entity update: " + timerEntityUpdate.getFormattedTime() + "\n");
 					content.append("Flush: " + timerFlushPackets.getFormattedTime() + "\n");
+					content.append("Lowest/Highest tick time: " + LOWEST_TICK + "/"+HIGHEST_TICK);
 					content.append("```\n");
 					content.append("JVM Stats:\n");
 					content.append("```\n");
@@ -238,24 +256,6 @@ public final class WorldThread extends Thread {
 					long jvmMaxMemory = (heapMemoryUsage.getMax() + nonHeapMemoryUsage.getMax()) / 1048576L; // in MB
 					double jvmMemUsedPerc = ((double) jvmTotalUsed / jvmMaxMemory) * 100.0;
 					content.append("Total JVM memory usage: " + Utils.formatLong(jvmTotalUsed) + "mb/" + Utils.formatLong(jvmMaxMemory) + "mb (" + Utils.formatDouble(jvmMemUsedPerc) + "%)\n");
-
-					/**
-					 * Garbage collection stats
-					 */
-					List<GarbageCollectorMXBean> gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
-					long[] lastCollectionTimes = new long[gcBeans.size()];
-					long[] lastCollectionCounts = new long[gcBeans.size()];
-					for (int i = 0; i < gcBeans.size(); i++) {
-						lastCollectionTimes[i] = gcBeans.get(i).getCollectionTime();
-						lastCollectionCounts[i] = gcBeans.get(i).getCollectionCount();
-					}
-					for (int i = 0; i < gcBeans.size(); i++) {
-						GarbageCollectorMXBean gcBean = gcBeans.get(i);
-						long newTime = gcBean.getCollectionTime();
-						long newCount = gcBean.getCollectionCount();
-						if (lastCollectionCounts[i] != newCount)
-							content.append("GC: " + gcBean.getName() + " last collection took " + Utils.formatLong(newTime - lastCollectionTimes[i]) + " ms\n");
-					}
 					content.append("```\n");
 					MultipartBody.Builder builder = new MultipartBody.Builder()
 							.setType(MultipartBody.FORM)

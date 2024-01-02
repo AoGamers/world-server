@@ -22,14 +22,15 @@ import com.rs.game.content.minigames.fightcaves.npcs.FightCavesNPC;
 import com.rs.game.content.minigames.fightcaves.npcs.TzKekCaves;
 import com.rs.game.content.minigames.fightcaves.npcs.TzTok_Jad;
 import com.rs.game.content.pets.Pets;
+import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.summoning.Summoning;
 import com.rs.game.map.instance.Instance;
+import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
-import com.rs.game.tasks.WorldTask;
+import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
-import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
 import com.rs.lib.net.ClientPacket;
@@ -130,7 +131,7 @@ public class FightCavesController extends Controller {
 		region = Instance.of(OUTSIDE, 8, 8);
 		region.copyMapAllPlanes(552, 640).thenAccept(e -> {
 			selectedMusic = MUSICS[Utils.random(MUSICS.length)];
-			player.setNextTile(!login ? getTile(46, 61) : getTile(32, 32));
+			player.tele(!login ? getTile(46, 61) : getTile(32, 32));
 			stage = Stages.RUNNING;
 			WorldTasks.delay(1, () -> {
 				if (!login) {
@@ -143,7 +144,7 @@ public class FightCavesController extends Controller {
 				playMusic();
 				player.unlock(); // unlocks player
 				if (!login) {
-					WorldTasks.schedule(new WorldTask() {
+					WorldTasks.schedule(new Task() {
 						@Override
 						public void run() {
 							if (stage != Stages.RUNNING)
@@ -231,7 +232,7 @@ public class FightCavesController extends Controller {
 	public void setWaveEvent() {
 		if (getCurrentWave() == 63)
 			player.npcDialogue(THHAAR_MEJ_JAL, HeadE.T_CALM_TALK, "Look out, here comes TzTok-Jad!");
-		WorldTasks.schedule(new WorldTask() {
+		WorldTasks.schedule(new Task() {
 			@Override
 			public void run() {
 				try {
@@ -248,9 +249,11 @@ public class FightCavesController extends Controller {
 	@Override
 	public void process() {
 		if (spawned) {
-			if (World.getNPCsInChunkRange(center.getChunkId(), 8).isEmpty()) {
-				spawned = false;
-				nextWave();
+			if (World.getServerTicks() % Ticks.fromSeconds(10) == 0) {
+				if (World.getNPCsInChunkRange(center.getChunkId(), 5).isEmpty()) {
+					spawned = false;
+					nextWave();
+				}
 			}
 		}
 	}
@@ -262,24 +265,12 @@ public class FightCavesController extends Controller {
 	}
 
 	@Override
-	public void magicTeleported(int type) {
+	public void onTeleported(TeleType type) {
 		exitCave(2);
 	}
 
 	@Override
-	public boolean processMagicTeleport(Tile toTile) {
-		player.sendMessage("A mysterious force prevents you from teleporting.");
-		return false;
-	}
-
-	@Override
-	public boolean processItemTeleport(Tile toTile) {
-		player.sendMessage("A mysterious force prevents you from teleporting.");
-		return false;
-	}
-
-	@Override
-	public boolean processObjectTeleport(Tile toTile) {
+	public boolean processTeleport(Teleport tele) {
 		player.sendMessage("A mysterious force prevents you from teleporting.");
 		return false;
 	}
@@ -296,7 +287,7 @@ public class FightCavesController extends Controller {
 			player.setForceMultiArea(false);
 			player.getInterfaceManager().removeOverlay();
 			if (type == 1 || type == 4) {
-				player.setNextTile(outside);
+				player.tele(outside);
 				if (type == 4) {
 					player.incrementCount("Fight Caves clears");
 					player.refreshFightKilnEntrance();

@@ -22,6 +22,7 @@ import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
 import com.rs.engine.quest.Quest;
 import com.rs.game.content.ItemConstants;
+import com.rs.game.content.Potions;
 import com.rs.game.content.achievements.AchievementSystemDialogue;
 import com.rs.game.content.achievements.SetReward;
 import com.rs.game.content.quests.RuneMysteries;
@@ -164,9 +165,9 @@ public class Lumbridge {
 
 	public static ObjectClickHandler handleCellarLadders = new ObjectClickHandler(new Object[] { 24360, 24365 }, e -> {
 		if (e.getObjectId() == 24360)
-			e.getPlayer().setNextTile(Tile.of(3190, 9834, 0));
+			e.getPlayer().tele(Tile.of(3190, 9834, 0));
 		else if (e.getObjectId() == 24365)
-			e.getPlayer().setNextTile(Tile.of(3188, 3433, 0));
+			e.getPlayer().tele(Tile.of(3188, 3433, 0));
 	});
 
 	public static ObjectClickHandler handleRFDChest = new ObjectClickHandler(new Object[] { 12308 }, e -> {
@@ -192,14 +193,6 @@ public class Lumbridge {
 			e.getPlayer().useLadder(Tile.of(3207, 3224, 2));
 	});
 
-	public static ObjectClickHandler handleThievesGuildExitLadder = new ObjectClickHandler(new Object[] { 52308 }, e -> {
-		e.getPlayer().useLadder(Tile.of(3223, 3269, 0));
-	});
-
-	public static ObjectClickHandler handleThievesGuildEntrance = new ObjectClickHandler(new Object[] { 52309 }, e -> {
-		e.getPlayer().useLadder(Tile.of(4762, 5891, 0));
-	});
-
 	public static ObjectClickHandler handleTakeFlour = new ObjectClickHandler(new Object[] { 36880 }, e -> {
 		if (e.getPlayer().getInventory().containsItem(1931, 1)) {
 			if (e.getPlayer().get(WHEAT_GRINDED) == Boolean.TRUE) {
@@ -213,6 +206,17 @@ public class Lumbridge {
 			}
 		} else
 			e.getPlayer().sendMessage("You need an empty pot to gather the flour.");
+	});
+
+	public static ItemOnObjectHandler handleTakeFlourWithPot = new ItemOnObjectHandler(new Object[] { 36880 }, new Object[] { 1931 }, e -> {
+			if (e.getPlayer().get(WHEAT_GRINDED) == Boolean.TRUE) {
+				e.getPlayer().save(WHEAT_GRINDED, Boolean.FALSE);
+				e.getPlayer().save(WHEAT_DEPOSITED, Boolean.FALSE);
+				e.getPlayer().sendMessage("You take the ground flour.");
+				e.getPlayer().setNextAnimation(new Animation(832));
+				e.getPlayer().getInventory().replace(1931, 1933);
+				updateWheat(e.getPlayer());
+			}
 	});
 
 	public static ObjectClickHandler handleWindmillLever = new ObjectClickHandler(new Object[] { 2718 }, e -> {
@@ -233,16 +237,16 @@ public class Lumbridge {
 
 	public static ObjectClickHandler handleStaircases1 = new ObjectClickHandler(new Object[] { 45481, 45482 }, e -> {
 		if (e.getObjectId() == 45481)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 1 ? 3 : e.getObject().getRotation() == 3 ? -3 : 0, e.getObject().getRotation() == 0 ? 3 : e.getObject().getRotation() == 2 ? -3 : 0, 1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 1 ? 3 : e.getObject().getRotation() == 3 ? -3 : 0, e.getObject().getRotation() == 0 ? 3 : e.getObject().getRotation() == 2 ? -3 : 0, 1));
 		else if (e.getObjectId() == 45482)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 1 ? -3 : e.getObject().getRotation() == 3 ? 3 : 0, e.getObject().getRotation() == 0 ? -3 : e.getObject().getRotation() == 2 ? 3 : 0, -1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 1 ? -3 : e.getObject().getRotation() == 3 ? 3 : 0, e.getObject().getRotation() == 0 ? -3 : e.getObject().getRotation() == 2 ? 3 : 0, -1));
 	});
 
 	public static ObjectClickHandler handleStaircases2 = new ObjectClickHandler(new Object[] { 45483, 45484 }, e -> {
 		if (e.getObjectId() == 45483)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 1 ? -3 : e.getObject().getRotation() == 3 ? 3 : 0, e.getObject().getRotation() == 0 ? -3 : e.getObject().getRotation() == 2 ? 3 : 0, 1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 1 ? -3 : e.getObject().getRotation() == 3 ? 3 : 0, e.getObject().getRotation() == 0 ? -3 : e.getObject().getRotation() == 2 ? 3 : 0, 1));
 		else if (e.getObjectId() == 45484)
-			e.getPlayer().setNextTile(e.getPlayer().transform(e.getObject().getRotation() == 1 ? 3 : e.getObject().getRotation() == 3 ? -3 : 0, e.getObject().getRotation() == 0 ? 3 : e.getObject().getRotation() == 2 ? -3 : 0, -1));
+			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 1 ? 3 : e.getObject().getRotation() == 3 ? -3 : 0, e.getObject().getRotation() == 0 ? 3 : e.getObject().getRotation() == 2 ? -3 : 0, -1));
 	});
 
 	public static ObjectClickHandler handleChurchLadders = new ObjectClickHandler(new Object[] { 36984, 36986 }, e -> {
