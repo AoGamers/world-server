@@ -35,9 +35,7 @@ import com.rs.game.model.entity.player.managers.InterfaceManager.Sub;
 import com.rs.game.model.item.ItemsContainer;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.WorldTasks;
-import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
-import com.rs.lib.game.SpotAnim;
 import com.rs.lib.game.Tile;
 import com.rs.lib.net.ClientPacket;
 import com.rs.lib.util.GenericAttribMap;
@@ -56,8 +54,7 @@ public final class Familiar extends NPC {
 	public static final int DEFAULT_ATTACK_SPEED = -1;
 	
 	private transient Player owner;
-	private transient boolean finished = false;
-	private transient int forageTicks = 0;
+    private transient int forageTicks = 0;
 	public transient int attackIndex;
 	
 	private int ticks;
@@ -66,8 +63,8 @@ public final class Familiar extends NPC {
 	private boolean trackDrain;
 	public int autoScrollMod = 0;
 	private ItemsContainer<Item> inv;
-	private Pouch pouch;
-	private GenericAttribMap attribs = new GenericAttribMap();
+	private final Pouch pouch;
+	private final GenericAttribMap attribs = new GenericAttribMap();
 
 	public Familiar(Player owner, Pouch pouch, Tile tile, int mapAreaNameHash, boolean canBeAttackFromOutOfArea) {
 		super(pouch.getBaseNpc(), tile, false);
@@ -331,10 +328,10 @@ public final class Familiar extends NPC {
 	}
 	
 	@Override
-	public void setTarget(Entity target) {
+	public void setCombatTarget(Entity target) {
 		if (isPassive())
 			return;
-		super.setTarget(target);
+		super.setCombatTarget(target);
 	}
 	
 	public boolean isPassive() {
@@ -432,8 +429,7 @@ public final class Familiar extends NPC {
 			return;
 		if (executeSpecial(target)) {
 			owner.getTempAttribs().setL("familiarSpecTimer", World.getServerTicks() + 4);
-			owner.setNextAnimation(new Animation(7660));
-			owner.setNextSpotAnim(new SpotAnim(1316));
+			owner.sync(7660, 1316);
 			drainSpec();
 			decrementScroll();
 		}
@@ -444,7 +440,7 @@ public final class Familiar extends NPC {
 		case CLICK:
 			return pouch.getScroll().use(owner, this);
 		case COMBAT:
-			if (getTarget() != null && pouch.getScroll().onCombatActivation(owner, this, getTarget()))
+			if (getCombatTarget() != null && pouch.getScroll().onCombatActivation(owner, this, getCombatTarget()))
 				setSpecActive(true);
 			return true;
 		case ITEM:
@@ -686,7 +682,7 @@ public final class Familiar extends NPC {
 		if (login)
 			sendMainConfigs();
 		else
-			removeTarget();
+			removeCombatTarget();
 		Tile teleTile = null;
 		teleTile = owner.getNearestTeleTile(getSize());
 		if (teleTile == null) {
@@ -705,7 +701,7 @@ public final class Familiar extends NPC {
 	public void dismiss() {
 		anim(pouch.getDespawnAnim());
 		kill();
-		WorldTasks.schedule(3, () -> finish());
+		WorldTasks.schedule(3, this::finish);
 	}
 	
 	public void kill() {
@@ -794,7 +790,8 @@ public final class Familiar extends NPC {
 	}
 
 	public boolean isFinished() {
-		return finished;
+        boolean finished = false;
+        return finished;
 	}
 
 	public GenericAttribMap getAttribs() {
@@ -812,7 +809,7 @@ public final class Familiar extends NPC {
 	public void interact() {
 		owner.startConversation(new Dialogue().addOptions("What would you like to do?", ops -> {
 			if (inv != null)
-				ops.add("Open Familiar Inventory", () -> openInventory());
+				ops.add("Open Familiar Inventory", this::openInventory);
 			if (pouch.getScroll().getTarget() == ScrollTarget.COMBAT)
 				ops.add("Setup scroll auto-fire", () -> owner.sendInputInteger("How many attacks would you like your familiar to automatically cast specials?<br>Setting this value to 0 will turn it off.", i -> {
 					autoScrollMod = i;
@@ -853,7 +850,7 @@ public final class Familiar extends NPC {
 				return false;
 			}
 		}
-		owner.getFamiliar().setTarget(target);
+		owner.getFamiliar().setCombatTarget(target);
 		return true;
 	}
 }

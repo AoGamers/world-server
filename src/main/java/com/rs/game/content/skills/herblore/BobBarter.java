@@ -18,7 +18,7 @@ package com.rs.game.content.skills.herblore;
 
 import com.rs.cache.loaders.ItemDefinitions;
 import com.rs.engine.dialogue.Dialogue;
-import com.rs.game.content.Potions.Potion;
+import com.rs.game.content.Potion;
 import com.rs.game.model.entity.player.Player;
 import com.rs.lib.game.Item;
 import com.rs.plugin.annotations.PluginEventHandler;
@@ -87,7 +87,7 @@ public class BobBarter {
 			//Logger.debug("doses " + doses);
 			if (potionDoses.containsKey(potionName)) {
 				ArrayList<Integer> temp = potionDoses.get(potionName);
-				doses += temp.get(0);
+				doses += temp.getFirst();
 			}
 			ArrayList<Integer> qtyAndIds = new ArrayList<>();
 			qtyAndIds.add(doses);
@@ -98,12 +98,12 @@ public class BobBarter {
 			p.getInventory().deleteItem(i);
 		}
 
-		if (potionDoses == new HashMap<String, ArrayList<Integer>>() || potionDoses.isEmpty())
+		if (potionDoses.equals(new HashMap<>()) || potionDoses.isEmpty())
 			p.sendMessage("You don't have any potions to decant.");
 		else
 			for (String name : potionDoses.keySet()) {
 				ArrayList<Integer> pot = potionDoses.get(name);
-				int totalDoses = pot.get(0);
+				int totalDoses = pot.getFirst();
 				int fullQty = totalDoses / dose;
 				int partialDose = totalDoses % dose;
 				//				Logger.debug("Making " + dose + " dose " + name + " potions.");

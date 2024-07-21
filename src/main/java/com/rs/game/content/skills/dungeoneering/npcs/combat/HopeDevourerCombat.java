@@ -88,7 +88,7 @@ public class HopeDevourerCombat extends CombatScript {
 			if (target instanceof Player player)
 				player.getSkills().set(Constants.DEFENSE, (int) (player.getSkills().getLevel(Constants.DEFENSE) - (damage * .05)));
 			delayHit(npc, 0, target, getMeleeHit(npc, damage));
-			WorldTasks.schedule(new Task() {
+			WorldTasks.scheduleLooping(new Task() {
 				private int ticks;
 				private Tile tile;
 
@@ -108,7 +108,7 @@ public class HopeDevourerCombat extends CombatScript {
 							if (distance == 0)
 								tile = Tile.of(target.getTile());
 						}
-						target.faceEntity(boss);
+						target.faceEntityTile(boss);
 						target.forceMove(tile, 10070, 1, 60);
 						stop();
 					}

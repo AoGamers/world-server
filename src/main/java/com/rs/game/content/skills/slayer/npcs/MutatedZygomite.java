@@ -43,7 +43,7 @@ public class MutatedZygomite extends ConditionalDeath {
 	}
 
 	private void resetNPC() {
-		setNextNPCTransformation(lvl74 ? 3344 : 3345);
+		transformIntoNPC(lvl74 ? 3344 : 3345);
 		tele(getRespawnTile());
 	}
 
@@ -56,7 +56,7 @@ public class MutatedZygomite extends ConditionalDeath {
 		if (npc.isCantInteract())
 			return;
 		player.setNextAnimation(new Animation(2988));
-		npc.setNextNPCTransformation(npc.getId() + 2);
+		npc.transformIntoNPC(npc.getId() + 2);
 		npc.setNextAnimation(new Animation(2982));
 		npc.setCantInteract(true);
 		npc.getCombat().setTarget(player);
@@ -70,5 +70,5 @@ public class MutatedZygomite extends ConditionalDeath {
 		}, 1);
 	}
 
-	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 3344, 3345, 3346, 3347 }, (npcId, tile) -> new MutatedZygomite(npcId, tile));
+	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 3344, 3345, 3346, 3347 }, MutatedZygomite::new);
 }

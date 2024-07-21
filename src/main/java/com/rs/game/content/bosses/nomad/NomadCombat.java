@@ -30,6 +30,7 @@ import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
 import com.rs.lib.game.Tile;
 import com.rs.utils.Ticks;
+import kotlin.Pair;
 
 public class NomadCombat extends CombatScript {
 
@@ -55,12 +56,12 @@ public class NomadCombat extends CombatScript {
 					nomad.heal(2500);
 					nomad.setHealed(true);
 					player.npcDialogue(nomad.getId(), HeadE.ANGRY, "You're thougher than I thought, time to even things up!");
-					player.voiceEffect(8019);
+					player.voiceEffect(8019, false);
 					return npc.getAttackSpeed();
 				}
 				nomad.setMeleeMode();
 				player.npcDialogue(nomad.getId(), HeadE.ANGRY, "Enough! THIS..ENDS..NOW!");
-				player.voiceEffect(7964);
+				player.voiceEffect(7964, false);
 			}
 		if (nomad.isMeleeMode()) {
 			int distanceX = target.getX() - npc.getX();
@@ -78,9 +79,9 @@ public class NomadCombat extends CombatScript {
 				nomad.setNextMovePerform();
 				npc.setNextAnimation(new Animation(12701));
 				player.npcDialogue(nomad.getId(), HeadE.ANGRY, "Let's make things interesting!");
-				player.voiceEffect(8039);
+				player.voiceEffect(8039, false);
 				final Tile middle = Tile.of(player.getTile());
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					int count;
 
 					@Override
@@ -136,7 +137,7 @@ public class NomadCombat extends CombatScript {
 				Tile throne = nomad.getThroneTile();
 				if (nomad.getX() != throne.getX() || nomad.getY() != throne.getY())
 					nomad.sendTeleport(nomad.getThroneTile());
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 
 					private boolean secondLoop;
 
@@ -146,12 +147,12 @@ public class NomadCombat extends CombatScript {
 							npc.setNextAnimation(new Animation(12698));
 							npc.setNextSpotAnim(new SpotAnim(2281));
 							player.npcDialogue(nomad.getId(), HeadE.ANGRY, "You cannot hide from my wrath!");
-							player.voiceEffect(7960);
+							player.voiceEffect(7960, false);
 							secondLoop = true;
 						} else {
 							if (npc.lineOfSightTo(target, false)) {
 								delayHit(npc, 2, target, getRegularHit(npc, 750));
-								World.sendProjectile(npc, target, 1658, 30, 30, 75, 25, 0, 0);
+								World.sendProjectile(npc, target, 1658, new Pair<>(30, 30), 75, 5, 0);
 							}
 							nomad.setCantFollowUnderCombat(false);
 							nomad.setNextMovePerform();
@@ -173,7 +174,7 @@ public class NomadCombat extends CombatScript {
 				nomad.sendTeleport(nomad.getThroneTile());
 				Magic.sendObjectTeleportSpell(player, false, throne.transform(1, -3, 0));
 				player.lock();
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					private boolean secondLoop;
 
 					@Override
@@ -183,14 +184,14 @@ public class NomadCombat extends CombatScript {
 							npc.setNextSpotAnim(new SpotAnim(2280));
 							player.freeze(Ticks.fromSeconds(17));
 							player.npcDialogue(nomad.getId(), HeadE.ANGRY, "Let's see how much punishment you can take!");
-							player.voiceEffect(8001);
+							player.voiceEffect(8001, false);
 							player.setNextFaceTile(Tile.of(player.getX(), player.getY() + 1, 0));
 							player.setNextSpotAnim(new SpotAnim(369));
 							player.unlock();
 							secondLoop = true;
 						} else {
 							delayHit(npc, 2, target, getRegularHit(npc, player.getMaxHitpoints() - 1));
-							World.sendProjectile(npc, target, 2280, 30, 30, 5, 25, 0, 0);
+							World.sendProjectile(npc, target, 2280, new Pair<>(30, 30), 5, 5, 0);
 							nomad.setCantFollowUnderCombat(false);
 							nomad.setNextMovePerform();
 							stop();
@@ -213,7 +214,7 @@ public class NomadCombat extends CombatScript {
 						target.setNextSpotAnim(new SpotAnim(85, 0, 100));
 					}
 				}, 1);
-			World.sendProjectile(npc, target, 1657, 30, 30, 75, 25, 0, 0);
+			World.sendProjectile(npc, target, 1657, new Pair<>(30, 30), 75, 5, 0);
 		}
 
 		return npc.getAttackSpeed();

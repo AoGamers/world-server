@@ -16,17 +16,17 @@
 //
 package com.rs.game.model.entity;
 
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
 import com.rs.utils.WorldUtil;
 
 public class ForceMovement {
-	private Tile start;
-	private Tile[] path;
-	private int startClientCycles;
-	private int speedClientCycles;
-	private int direction;
+	private final Tile start;
+	private final Tile[] path;
+	private final int startClientCycles;
+	private final int speedClientCycles;
+	private final int direction;
 
 	public ForceMovement(Tile start, Tile[] path, int startClientCycles, int speedClientCycles, int direction) {
 		this.start = start;

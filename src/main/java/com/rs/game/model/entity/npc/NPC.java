@@ -19,12 +19,15 @@ package com.rs.game.model.entity.npc;
 import com.rs.cache.loaders.Bonus;
 import com.rs.cache.loaders.NPCDefinitions;
 import com.rs.cache.loaders.interfaces.IFEvents;
-import com.rs.engine.thread.LowPriorityTaskExecutor;
+import com.rs.engine.pathfinder.*;
+import com.rs.engine.pathfinder.collision.CollisionStrategyType;
+import com.rs.engine.thread.AsyncTaskExecutor;
 import com.rs.game.World;
 import com.rs.game.content.Effect;
 import com.rs.game.content.bosses.godwars.GodwarsController;
-import com.rs.game.content.combat.PolyporeStaff;
+import com.rs.game.content.combat.PolyporeStaffKt;
 import com.rs.game.content.minigames.treasuretrails.TreasureTrailsManager;
+import com.rs.game.content.quests.elderkiln.TokkulZoKt;
 import com.rs.game.content.skills.hunter.BoxHunterType;
 import com.rs.game.content.skills.slayer.SlayerMonsters;
 import com.rs.game.content.skills.summoning.Familiar;
@@ -39,9 +42,9 @@ import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions;
 import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions.AggressiveType;
 import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions.AttackStyle;
 import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions.Skill;
-import com.rs.game.model.entity.pathing.*;
 import com.rs.game.model.entity.player.Bank;
 import com.rs.game.model.entity.player.Player;
+import com.rs.game.model.entity.player.managers.AuraManager;
 import com.rs.game.model.item.ItemsContainer;
 import com.rs.game.tasks.TaskInformation;
 import com.rs.game.tasks.WorldTasks;
@@ -50,8 +53,6 @@ import com.rs.lib.game.Animation;
 import com.rs.lib.game.GroundItem;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
-import com.rs.lib.net.packets.encoders.Sound;
-import com.rs.lib.net.packets.encoders.Sound.SoundType;
 import com.rs.lib.util.Logger;
 import com.rs.lib.util.Utils;
 import com.rs.plugin.PluginManager;
@@ -80,7 +81,7 @@ public class NPC extends Entity {
 	private boolean spawned;
 	private transient NPCCombat combat;
 	private transient boolean ignoreNPCClipping;
-	public Tile forceWalk;
+	private Tile forceWalk;
 	private int size;
 	private boolean hidden = false;
 	private transient boolean loadsUpdateZones = false;
@@ -97,6 +98,7 @@ public class NPC extends Entity {
 	private boolean noDistanceCheck;
 	private transient long timeLastSpawned;
 	private boolean canAggroNPCs;
+	private transient int attackRange;
 
 	// npc masks
 	private transient Transformation nextTransformation;
@@ -129,7 +131,7 @@ public class NPC extends Entity {
 		setHitpoints(getMaxHitpoints());
 		setFaceAngle(direction == null ? getRespawnDirection() : direction.getAngle());
 		setRandomWalk((getDefinitions().walkMask & 0x2) != 0 || forceRandomWalk(id));
-		setClipType((getDefinitions().walkMask & 0x4) != 0 ? ClipType.WATER : ClipType.NORMAL);
+		setCollisionStrategyType((getDefinitions().walkMask & 0x4) != 0 ? CollisionStrategyType.WATER : CollisionStrategyType.NORMAL);
 		size = getDefinitions().size;
 		if (getDefinitions().hasAttackOption())
 			setRandomWalk(true);
@@ -142,7 +144,8 @@ public class NPC extends Entity {
 			setRandomWalk(true);
 		if (getDefinitions().combatLevel >= 200)
 			setIgnoreDocile(true);
-		combatLevels = NPCCombatDefinitions.getDefs(id).getLevels();
+		combatLevels = getCombatDefinitions().getLevels();
+		attackRange = getCombatDefinitions().getAttackRange();
 		combat = new NPCCombat(this);
 		capDamage = -1;
 		lureDelay = 12000;
@@ -178,7 +181,7 @@ public class NPC extends Entity {
 	}
 
 	public void resetLevels() {
-		combatLevels = NPCCombatDefinitions.getDefs(id).getLevels();
+		combatLevels = getCombatDefinitions().getLevels();
 	}
 
 	public void transformIntoNPC(int id) {
@@ -186,14 +189,11 @@ public class NPC extends Entity {
 		nextTransformation = new Transformation(id);
 	}
 
-	public void setNextNPCTransformation(int id) {
-		transformIntoNPC(id);
-	}
-
 	public void setNPC(int id) {
 		this.id = id;
 		size = getDefinitions().size;
-		combatLevels = NPCCombatDefinitions.getDefs(id).getLevels();
+		combatLevels = getCombatDefinitions().getLevels();
+		attackRange = getCombatDefinitions().getAttackRange();
 	}
 
 	public void setLevels(Map<Skill, Integer> levels) {
@@ -234,6 +234,14 @@ public class NPC extends Entity {
 		return getCombatDefinitions().getHitpoints();
 	}
 
+	public int getAttackRange() {
+		return attackRange;
+	}
+
+	public void setAttackRange(int attackRange) {
+		this.attackRange = attackRange;
+	}
+
 	public int getId() {
 		return id;
 	}
@@ -262,7 +270,7 @@ public class NPC extends Entity {
 		if (getTickCounter() % 100 == 0)
 			restoreTick();
 		if (!combat.process() && routeEvent == null) {
-			if (!isForceWalking() && !cantInteract && !checkAggressivity() && !hasEffect(Effect.FREEZE)) {
+			if (getTickCounter() % 3 == 0 && !isForceWalking() && !cantInteract && !checkAggressivity() && !hasEffect(Effect.FREEZE)) {
 				if (!hasWalkSteps() && shouldRandomWalk()) {
 					boolean can = Math.random() > 0.9;
 					if (can) {
@@ -273,9 +281,9 @@ public class NPC extends Entity {
 						if (Utils.random(2) == 0)
 							moveY = -moveY;
 						resetWalkSteps();
-						DumbRouteFinder.addDumbPathfinderSteps(this, respawnTile.transform(moveX, moveY, 0), getDefinitions().hasAttackOption() ? 7 : 3, getClipType());
+						DumbRouteFinder.addDumbPathfinderSteps(this, respawnTile.transform(moveX, moveY, 0), getDefinitions().hasAttackOption() ? 7 : 3, getCollisionStrategy());
 						if (Utils.getDistance(this.getTile(), respawnTile) > 3 && !getDefinitions().hasAttackOption())
-							DumbRouteFinder.addDumbPathfinderSteps(this, respawnTile, getDefinitions().hasAttackOption() ? 7 : 3, getClipType());
+							DumbRouteFinder.addDumbPathfinderSteps(this, respawnTile, getDefinitions().hasAttackOption() ? 7 : 3, getCollisionStrategy());
 					}
 				}
 			}
@@ -284,14 +292,12 @@ public class NPC extends Entity {
 			if (!hasEffect(Effect.FREEZE))
 				if (getX() != forceWalk.getX() || getY() != forceWalk.getY()) {
 					if (!hasWalkSteps()) {
-						Route route = RouteFinder.find(getX(), getY(), getPlane(), getSize(), new FixedTileStrategy(forceWalk.getX(), forceWalk.getY()), true);
-						for (int i = route.getStepCount() - 1; i >= 0; i--)
-							if (!addWalkSteps(route.getBufferX()[i], route.getBufferY()[i], 25, true, true))
-								break;
-					}
-					if (!hasWalkSteps()) { // failing finding route
-						tele(Tile.of(forceWalk));
-						forceWalk = null; // so ofc reached forcewalk place
+						Route route = RouteFinderKt.routeEntityToTile(this, forceWalk, 25);
+						if (route.getFailed()) {
+							tele(Tile.of(forceWalk));
+							forceWalk = null;
+						} else
+							RouteFinderKt.walkRoute(this, route, true);
 					}
 				} else
 					// walked till forcewalk place
@@ -313,16 +319,11 @@ public class NPC extends Entity {
 	}
 
 	private static boolean forceRandomWalk(int npcId) {
-		switch (npcId) {
-		case 11226:
-			return true;
-		case 3341:
-		case 3342:
-		case 3343:
-			return true;
-		default:
-			return false;
-		}
+        return switch (npcId) {
+            case 11226 -> true;
+            case 3341, 3342, 3343 -> true;
+            default -> false;
+        };
 	}
 
 	@Override
@@ -341,8 +342,20 @@ public class NPC extends Entity {
 					hit.setDamage(0);
 					player.sendMessage("You do not have the slayer level required to damage this monster.");
 				}
-			if (hit.getDamage() > 0 && isTzhaarMonster() && TzHaar.depleteTokkulZo(player))
+			if (hit.getDamage() > 0 && isTzhaarMonster() && TokkulZoKt.depleteTokkulZo(player))
 				hit.setDamage((int) (hit.getDamage() * 1.1));
+		}
+		if (hit.getDamage() >= 200) {
+			Bonus bonus = switch(hit.getLook()) {
+				case MELEE_DAMAGE -> Bonus.ABSORB_MELEE;
+				case RANGE_DAMAGE -> Bonus.ABSORB_RANGE;
+				default -> Bonus.ABSORB_MAGIC;
+			};
+			int reducedDamage = hit.getDamage() * getBonus(bonus) / 100;
+			if (reducedDamage > 0) {
+				hit.setDamage(hit.getDamage() - reducedDamage);
+				hit.addSoaking(reducedDamage);
+			}
 		}
 		handlePostHit(hit);
 	}
@@ -354,8 +367,17 @@ public class NPC extends Entity {
 
 	@Override
 	public void handlePostHit(Hit hit) {
+		super.handlePostHit(hit);
 		if (capDamage != -1 && hit.getDamage() > capDamage)
 			hit.setDamage(capDamage);
+		if (hit.getLook() == HitLook.MAGIC_DAMAGE) {
+			if (hit.getSource() instanceof Player player && player.getAuraManager().isActivated(AuraManager.Aura.DARK_MAGIC) && hit.getData("darkMagicBleed") == null && Utils.random(100) < 13) {
+				for (int i = 1; i <= 4; i++) {
+					int finalI = i;
+					getTasks().schedule(2 * i, () -> applyHit(new Hit(hit.getSource(), 26 - finalI, hit.getLook()).setData("darkMagicBleed", true)));
+				}
+			}
+		}
 	}
 
 	@Override
@@ -364,7 +386,7 @@ public class NPC extends Entity {
 		getInteractionManager().forceStop();
 		setFaceAngle(getRespawnDirection());
 		combat.reset();
-		combatLevels = NPCCombatDefinitions.getDefs(id).getLevels(); // back to real bonuses
+		combatLevels = getCombatDefinitions().getLevels(); // back to real bonuses
 		forceWalk = null;
 	}
 
@@ -388,7 +410,7 @@ public class NPC extends Entity {
 	 */
 	public void finishAfterTicks(final int ticks) {
 		WorldTasks.scheduleTimer(tick -> {
-			if (tick == ticks) {
+			if (tick >= ticks) {
 				if (!hasFinished())
 					finish();
 				return false;
@@ -403,7 +425,7 @@ public class NPC extends Entity {
 			setTile(respawnTile);
 			finish();
 		}
-		respawnTask = WorldTasks.schedule(time < 0 ? getCombatDefinitions().getRespawnDelay() : time, () -> spawn());
+		respawnTask = WorldTasks.schedule(time < 0 ? getCombatDefinitions().getRespawnDelay() : time, this::spawn);
 	}
 
 	public void cancelRespawnTask() {
@@ -427,6 +449,8 @@ public class NPC extends Entity {
 		ChunkManager.updateChunks(this);
 		loadMapRegions();
 		checkMultiArea();
+		if (getCombatDefinitions().getRespawnAnim() != -1)
+			anim(getCombatDefinitions().getRespawnAnim());
 		onRespawn();
 	}
 
@@ -489,8 +513,7 @@ public class NPC extends Entity {
 		WorldTasks.scheduleTimer(loop -> {
 			if (loop == 0) {
 				setNextAnimation(new Animation(defs.getDeathEmote()));
-				if (source instanceof Player p)
-					soundEffect(getCombatDefinitions().getDeathSound(), 1);
+				soundEffect(source, getCombatDefinitions().getDeathSound(), true);
 			}
 			else if (loop >= defs.getDeathDelay()) {
 				if (source instanceof Player player)
@@ -552,12 +575,10 @@ public class NPC extends Entity {
 			if (charm != null)
 				for (Drop d : charm.getDrops())
 					sendDrop(killer, d.toItem());
-		} catch (Exception e) {
-			e.printStackTrace();
-		} catch (Error e) {
+		} catch (Exception | Error e) {
 			e.printStackTrace();
 		}
-	}
+    }
 
 	public void drop() {
 		try {
@@ -565,12 +586,10 @@ public class NPC extends Entity {
 			if (killer == null)
 				return;
 			drop(killer);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} catch (Error e) {
+		} catch (Exception | Error e) {
 			e.printStackTrace();
 		}
-	}
+    }
 
 	public static boolean yellDrop(int itemId) {
 		//Nex
@@ -584,51 +603,18 @@ public class NPC extends Entity {
 		//New GWD Items
 		if (itemId >= 24974 && itemId <= 25039)
 			return true;
-		switch (itemId) {
-		//KBD
-		case 25312:
-		case 25314:
-		case 25316:
-		case 25318:
-		case 11286:
-			//Slayer Drops
-		case 11732:
-		case 15486:
-		case 11235:
-		case 4151:
-		case 21369:
-			//Dagganoth Drops
-		case 6731:
-		case 6733:
-		case 6735:
-		case 6737:
-		case 6739:
-			//Glacors
-		case 21777:
-		case 21787:
-		case 21790:
-		case 21793:
-			//KQ
-		case 3140:
-			//Tormented Demons
-		case 14484:
-			//Original GWD
-		case 11702:
-		case 11704:
-		case 11706:
-		case 11708:
-		case 11718:
-		case 11722:
-		case 11720:
-		case 11724:
-		case 11726:
-		case 11728:
-		case 11716:
-		case 11730:
-			return true;
-		default:
-			return false;
-		}
+        return switch (itemId) {
+            //KBD
+            //Slayer Drops
+            //Dagganoth Drops
+            //Glacors
+            //KQ
+            //Tormented Demons
+            //Original GWD
+            case 25312, 25314, 25316, 25318, 11286, 11732, 15486, 11235, 4151, 21369, 6731, 6733, 6735, 6737, 6739, 21777, 21787, 21790, 21793, 3140, 14484, 11702, 11704, 11706, 11708, 11718, 11722, 11720, 11724, 11726, 11728, 11716, 11730 ->
+                    true;
+            default -> false;
+        };
 	}
 
 	public void sendDrop(Player player, Item item) {
@@ -696,7 +682,7 @@ public class NPC extends Entity {
 
 	public static void displayDropsFor(Player player, int npcId, int npcAmount) {
 		player.sendMessage("<col=FF0000><shad=000000>Calculating drops...");
-		LowPriorityTaskExecutor.execute(() -> {
+		AsyncTaskExecutor.execute(() -> {
 			long start = System.currentTimeMillis();
 			ItemsContainer<Item> dropCollection = getDropsFor(npcId, npcAmount, player.getEquipment().wearingRingOfWealth());
 			if (dropCollection == null) {
@@ -736,44 +722,44 @@ public class NPC extends Entity {
 		return maxHit;
 	}
 
-	public void lowerDefense(double multiplier, double maxDrain) {
-		lowerStat(Skill.DEFENSE, multiplier, maxDrain);
+	public int lowerDefense(double multiplier, double maxDrain) {
+		return lowerStat(Skill.DEFENSE, multiplier, maxDrain);
 	}
 
-	public void lowerDefense(int drain, double maxDrain) {
-		lowerStat(Skill.DEFENSE, drain, maxDrain);
+	public int lowerDefense(int drain, double maxDrain) {
+		return lowerStat(Skill.DEFENSE, drain, maxDrain);
 	}
 
-	public void lowerAttack(double multiplier, double maxDrain) {
-		lowerStat(Skill.ATTACK, multiplier, maxDrain);
+	public int lowerAttack(double multiplier, double maxDrain) {
+		return lowerStat(Skill.ATTACK, multiplier, maxDrain);
 	}
 
-	public void lowerAttack(int drain, double maxDrain) {
-		lowerStat(Skill.ATTACK, drain, maxDrain);
+	public int lowerAttack(int drain, double maxDrain) {
+		return lowerStat(Skill.ATTACK, drain, maxDrain);
 	}
 
-	public void lowerStrength(double multiplier, double maxDrain) {
-		lowerStat(Skill.STRENGTH, multiplier, maxDrain);
+	public int lowerStrength(double multiplier, double maxDrain) {
+		return lowerStat(Skill.STRENGTH, multiplier, maxDrain);
 	}
 
-	public void lowerStrength(int drain, double maxDrain) {
-		lowerStat(Skill.STRENGTH, drain, maxDrain);
+	public int lowerStrength(int drain, double maxDrain) {
+		return lowerStat(Skill.STRENGTH, drain, maxDrain);
 	}
 
-	public void lowerMagic(double multiplier, double maxDrain) {
-		lowerStat(Skill.MAGE, multiplier, maxDrain);
+	public int lowerMagic(double multiplier, double maxDrain) {
+		return lowerStat(Skill.MAGE, multiplier, maxDrain);
 	}
 
-	public void lowerMagic(int drain, double maxDrain) {
-		lowerStat(Skill.MAGE, drain, maxDrain);
+	public int lowerMagic(int drain, double maxDrain) {
+		return lowerStat(Skill.MAGE, drain, maxDrain);
 	}
 	
-	public void lowerRange(double multiplier, double maxDrain) {
-		lowerStat(Skill.RANGE, multiplier, maxDrain);
+	public int lowerRange(double multiplier, double maxDrain) {
+		return lowerStat(Skill.RANGE, multiplier, maxDrain);
 	}
 
-	public void lowerRange(int drain, double maxDrain) {
-		lowerStat(Skill.RANGE, drain, maxDrain);
+	public int lowerRange(int drain, double maxDrain) {
+		return lowerStat(Skill.RANGE, drain, maxDrain);
 	}
 	
 	public int getStat(Skill skill) {
@@ -793,19 +779,21 @@ public class NPC extends Entity {
 		combatLevels.put(skill, level);
 	}
 
-	public void lowerStat(Skill stat, double multiplier, double maxDrain) {
+	public int lowerStat(Skill stat, double multiplier, double maxDrain) {
 		if (combatLevels != null)
 			setStat(stat, Utils.clampI((int) (getStat(stat) - (getStat(stat) * multiplier)), (int) ((double) getCombatDefinitions().getLevels().get(stat) * maxDrain), getStat(stat)));
+		return getStat(stat);
 	}
 
-	public void lowerStat(Skill stat, int levelDrain, double maxDrain) {
+	public int lowerStat(Skill stat, int levelDrain, double maxDrain) {
 		if (combatLevels != null)
-			setStat(stat, Utils.clampI((int) getStat(stat) - levelDrain, (int) ((double) getCombatDefinitions().getLevels().get(stat) * maxDrain), getStat(stat)));
+			setStat(stat, Utils.clampI(getStat(stat) - levelDrain, (int) ((double) getCombatDefinitions().getLevels().get(stat) * maxDrain), getStat(stat)));
+		return getStat(stat);
 	}
 
 	public int getBonus(Bonus bonus) {
-		if (NPCCombatDefinitions.getDefs(id).hasOverriddenBonuses())
-			return NPCCombatDefinitions.getDefs(id).getBonus(bonus);
+		if (getCombatDefinitions().hasOverriddenBonuses())
+			return getCombatDefinitions().getBonus(bonus);
 		else
 			return NPCDefinitions.getDefs(id).getBonus(bonus);
 	}
@@ -884,18 +872,18 @@ public class NPC extends Entity {
 		return forceWalk != null;
 	}
 
-	public Entity getTarget() {
+	public Entity getCombatTarget() {
 		return combat.getTarget();
 	}
 
-	public void setTarget(Entity entity) {
+	public void setCombatTarget(Entity entity) {
 		if (isForceWalking()) // if force walk not gonna get target
 			return;
 		combat.setTarget(entity);
 		lastAttackedByTarget = System.currentTimeMillis();
 	}
 
-	public void removeTarget() {
+	public void removeCombatTarget() {
 		if (combat.getTarget() == null)
 			return;
 		combat.removeTarget();
@@ -945,30 +933,24 @@ public class NPC extends Entity {
 		possibleTarget.addAll(queryNearbyPlayersByTileRange(tileRadius, player -> {
 			if (isRevenant() && player.hasEffect(Effect.REV_AGGRO_IMMUNE))
 				return false;
-			if (player.isDead()
-				|| !canAggroPlayer(player)
-				|| (isNormallyPassive && !player.hasEffect(Effect.AGGRESSION_POTION))
-				|| (!player.hasEffect(Effect.AGGRESSION_POTION) && player.isDocile() && !ignoreDocile)
-				|| player.getAppearance().isHidden()
-				|| !WorldUtil.isInRange(getX(), getY(), getSize(), player.getX(), player.getY(), player.getSize(), getAggroDistance())
-				|| (!forceMultiAttacked && (!isAtMultiArea() || !player.isAtMultiArea()) && player.getAttackedBy() != this && (player.inCombat() || player.getFindTargetDelay() > System.currentTimeMillis()))
-				|| !lineOfSightTo(player, false)
-				|| (!player.hasEffect(Effect.AGGRESSION_POTION) && !forceAgressive && !WildernessController.isAtWild(this.getTile()) && player.getSkills().getCombatLevelWithSummoning() >= getCombatLevel() * 2))
-				return false;
-			return true;
-		}));
+            return !player.isDead()
+                    && canAggroPlayer(player)
+                    && (!isNormallyPassive || player.hasEffect(Effect.AGGRESSION_POTION))
+                    && (player.hasEffect(Effect.AGGRESSION_POTION) || !player.isDocile() || ignoreDocile)
+                    && !player.getAppearance().isHidden() && !player.isTrulyHidden()
+                    && WorldUtil.isInRange(getX(), getY(), getSize(), player.getX(), player.getY(), player.getSize(), getAggroDistance())
+                    && (forceMultiAttacked || (isAtMultiArea() && player.isAtMultiArea()) || player.getAttackedBy() == this || (!player.inCombat() && player.getFindTargetDelay() <= System.currentTimeMillis()))
+                    && lineOfSightTo(player, false)
+                    && (player.hasEffect(Effect.AGGRESSION_POTION) || forceAgressive || WildernessController.isAtWild(this.getTile()) || player.getSkills().getCombatLevelWithSummoning() < getCombatLevel() * 2);
+        }));
 		if (includeNpcs && !isNormallyPassive) {
-			possibleTarget.addAll(queryNearbyNPCsByTileRange(tileRadius, npc -> {
-				if (npc == this
-					|| npc.isDead()
-					|| !canAggroNPC(npc)
-					|| !WorldUtil.isInRange(getX(), getY(), getSize(), npc.getX(), npc.getY(), npc.getSize(), getAggroDistance())
-					|| !npc.getDefinitions().hasAttackOption()
-					|| (!forceMultiAttacked && (!isAtMultiArea() || !npc.isAtMultiArea()) && npc.getAttackedBy() != this && (npc.inCombat() || npc.getFindTargetDelay() > System.currentTimeMillis()))
-					|| !lineOfSightTo(npc, false))
-					return false;
-				return true;
-			}));
+			possibleTarget.addAll(queryNearbyNPCsByTileRange(tileRadius, npc -> npc != this
+                    && !npc.isDead()
+                    && canAggroNPC(npc)
+                    && WorldUtil.isInRange(getX(), getY(), getSize(), npc.getX(), npc.getY(), npc.getSize(), getAggroDistance())
+                    && npc.getDefinitions().hasAttackOption()
+                    && (forceMultiAttacked || (isAtMultiArea() && npc.isAtMultiArea()) || npc.getAttackedBy() == this || (!npc.inCombat() && npc.getFindTargetDelay() <= System.currentTimeMillis()))
+                    && lineOfSightTo(npc, false)));
 		}
 		return possibleTarget;
 	}
@@ -991,7 +973,7 @@ public class NPC extends Entity {
 		List<Entity> possibleTarget = getPossibleTargets();
 		if (!possibleTarget.isEmpty()) {
 			Entity target = possibleTarget.get(Utils.random(possibleTarget.size()));
-			setTarget(target);
+			setCombatTarget(target);
 			target.setAttackedBy(target);
 			//target.setFindTargetDelay(System.currentTimeMillis() + 10000); //TODO makes everything possible aggro to you
 			return true;
@@ -1039,7 +1021,7 @@ public class NPC extends Entity {
 
 	@Override
 	public String toString() {
-		return getDefinitions().getName() + " - " + id + " - " + getX() + " " + getY() + " " + getPlane();
+		return "["+getDefinitions().getName() + " - id: " + id + " @ (" + getX() + "," + getY() + "," + getPlane()+")]";
 	}
 
 	public boolean isForceAgressive() {
@@ -1199,93 +1181,16 @@ public class NPC extends Entity {
 	}
 
 	private boolean isTzhaarMonster() {
-		switch(getId()) {
-		case 2591:
-		case 2592:
-		case 2594:
-		case 2595:
-		case 2596:
-		case 2597:
-		case 2600:
-		case 2601:
-		case 2602:
-		case 2603:
-		case 2605:
-		case 2606:
-		case 2607:
-		case 2608:
-		case 2609:
-		case 2611:
-		case 2614:
-		case 2615:
-		case 2616:
-		case 2617:
-		case 2628:
-		case 2629:
-		case 2630:
-		case 2631:
-		case 2632:
-		case 2734:
-		case 2735:
-		case 2736:
-		case 2737:
-		case 2738:
-		case 2739:
-		case 2740:
-		case 2741:
-		case 2742:
-		case 2743:
-		case 2744:
-		case 2745:
-		case 2746:
-		case 7767:
-		case 7768:
-		case 7769:
-		case 7770:
-		case 7771:
-		case 7772:
-		case 7773:
-		case 15170:
-		case 15171:
-		case 15177:
-		case 15178:
-		case 15181:
-		case 15182:
-		case 15183:
-		case 15184:
-		case 15186:
-		case 15187:
-		case 15188:
-		case 15189:
-		case 15190:
-		case 15191:
-		case 15192:
-		case 15196:
-		case 15197:
-		case 15198:
-		case 15199:
-		case 15201:
-		case 15202:
-		case 15203:
-		case 15204:
-		case 15205:
-		case 15206:
-		case 15207:
-		case 15208:
-		case 15209:
-		case 15210:
-		case 15211:
-		case 15212:
-		case 15213:
-		case 15214:
-			return true;
-		}
-		return false;
-	}
+        return switch (getId()) {
+            case 2591, 2592, 2594, 2595, 2596, 2597, 2600, 2601, 2602, 2603, 2605, 2606, 2607, 2608, 2609, 2611, 2614, 2615, 2616, 2617, 2628, 2629, 2630, 2631, 2632, 2734, 2735, 2736, 2737, 2738, 2739, 2740, 2741, 2742, 2743, 2744, 2745, 2746, 7767, 7768, 7769, 7770, 7771, 7772, 7773, 15170, 15171, 15177, 15178, 15181, 15182, 15183, 15184, 15186, 15187, 15188, 15189, 15190, 15191, 15192, 15196, 15197, 15198, 15199, 15201, 15202, 15203, 15204, 15205, 15206, 15207, 15208, 15209, 15210, 15211, 15212, 15213, 15214 ->
+                    true;
+            default -> false;
+        };
+    }
 
 	public boolean canBeAttackedBy(Player player) {
 		if (getId() == 879 || getId() == 14578)
-			if (player.getEquipment().getWeaponId() != 2402 && player.getCombatDefinitions().getSpell() != null && !PolyporeStaff.isWielding(player)) {
+			if (player.getEquipment().getWeaponId() != 2402 && player.getCombatDefinitions().getSpell() != null && !PolyporeStaffKt.usingPolypore(player)) {
 				player.sendMessage("I'd better wield Silverlight first.");
 				return false;
 			}
@@ -1310,51 +1215,6 @@ public class NPC extends Entity {
 
 	public void setIgnoreNPCClipping(boolean ignoreNPCClipping) {
 		this.ignoreNPCClipping = ignoreNPCClipping;
-	}
-	
-	private Sound playSound(Sound sound) {
-		World.playSound(getTile(), sound);
-		return sound;
-	}
-	
-	private Sound playSound(int soundId, int delay, SoundType type) {
-		return playSound(new Sound(soundId, delay, type));
-	}
-	
-	public void jingle(int jingleId, int delay) {
-		playSound(jingleId, delay, SoundType.JINGLE);
-	}
-	
-	public void jingle(int jingleId) {
-		playSound(jingleId, 0, SoundType.JINGLE);
-	}
-	
-	public void musicTrack(int trackId, int delay, int volume) {
-		playSound(trackId, delay, SoundType.MUSIC).volume(volume);
-	}
-	
-	public void musicTrack(int trackId, int delay) {
-		playSound(trackId, delay, SoundType.MUSIC);
-	}
-	
-	public void musicTrack(int trackId) {
-		musicTrack(trackId, 100);
-	}
-	
-	public void soundEffect(int soundId, int delay) {
-		playSound(soundId, delay, SoundType.EFFECT).radius(10);
-	}
-	
-	public void soundEffect(int soundId) {
-		soundEffect(soundId, 0);
-	}
-	
-	public void voiceEffect(int voiceId, int delay) {
-		playSound(voiceId, delay, SoundType.VOICE);
-	}
-	
-	public void voiceEffect(int voiceId) {
-		voiceEffect(voiceId, 0);
 	}
 
 	public NPCBodyMeshModifier getBodyMeshModifier() {

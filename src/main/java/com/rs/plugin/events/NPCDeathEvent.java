@@ -26,10 +26,10 @@ import java.util.Map;
 
 public class NPCDeathEvent implements PluginEvent {
 
-	private static Map<Object, PluginHandler<? extends PluginEvent>> HANDLERS = new HashMap<>();
+	private static final Map<Object, PluginHandler<? extends PluginEvent>> HANDLERS = new HashMap<>();
 
-	private NPC npc;
-	private Entity killer;
+	private final NPC npc;
+	private final Entity killer;
 
 	public NPCDeathEvent(NPC npc, Entity killer) {
 		this.npc = npc;
@@ -42,6 +42,14 @@ public class NPCDeathEvent implements PluginEvent {
 
 	public Entity getKiller() {
 		return killer;
+	}
+
+	public Entity component1() {
+		return killer;
+	}
+
+	public NPC component2() {
+		return npc;
 	}
 
 	public boolean killedByPlayer() {

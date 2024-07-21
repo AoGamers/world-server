@@ -20,6 +20,7 @@ import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
+import com.rs.game.model.entity.player.Skills;
 import com.rs.lib.Constants;
 import com.rs.lib.game.SpotAnim;
 import com.rs.utils.Ticks;
@@ -124,7 +125,7 @@ public enum Effect {
 		public void tick(Entity entity, long tick) {
 			if(entity instanceof Player player && player.getDungManager().isInsideDungeon()) {
 				List<NPC> npcs = player.queryNearbyNPCsByTileRange(1, npc -> !npc.isDead() && npc.withinDistance(player, 1)
-						&& npc.getDefinitions().hasAttackOption() && player.getControllerManager().canHit(npc) && npc.getTarget() instanceof Player);
+						&& npc.getDefinitions().hasAttackOption() && player.getControllerManager().canHit(npc) && npc.getCombatTarget() instanceof Player);
 				for (NPC npc : npcs)
 					if (tick % Ticks.fromSeconds(10) == 0) {
 						int dmg = 40 * player.getSkills().getCombatLevelWithSummoning() / 138;
@@ -149,13 +150,13 @@ public enum Effect {
 		@Override
 		public void apply(Entity entity) {
 			if (entity instanceof Player player)
-				Potions.applyOverLoadEffect(player);
+				Potion.applyOverloadEffect(player);
 		}
 
 		@Override
 		public void tick(Entity entity, long tick) {
 			if (tick % 25 == 0 && entity instanceof Player player)
-				Potions.applyOverLoadEffect(player);
+				Potion.applyOverloadEffect(player);
 		}
 
 		@Override
@@ -184,37 +185,71 @@ public enum Effect {
 						player.getSkills().set(Constants.RANGE, realLevel);
 					player.heal(500);
 				}
-				player.soundEffect(2607);
+				player.soundEffect(2607, false);
 				player.sendMessage("<col=480000>The effects of overload have worn off and you feel normal again.");
 			}
 		}
 	},
+	OOG_BANDOS_POOL("Bandos pool") {
 
-	FARMERS_AFFINITY("Farmer's affinity"),
+	},
 
-	SHOOTING_STAR_MINING_BUFF("star sprite's power", false);
+	OOG_SALTWATER_POOL("saltwater spring") {
+		@Override
+		public void apply(Entity entity) {
+			if (entity instanceof Player player)
+				player.restoreRunEnergy(player.getSkills().getLevel(Skills.AGILITY));
+		}
+		@Override
+		public void tick(Entity entity, long tick) {
+			if (tick % Ticks.fromSeconds(3) == 0 && entity instanceof Player player)
+				player.restoreRunEnergy(player.getSkills().getLevel(Skills.AGILITY));
+		}
+	},
+	OOG_THERMAL_POOL("thermal bath") {
+		@Override
+		public void apply(Entity entity) {
+			if (entity instanceof Player player) {
+				player.refreshHitPoints();
+				player.addEffect(Effect.ANTIPOISON, Ticks.fromMinutes(15));
+			}
+		}
 
-	private boolean removeOnDeath = true;
-	private String name;
+		@Override
+		public void expire(Entity entity) {
+			if (entity instanceof Player player)
+				player.refreshHitPoints();
+		}
+	},
 
-	private Effect(String name, boolean removeOnDeath) {
+	FARMERS_AFFINITY("farmer's affinity"),
+
+	PATCH_BOMB("patch bomb"),
+
+	SHOOTING_STAR_MINING_BUFF("star sprite's power", false),
+	EVIL_TREE_WOODCUTTING_BUFF("evil tree magic", false);
+
+    private final String name;
+
+	Effect(String name, boolean removeOnDeath) {
 		this.name = name;
 	}
 
-	private Effect(String name) {
+	Effect(String name) {
 		this(name, true);
 	}
 
-	private Effect(boolean removeOnDeath) {
+	Effect(boolean removeOnDeath) {
 		this(null, removeOnDeath);
 	}
 
-	private Effect() {
+	Effect() {
 		this(null, true);
 	}
 
 	public boolean isRemoveOnDeath() {
-		return removeOnDeath;
+        boolean removeOnDeath = true;
+        return removeOnDeath;
 	}
 
 	public void apply(Entity player) {

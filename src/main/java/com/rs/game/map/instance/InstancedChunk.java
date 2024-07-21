@@ -17,16 +17,18 @@
 package com.rs.game.map.instance;
 
 import com.rs.cache.loaders.map.ClipFlag;
+import com.rs.game.World;
 import com.rs.game.map.Chunk;
 import com.rs.game.map.ChunkManager;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
-import com.rs.game.model.entity.pathing.WorldCollision;
+import com.rs.engine.pathfinder.Direction;
+import com.rs.engine.pathfinder.WorldCollision;
 import com.rs.game.model.object.GameObject;
 import com.rs.lib.game.Tile;
 import com.rs.lib.game.WorldObject;
 import com.rs.lib.util.MapUtils;
 import com.rs.lib.util.MapUtils.Structure;
+import com.rs.utils.Areas;
 import com.rs.utils.spawns.NPCSpawn;
 import com.rs.utils.spawns.NPCSpawns;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -35,14 +37,14 @@ import it.unimi.dsi.fastutil.objects.ObjectLists;
 import java.util.List;
 
 public class InstancedChunk extends Chunk {
-	private int fromChunkId;
-	private int fromChunkX;
-	private int fromChunkY;
-	private int fromPlane;
+	private final int fromChunkId;
+	private final int fromChunkX;
+	private final int fromChunkY;
+	private final int fromPlane;
 
 	private int rotation;
 
-	private List<NPC> npcSpawns = ObjectLists.synchronize(new ObjectArrayList<>());
+	private final List<NPC> npcSpawns = ObjectLists.synchronize(new ObjectArrayList<>());
 
 	public InstancedChunk(int fromChunkId, int toChunkId, int rotation) {
 		super(toChunkId);
@@ -63,9 +65,11 @@ public class InstancedChunk extends Chunk {
 
 	}
 
-	public void loadMap(boolean copyNpcs) {
+	public void loadMap(boolean copyNpcs, boolean copyMulti) {
 		Chunk realChunk = ChunkManager.getChunk(getFromChunkId(), true);
 		setMapDataLoaded();
+		if (copyMulti)
+			setMulticombat(Areas.withinArea("multi", realChunk.getId()));
 		for (int x = 0;x < 8;x++) {
 			for (int y = 0;y < 8;y++) {
 				Tile original = Tile.of(getOriginalBaseX()+x, getOriginalBaseY()+y, fromPlane);

@@ -20,9 +20,10 @@ import com.rs.engine.dialogue.Conversation;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
+import com.rs.engine.pathfinder.RouteFinderKt;
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
-import com.rs.game.content.achievements.AchievementSystemDialogue;
+import com.rs.game.content.achievements.AchievementSystemD;
 import com.rs.game.content.achievements.SetReward;
 import com.rs.game.content.quests.monksfriend.dialogues.BrotherCedricMonksFriendD;
 import com.rs.game.content.quests.monksfriend.dialogues.BrotherOmadMonksFriendD;
@@ -31,9 +32,7 @@ import com.rs.game.content.skills.thieving.Thieving;
 import com.rs.game.content.world.AgilityShortcuts;
 import com.rs.game.content.world.doors.Doors;
 import com.rs.game.ge.GE;
-import com.rs.game.model.entity.pathing.FixedTileStrategy;
-import com.rs.game.model.entity.pathing.RouteEvent;
-import com.rs.game.model.entity.pathing.RouteFinder;
+import com.rs.engine.pathfinder.RouteEvent;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.lib.Constants;
@@ -95,28 +94,22 @@ public class Ardougne  {
 				})));
 	});
 
-	public static NPCClickHandler handleBrotherOmad = new NPCClickHandler(new Object[] { 279 }, e -> {
-		e.getPlayer().startConversation(new BrotherOmadMonksFriendD(e.getPlayer()).getStart());
-	});
+	public static NPCClickHandler handleBrotherOmad = new NPCClickHandler(new Object[] { 279 }, e -> e.getPlayer().startConversation(new BrotherOmadMonksFriendD(e.getPlayer()).getStart()));
 
-	public static NPCClickHandler handleBrotherCedric = new NPCClickHandler(new Object[] { 280 }, e -> {
-		e.getPlayer().startConversation(new BrotherCedricMonksFriendD(e.getPlayer()).getStart());
-	});
+	public static NPCClickHandler handleBrotherCedric = new NPCClickHandler(new Object[] { 280 }, e -> e.getPlayer().startConversation(new BrotherCedricMonksFriendD(e.getPlayer()).getStart()));
 
-	public static NPCClickHandler handleTownCrier = new NPCClickHandler(new Object[] { 6138 }, e -> {
-		e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
-			{
-				addNPC(e.getNPCId(), HeadE.CHEERFUL, "Hello, what are you after?");
-				addOptions("What would you like to say?", new Options() {
-					@Override
-					public void create() {
-						option("About the Achievement System...", new AchievementSystemDialogue(player, e.getNPCId(), SetReward.ARDOUGNE_CLOAK).getStart());
-					}
-				});
-				create();
-			}
-		});
-	});
+	public static NPCClickHandler handleTownCrier = new NPCClickHandler(new Object[] { 6138 }, e -> e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
+        {
+            addNPC(e.getNPCId(), HeadE.CHEERFUL, "Hello, what are you after?");
+            addOptions("What would you like to say?", new Options() {
+                @Override
+                public void create() {
+                    option("About the Achievement System...", () -> new AchievementSystemD(player, e.getNPCId(), SetReward.ARDOUGNE_CLOAK));
+                }
+            });
+            create();
+        }
+    }));
 	
 	private static void bank(Player p) {
 		if(!p.getBank().checkPin())
@@ -196,40 +189,6 @@ public class Ardougne  {
 		}
 	});
 
-	public static NPCClickHandler handleDrOrbon = new NPCClickHandler(new Object[] { 290 }, e -> {
-		e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
-			{
-				addNPC(e.getNPCId(), HeadE.CHEERFUL, "Hello, what are you after?");
-				addOptions("What would you like to say?", new Options() {
-					@Override
-					public void create() {
-						option("About the Achievement System...", new AchievementSystemDialogue(player, e.getNPCId(), SetReward.ARDOUGNE_CLOAK).getStart());
-					}
-				});
-				create();
-			}
-		});
-	});
-
-	public static NPCClickHandler handleAleck = new NPCClickHandler(new Object[] { 5110 }, e -> {
-		if (e.getOpNum() == 1)
-			e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
-				{
-					addNPC(e.getNPCId(), HeadE.CHEERFUL, "Hello, what are you after?");
-					addOptions("What would you like to say?", new Options() {
-						@Override
-						public void create() {
-							option("Do you have anything for trade?", () -> ShopsHandler.openShop(player, "alecks_hunter_emporium"));
-							option("About the Achievement System...", new AchievementSystemDialogue(player, e.getNPCId(), SetReward.ARDOUGNE_CLOAK).getStart());
-						}
-					});
-					create();
-				}
-			});
-		else
-			ShopsHandler.openShop(e.getPlayer(), "alecks_hunter_emporium");
-	});
-
 	public static ObjectClickHandler handleZMIShortcut = new ObjectClickHandler(new Object[] { 26844, 26845 }, e -> {
 		if (e.getObject().getId() == 26844)
 			e.getPlayer().tele(Tile.of(3312, 4817, 0));
@@ -242,15 +201,11 @@ public class Ardougne  {
 		p.tele(Tile.of(2696, 9683, 0));
 	});
 
-	public static ObjectClickHandler handleClockTowerDungeonEntrances = new ObjectClickHandler(new Object[] { 1754, 1756 }, new Tile[] { Tile.of(2566, 3242, 0), Tile.of(2566, 3231, 0), Tile.of(2569, 3231, 0), Tile.of(2566, 3227, 0), Tile.of(2569, 3227, 0), Tile.of(2572, 3227, 0), Tile.of(2621, 3261, 0) }, e -> {
-		e.getPlayer().useLadder(Tile.of(e.getObject().getX(), e.getObject().getY()+6399, 0));
-	});
+	public static ObjectClickHandler handleClockTowerDungeonEntrances = new ObjectClickHandler(new Object[] { 1754, 1756 }, new Tile[] { Tile.of(2566, 3242, 0), Tile.of(2566, 3231, 0), Tile.of(2569, 3231, 0), Tile.of(2566, 3227, 0), Tile.of(2569, 3227, 0), Tile.of(2572, 3227, 0), Tile.of(2621, 3261, 0) }, e -> e.getPlayer().useLadder(Tile.of(e.getObject().getX(), e.getObject().getY()+6399, 0)));
 
-	public static ObjectClickHandler handleClockTowerDungeonExits = new ObjectClickHandler(new Object[] { 32015 }, new Tile[] {  Tile.of(2566, 9642, 0), Tile.of(2572, 9631, 0), Tile.of(2566, 9631, 0), Tile.of(2566, 9627, 0), Tile.of(2569, 9627, 0), Tile.of(2572, 9627, 0), Tile.of(2576, 9655, 0), Tile.of(2621, 9661, 0) }, e -> {
-		e.getPlayer().useLadder(Tile.of(e.getObject().getX(), e.getObject().getY()-6399, 0));
-	});
+	public static ObjectClickHandler handleClockTowerDungeonExits = new ObjectClickHandler(new Object[] { 32015 }, new Tile[] {  Tile.of(2566, 9642, 0), Tile.of(2572, 9631, 0), Tile.of(2566, 9631, 0), Tile.of(2566, 9627, 0), Tile.of(2569, 9627, 0), Tile.of(2572, 9627, 0), Tile.of(2576, 9655, 0), Tile.of(2621, 9661, 0) }, e -> e.getPlayer().useLadder(Tile.of(e.getObject().getX(), e.getObject().getY()-6399, 0)));
 
-	public static ObjectClickHandler handleArdougneSewerEntrance = new ObjectClickHandler(new Object[] { "Manhole" }, e -> {
+	public static ObjectClickHandler handleArdougneSewerEntrance = new ObjectClickHandler(new Object[] { 881, 882 }, e -> {
 		Player p = e.getPlayer();
 		GameObject obj = e.getObject();
 		if(e.getOption().equalsIgnoreCase("Open")) {
@@ -275,13 +230,7 @@ public class Ardougne  {
 		p.tele(Tile.of(2697, 3283, 0));
 	});
 
-	public static ObjectClickHandler handleClocktowerDungeonLadders = new ObjectClickHandler(new Object[] { 1755, 1756 }, e -> {
-		e.getPlayer().ladder(Tile.of(e.getPlayer().getX(), e.getPlayer().getY() + (e.getObjectId() == 1756 ? 6400 : -6400), 0));
-	});
-
-	public static ObjectClickHandler handleWestArdyPrisonStairs = new ObjectClickHandler(new Object[] { 2523, 2522 }, e -> {
-		e.getPlayer().useStairs(e.getPlayer().transform(0, e.getPlayer().getY() > 9000 ? -6400 : 6400, 0));
-	});
+	public static ObjectClickHandler handleClocktowerDungeonLadders = new ObjectClickHandler(new Object[] { 1755, 1756 }, e -> e.getPlayer().ladder(Tile.of(e.getPlayer().getX(), e.getPlayer().getY() + (e.getObjectId() == 1756 ? 6400 : -6400), 0)));
 
 	public static ObjectClickHandler handleLogBalanceShortcut = new ObjectClickHandler(new Object[] { 35997, 35999 }, e -> {
 		if (!Agility.hasLevel(e.getPlayer(), 33))
@@ -290,21 +239,23 @@ public class Ardougne  {
 	});
 
 	public static ObjectClickHandler handleEnterUndergroundPass = new ObjectClickHandler(new Object[] { 36000 }, e -> {
-		e.getPlayer().tele(Tile.of(2312, 3217, 0));
+		if (e.getPlayer().isQuestComplete(Quest.BIOHAZARD)) {
+			e.getPlayer().tele(Tile.of(2312, 3217, 0));
+		} else {
+			e.getPlayer().playerDialogue(HeadE.WORRIED, "I don't think I should go through here. I don't know where I'll end up.");
+		}
 	});
 
-	public static NPCClickHandler handleDarkMage = new NPCClickHandler(new Object[] { 1001 }, e -> {
-		e.getPlayer().sendOptionDialogue("Buy an Iban's staff for 100,000 gold?", ops -> {
-			ops.add("Yes, I'll pay 100,000 gold for a staff.", () -> {
-				if (e.getPlayer().getInventory().hasCoins(100000)) {
-					e.getPlayer().getInventory().removeCoins(100000);
-					e.getPlayer().getInventory().addItem(1409, 1);
-				} else
-					e.getPlayer().sendMessage("You don't have enough money.");
-			});
-			ops.add("No, that's too much.");
-		});
-	});
+	public static NPCClickHandler handleDarkMage = new NPCClickHandler(new Object[] { 1001 }, e -> e.getPlayer().sendOptionDialogue("Buy an Iban's staff for 100,000 gold?", ops -> {
+        ops.add("Yes, I'll pay 100,000 gold for a staff.", () -> {
+            if (e.getPlayer().getInventory().hasCoins(100000)) {
+                e.getPlayer().getInventory().removeCoins(100000);
+                e.getPlayer().getInventory().addItem(1409, 1);
+            } else
+                e.getPlayer().sendMessage("You don't have enough money.");
+        });
+        ops.add("No, that's too much.");
+    }));
 
 	public static NPCClickHandler handleSilkTrader = new NPCClickHandler(new Object[] { 574 }, e -> {
 		if (e.getOpNum() == 3) {
@@ -333,48 +284,36 @@ public class Ardougne  {
 			Doors.handleDoor(e.getPlayer(), e.getObject());
 	});
 
-	public static ObjectClickHandler handleEnterTempleOfIkov = new ObjectClickHandler(new Object[] { 1754 }, Tile.of(2677, 3405, 0), e -> {
-		e.getPlayer().useStairs(827, e.getPlayer().transform(0, 6400, 0), 1, 2);
-	});
+	public static ObjectClickHandler handleEnterTempleOfIkov = new ObjectClickHandler(new Object[] { 1754 }, Tile.of(2677, 3405, 0), e -> e.getPlayer().useStairs(827, e.getPlayer().transform(0, 6400, 0), 1, 2));
 
-	public static ObjectClickHandler handleExitTempleOfIkov = new ObjectClickHandler(new Object[] { 32015 }, Tile.of(2677, 9805, 0), e -> {
-		e.getPlayer().useStairs(828, e.getPlayer().transform(0, -6400, 0), 1, 2);
-	});
+	public static ObjectClickHandler handleExitTempleOfIkov = new ObjectClickHandler(new Object[] { 32015 }, Tile.of(2677, 9805, 0), e -> e.getPlayer().useStairs(828, e.getPlayer().transform(0, -6400, 0), 1, 2));
 
-	public static ObjectClickHandler handleEnterBootsofLightnessRoom = new ObjectClickHandler(new Object[] { 35121 }, Tile.of(2650, 9804, 0), e -> {
-		e.getPlayer().useStairs(-1, e.getPlayer().transform(-8, -41, 0), 1, 2);
-	});
+	public static ObjectClickHandler handleEnterBootsofLightnessRoom = new ObjectClickHandler(new Object[] { 35121 }, Tile.of(2650, 9804, 0), e -> e.getPlayer().useStairs(-1, e.getPlayer().transform(-8, -41, 0), 1, 2));
 
-	public static ObjectClickHandler handleExitBootsofLightnessRoom = new ObjectClickHandler(new Object[] { 96 }, Tile.of(2638, 9763, 0), e -> {
-		e.getPlayer().useStairs(-1, e.getPlayer().transform(8, 41, 0), 1, 2);
-	});
+	public static ObjectClickHandler handleExitBootsofLightnessRoom = new ObjectClickHandler(new Object[] { 96 }, Tile.of(2638, 9763, 0), e -> e.getPlayer().useStairs(-1, e.getPlayer().transform(8, 41, 0), 1, 2));
 
-	public static ObjectClickHandler handleLegendsGuildDoor = new ObjectClickHandler(new Object[] { "Legends Guild door" }, e -> {
-		e.getPlayer().handleOneWayDoor(e.getObject(), 1, 3);
-	});
+	public static ObjectClickHandler handleLegendsGuildDoor = new ObjectClickHandler(new Object[] { "Legends Guild door" }, e -> e.getPlayer().handleOneWayDoor(e.getObject(), 1, 3));
 
-	public static ObjectClickHandler handleEnterLegendsGuildBasement = new ObjectClickHandler(new Object[] { 41425 }, e -> {
-		e.getPlayer().tele(e.getPlayer().transform(-3, 6400, 0));
-	});
+	public static ObjectClickHandler handleEnterLegendsGuildBasement = new ObjectClickHandler(new Object[] { 41425 }, e -> e.getPlayer().tele(e.getPlayer().transform(-3, 6400, 0)));
 
-	public static ObjectClickHandler handleExitLegendsGuildBasement = new ObjectClickHandler(new Object[] { 32048 }, Tile.of(2717, 9773, 0), e -> {
-		e.getPlayer().tele(e.getPlayer().transform(3, -6400, 0));
-	});
+	public static ObjectClickHandler handleExitLegendsGuildBasement = new ObjectClickHandler(new Object[] { 32048 }, Tile.of(2717, 9773, 0), e -> e.getPlayer().tele(e.getPlayer().transform(3, -6400, 0)));
 
 	public static ObjectClickHandler handleMournerTrapdoor = new ObjectClickHandler(new Object[] { 8783 }, e -> {
-		e.getPlayer().ladder(Tile.of(2044, 4649, 0));
+		if (e.getPlayer().isQuestComplete(Quest.BIOHAZARD)) {
+			e.getPlayer().ladder(Tile.of(2044, 4649, 0));
+		} else {
+			e.getPlayer().sendMessage("The trapdoor is bolted on the other side.");
+		}
 	});
 
-	public static ObjectClickHandler handleMournerBasementLadder = new ObjectClickHandler(new Object[] { 8785 }, e -> {
-		e.getPlayer().ladder(Tile.of(2543, 3327, 0));
-	});
+	public static ObjectClickHandler handleMournerBasementLadder = new ObjectClickHandler(new Object[] { 8785 }, e -> { e.getPlayer().ladder(Tile.of(2543, 3327, 0)); });
 
 	public static ObjectClickHandler handleRangeGuildEnter = new ObjectClickHandler(false, new Object[] { 2514 }, e -> {
 		if (e.getPlayer().getSkills().getLevelForXp(Constants.RANGE) <= 40) {
 			e.getPlayer().sendMessage("You require 40 Ranged to enter the Ranging Guild.");
 			return;
 		}
-		if (RouteFinder.find(2659, 3437, 0, 1, new FixedTileStrategy(e.getPlayer().getX(), e.getPlayer().getY()), false).getStepCount() != -1)
+		if (RouteFinderKt.routeEntityToTile(e.getPlayer(), Tile.of(2659, 3437, 0)).getSuccess())
 			e.getPlayer().setRouteEvent(new RouteEvent(Tile.of(2659, 3437, 0), () -> {
 				Doors.handleDoor(e.getPlayer(), e.getObject());
 				e.getPlayer().addWalkSteps(Tile.of(2657, 3439, 0), 5, false);
@@ -445,21 +384,13 @@ public class Ardougne  {
 	});
 
 	//Carnillean
-	public static ObjectClickHandler handlecarnilleanstairsup = new ObjectClickHandler(new Object[] { 73418 }, e -> {
-		e.getPlayer().tele(Tile.of(2569, 3267, 1));
-	});
+	public static ObjectClickHandler handlecarnilleanstairsup = new ObjectClickHandler(new Object[] { 73418 }, e -> e.getPlayer().tele(Tile.of(2569, 3267, 1)));
 
-	public static ObjectClickHandler handlecarnilleanstairsdown = new ObjectClickHandler(new Object[] { 73419 }, e -> {
-		e.getPlayer().tele(Tile.of(2568, 3269, 0));
-	});
+	public static ObjectClickHandler handlecarnilleanstairsdown = new ObjectClickHandler(new Object[] { 73419 }, e -> e.getPlayer().tele(Tile.of(2568, 3269, 0)));
 
-	public static ObjectClickHandler handlecarnilleankitchenstairsup = new ObjectClickHandler(new Object[] { 34829 }, e -> {
-		e.getPlayer().tele(Tile.of(2569, 3268, 0));
-	});
+	public static ObjectClickHandler handlecarnilleankitchenstairsup = new ObjectClickHandler(new Object[] { 34829 }, e -> e.getPlayer().tele(Tile.of(2569, 3268, 0)));
 
-	public static ObjectClickHandler handlecarnilleankitchenstairsdown = new ObjectClickHandler(new Object[] { 36703 }, e -> {
-		e.getPlayer().tele(Tile.of(2569, 9668, 0));
-	});
+	public static ObjectClickHandler handlecarnilleankitchenstairsdown = new ObjectClickHandler(new Object[] { 36703 }, e -> e.getPlayer().tele(Tile.of(2569, 9668, 0)));
 	//Fight Arena
 	public static ObjectClickHandler handlefightarenastairs = new ObjectClickHandler(new Object[] { 41121, 41122 }, e -> {
 		if (e.getObjectId() == 41121)
@@ -490,29 +421,17 @@ public class Ardougne  {
 			e.getPlayer().tele(e.getPlayer().transform(e.getObject().getRotation() == 2 ? -0 : e.getObject().getRotation() == 3 ? -0 : 0, e.getObject().getRotation() == 4 ? -0 : e.getObject().getRotation() == 1 ? -0 : 0, -1));
 	});
 
-	public static ObjectClickHandler handlehadleystairsup = new ObjectClickHandler(new Object[] { 2536 }, e -> {
-		e.getPlayer().tele(Tile.of(2517, 3426, 1));
-	});
+	public static ObjectClickHandler handlehadleystairsup = new ObjectClickHandler(new Object[] { 2536 }, e -> e.getPlayer().tele(Tile.of(2517, 3426, 1)));
 
-	public static ObjectClickHandler handlehadleystairsdown = new ObjectClickHandler(new Object[] { 2535 }, e -> {
-		e.getPlayer().tele(Tile.of(2516, 3423, 0));
-	});
+	public static ObjectClickHandler handlehadleystairsdown = new ObjectClickHandler(new Object[] { 2535 }, e -> e.getPlayer().tele(Tile.of(2516, 3423, 0)));
 
 	//Observatory goblin kitchen dungeon-Note the stairs(25429) at (2335, 9350, 0) south of the ruin one is supposed to be a cutscene leading to the end of the quest but shares an ID
-	public static ObjectClickHandler handlegoblinladderup = new ObjectClickHandler(new Object[] { 25429 }, e -> {
-		e.getPlayer().tele(Tile.of(2458, 3185, 0));
-	});
+	public static ObjectClickHandler handlegoblinladderup = new ObjectClickHandler(new Object[] { 25429 }, e -> e.getPlayer().tele(Tile.of(2458, 3185, 0)));
 
-	public static ObjectClickHandler handlegoblinladderdown = new ObjectClickHandler(new Object[] { 25432 }, e -> {
-		e.getPlayer().tele(Tile.of(2335, 9394, 0));
-	});
+	public static ObjectClickHandler handlegoblinladderdown = new ObjectClickHandler(new Object[] { 25432 }, e -> e.getPlayer().tele(Tile.of(2335, 9394, 0)));
 
-	public static ObjectClickHandler handleObservatoryladderup = new ObjectClickHandler(new Object[] { 25431 }, e -> {
-		e.getPlayer().tele(Tile.of(2443, 3158, 1));
-	});
+	public static ObjectClickHandler handleObservatoryladderup = new ObjectClickHandler(new Object[] { 25431 }, e -> e.getPlayer().tele(Tile.of(2443, 3158, 1)));
 
-	public static ObjectClickHandler handleObservatoryladderdown = new ObjectClickHandler(new Object[] { 25437 }, e -> {
-		e.getPlayer().tele(Tile.of(2444, 3162, 0));
-	});
+	public static ObjectClickHandler handleObservatoryladderdown = new ObjectClickHandler(new Object[] { 25437 }, e -> e.getPlayer().tele(Tile.of(2444, 3162, 0)));
 
 }

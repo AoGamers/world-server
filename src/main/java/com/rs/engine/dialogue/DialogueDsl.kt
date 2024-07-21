@@ -1,5 +1,7 @@
-package com.rs.engine.dialogue;
+package com.rs.engine.dialogue
 
+import com.rs.engine.dialogue.statements.MakeXStatement
+import com.rs.engine.dialogue.statements.OptionStatement
 import com.rs.engine.dialogue.statements.Statement
 import com.rs.engine.quest.Quest
 import com.rs.game.model.entity.npc.NPC
@@ -11,126 +13,230 @@ import java.util.function.BooleanSupplier
 annotation class DialogueDsl
 
 @DialogueDsl
-open class DialogueBuilder() {
-    private val dialogue = Dialogue()
+open class DialogueBuilder(val stages: MutableMap<String, Dialogue> = mutableMapOf()) {
+    private var dialogue = Dialogue()
+    private var pendingLabel: String? = null
+    val start = dialogue
 
     fun player(expression: HeadE, text: String, extraFunctionality: Runnable? = null) {
-        dialogue.addPlayer(expression, text, extraFunctionality)
+        dialogue = dialogue.addPlayer(expression, text, extraFunctionality)
+        applyPendingLabel()
     }
 
     fun npc(id: Int, expression: HeadE, text: String, extraFunctionality: Runnable? = null) {
-        dialogue.addNPC(id, expression, text, extraFunctionality)
+        dialogue = dialogue.addNPC(id, expression, text, extraFunctionality)
+        applyPendingLabel()
     }
 
     fun item(itemId: Int, text: String, extraFunctionality: Runnable? = null) {
-        dialogue.addItem(itemId, text, extraFunctionality)
+        dialogue = dialogue.addItem(itemId, text, extraFunctionality)
+        applyPendingLabel()
     }
 
     fun simple(vararg text: String, extraFunctionality: Runnable? = null) {
-        if (extraFunctionality != null) {
+        dialogue = if (extraFunctionality != null) {
             dialogue.addSimple(text.first(), extraFunctionality)
         } else {
             dialogue.addSimple(*text)
         }
+        applyPendingLabel()
     }
 
     fun exec(extraFunctionality: Runnable) {
-        dialogue.addNext(extraFunctionality)
+        dialogue = dialogue.addNext(extraFunctionality)
+        applyPendingLabel()
     }
 
     fun addItemToInv(player: Player, item: Item, text: String) {
-        dialogue.addItemToInv(player, item, text)
+        dialogue = dialogue.addItemToInv(player, item, text)
+        applyPendingLabel()
+    }
+
+    fun addItemToInv(player: Player, itemId: Int, text: String) {
+        dialogue = dialogue.addItemToInv(player, Item(itemId, 1), text)
+        applyPendingLabel()
     }
 
     fun questStart(quest: Quest) {
-        dialogue.addQuestStart(quest)
+        dialogue = dialogue.addQuestStart(quest)
+        applyPendingLabel()
+    }
+
+    fun jump(next: Dialogue) {
+        dialogue = dialogue.addNext(next)
+        applyPendingLabel()
     }
 
     fun options(title: String? = null, setup: OptionsBuilder.() -> Unit) {
-        dialogue.addOptions(title) { options ->
-            OptionsBuilder().apply(setup).applyToOptions(options)
+        dialogue = dialogue.addOptions(title) { options ->
+            OptionsBuilder(stages).apply(setup).applyToOptions(options)
         }
+        applyPendingLabel()
+    }
+
+    fun cosmeticOptions(vararg options: String) {
+        dialogue = dialogue.addNext(OptionStatement("Select an Option", *options))
+        val nextChain = Dialogue()
+        options.forEach { _ -> dialogue.addNext(nextChain) }
+        applyPendingLabel()
+        dialogue = nextChain
     }
 
     fun makeX(itemId: Int, maxAmt: Int = 60) {
-        dialogue.addMakeX(itemId, maxAmt)
+        dialogue = dialogue.addMakeX(itemId, maxAmt)
+        applyPendingLabel()
     }
 
     fun makeX(itemIds: IntArray, maxAmt: Int = 60) {
-        dialogue.addMakeX(itemIds, maxAmt)
+        dialogue = dialogue.addMakeX(itemIds, maxAmt)
+        applyPendingLabel()
     }
 
-    fun gotoStage(stageName: String, conversation: Conversation) {
-        dialogue.addGotoStage(stageName, conversation)
+    fun makeX(makeXType: MakeXStatement.MakeXType, itemIds: IntArray, maxAmt: Int = 60) {
+        dialogue = dialogue.addMakeX(makeXType, itemIds, maxAmt)
+        applyPendingLabel()
+    }
+
+    fun makeX(makeXType: MakeXStatement.MakeXType, question: String, itemIds: IntArray, maxAmt: Int = 60) {
+        dialogue = dialogue.addMakeX(makeXType, question, itemIds, maxAmt)
+        applyPendingLabel()
+    }
+
+    fun label(stageName: String) {
+        pendingLabel = stageName
+    }
+
+    fun goto(stageName: String, conversation: Conversation? = null) {
+        dialogue = if (conversation != null)
+            dialogue.addGotoStage(stageName, conversation)
+        else
+            dialogue.addGotoStage(stageName, stages)
     }
 
     fun statementWithOptions(statement: Statement, vararg options: DialogueBuilder.() -> Unit) {
-        val optionDialogues = options.map { DialogueBuilder().apply(it).build() }
-        dialogue.addStatementWithOptions(statement, *optionDialogues.toTypedArray())
+        val optionDialogues = options.map { DialogueBuilder(stages).apply(it).build() }
+        dialogue = dialogue.addStatementWithOptions(statement, *optionDialogues.toTypedArray())
+        applyPendingLabel()
     }
 
     fun statementWithActions(statement: Statement, vararg events: Runnable) {
-        dialogue.addStatementWithActions(statement, *events)
+        dialogue = dialogue.addStatementWithActions(statement, *events)
+        applyPendingLabel()
     }
 
     fun item(itemId: Int, text: String) {
-        dialogue.addItem(itemId, text)
+        dialogue = dialogue.addItem(itemId, text)
+        applyPendingLabel()
     }
 
     fun simple(text: String) {
-        dialogue.addSimple(text)
+        dialogue = dialogue.addSimple(text)
+        applyPendingLabel()
     }
 
     fun npc(npc: NPC, expression: HeadE, text: String, extraFunctionality: Runnable? = null) {
-        dialogue.addNPC(npc, expression, text, extraFunctionality)
+        dialogue = dialogue.addNPC(npc, expression, text, extraFunctionality)
+        applyPendingLabel()
     }
 
     fun makeX(itemId: Int) {
-        dialogue.addMakeX(itemId)
+        dialogue = dialogue.addMakeX(itemId)
+        applyPendingLabel()
     }
 
     fun makeX(itemIds: IntArray) {
-        dialogue.addMakeX(itemIds)
+        dialogue = dialogue.addMakeX(itemIds)
+        applyPendingLabel()
     }
 
     fun nextIf(condition: BooleanSupplier, dialogueSetup: DialogueBuilder.() -> Unit) {
-        val nextDialogue = DialogueBuilder().apply(dialogueSetup).build()
-        dialogue.addNextIf(condition, nextDialogue)
+        val nextDialogue = DialogueBuilder(stages).apply(dialogueSetup).build()
+        dialogue = dialogue.addNextIf(condition, nextDialogue)
+        applyPendingLabel()
+    }
+
+    fun statement(nextDialogue: Dialogue) {
+        dialogue = dialogue.addNext(nextDialogue)
+        applyPendingLabel()
+    }
+
+    fun statement(statement: Statement) {
+        dialogue = dialogue.addNext(Dialogue(statement))
+        applyPendingLabel()
+    }
+
+    fun appendToCurrent(dialogue: Dialogue) {
+        dialogue.addNext(dialogue)
+    }
+
+    fun appendToCurrent(statement: Statement) {
+        dialogue.addNext(Dialogue(statement))
+    }
+
+    fun appendToCurrent(action: Runnable) {
+        dialogue.addNext(action)
     }
 
     fun stop() {
-        dialogue.addStop()
+        dialogue = dialogue.addStop()
     }
 
     fun setStage(stageName: String, conversation: Conversation) {
-        dialogue.setStage(stageName, conversation)
+        dialogue = dialogue.setStage(stageName, conversation)
     }
 
     fun voiceEffect(voiceId: Int) {
-        dialogue.voiceEffect(voiceId)
+        dialogue = dialogue.voiceEffect(voiceId)
     }
 
-    internal open fun build(): Dialogue = dialogue
+    private fun applyPendingLabel() {
+        if (pendingLabel != null) {
+            stages[pendingLabel!!] = dialogue
+            pendingLabel = null
+        }
+    }
+
+    internal open fun build(): Dialogue = start
 }
 
 @DialogueDsl
-class OptionsBuilder() {
-    private val optionBuilders = mutableListOf<Pair<String, OptionBuilder.() -> Unit>>()
+class OptionsBuilder(val stages: MutableMap<String, Dialogue>) {
+    private sealed class OptionOperation {
+        data class BuilderOp(val name: String, val setup: OptionBuilder.() -> Unit) : OptionOperation()
+        data class ExecOp(val name: String, val exec: Runnable) : OptionOperation()
+    }
 
-    fun option(name: String, setup: OptionBuilder.() -> Unit = {}) {
-        optionBuilders.add(name to setup)
+    private val operations = mutableListOf<OptionOperation>()
+
+    fun op(name: String, setup: OptionBuilder.() -> Unit = {}) {
+        operations.add(OptionOperation.BuilderOp(name, setup))
+    }
+
+    fun ops(vararg names: String, setup: OptionBuilder.() -> Unit = {}) {
+        names.forEach { name -> operations.add(OptionOperation.BuilderOp(name, setup)) }
+    }
+
+    fun opExec(name: String, exec: Runnable) {
+        operations.add(OptionOperation.ExecOp(name, exec))
     }
 
     fun applyToOptions(options: Options) {
-        optionBuilders.forEach { (name, setup) ->
-            val builder = OptionBuilder().apply(setup)
-            options.add(name, builder.build())
+        operations.forEach { operation ->
+            when (operation) {
+                is OptionOperation.BuilderOp -> {
+                    val builder = OptionBuilder(stages).apply(operation.setup)
+                    options.add(operation.name, builder.build())
+                }
+                is OptionOperation.ExecOp -> {
+                    options.add(operation.name, operation.exec)
+                }
+            }
         }
     }
 }
 
 @DialogueDsl
-class OptionBuilder : DialogueBuilder()
+class OptionBuilder(stages: MutableMap<String, Dialogue>) : DialogueBuilder(stages)
 
 fun dialogue(block: DialogueBuilder.() -> Unit): Dialogue {
     val builder = DialogueBuilder()
@@ -138,6 +244,18 @@ fun dialogue(block: DialogueBuilder.() -> Unit): Dialogue {
     return builder.build()
 }
 
+fun createDialogueSection(block: DialogueBuilder.() -> Unit): Dialogue {
+    val builder = DialogueBuilder()
+    builder.block()
+    return builder.build().head
+}
+
 fun Player.startConversation(block: DialogueBuilder.() -> Unit) {
     startConversation(DialogueBuilder().apply(block).build())
+}
+
+fun Player.sendOptionsDialogue(title: String? = null, setup: OptionsBuilder.() -> Unit) {
+    startConversation(DialogueBuilder().apply {
+        options(title, setup)
+    }.build())
 }

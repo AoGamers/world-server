@@ -55,10 +55,10 @@ public class Burying {
 		ACCURSED_ASHES(20266, 12.5),
 		INFERNAL_ASHES(20268, 62.5);
 
-		private int id;
-		private double experience;
+		private final int id;
+		private final double experience;
 
-		private static Map<Integer, Bone> bones = new HashMap<>();
+		private static final Map<Integer, Bone> bones = new HashMap<>();
 
 		static {
 			for (Bone bone : Bone.values())
@@ -92,7 +92,7 @@ public class Burying {
 			final Bone bone = Bone.forId(item.getId());
 			final ItemDefinitions itemDef = new ItemDefinitions(item.getId());
 			player.lock();
-			player.soundEffect(2738);
+			player.soundEffect(2738, true);
 
 			player.setNextAnimation(bone.name().contains("ASHES") ? SCATTER_ANIMATION : BURY_ANIMATION);
 			if (bone == Bone.ACCURSED_ASHES)
@@ -127,7 +127,7 @@ public class Burying {
 		if (itemDef.getName().toLowerCase().contains("dragon") || itemDef.getName().toLowerCase().contains("ourg"))
 			switch (player.getEquipment().getAmuletId()) {
 			case 19888:
-				prayerGain = 300;
+				prayerGain = 30;
 				break;
 			case 19887:
 			case 19886:
@@ -136,11 +136,11 @@ public class Burying {
 			default:
 				break;
 			}
-		else if (itemDef.getName().toLowerCase().contains("big"))
+		else if (itemDef.getName().toLowerCase().contains("big") || itemDef.getName().toLowerCase().contains("baby dragon"))
 			switch (player.getEquipment().getAmuletId()) {
 			case 19888:
 			case 19887:
-				prayerGain = 200;
+				prayerGain = 20;
 				break;
 			case 19886:
 				prayerGain = 10;
@@ -153,7 +153,7 @@ public class Burying {
 			case 19888:
 			case 19887:
 			case 19886:
-				prayerGain = 100;
+				prayerGain = 10;
 				break;
 			default:
 				break;

@@ -18,14 +18,14 @@ package com.rs.game.content.minigames.creations;
 
 import com.rs.game.content.Effect;
 import com.rs.game.content.combat.AttackStyle;
-import com.rs.game.content.combat.PlayerCombat;
+import com.rs.game.content.combat.PlayerCombatKt;
 import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.skills.summoning.Familiar;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
-import com.rs.game.model.entity.pathing.RouteEvent;
+import com.rs.engine.pathfinder.Direction;
+import com.rs.engine.pathfinder.RouteEvent;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Inventory;
@@ -42,8 +42,8 @@ import com.rs.utils.WorldUtil;
 
 public class StealingCreationController extends Controller {
 
-	private transient StealingCreationGameController game;
-	private boolean team;
+	private final transient StealingCreationGameController game;
+	private final boolean team;
 
 	public StealingCreationController(StealingCreationGameController game, boolean team) {
 		this.game = game;
@@ -293,7 +293,7 @@ public class StealingCreationController extends Controller {
 			player.sendMessage("You pick " + Utils.formatPlayerNameForDisplay(target.getDisplayName()) + "'s pocket.");
 			player.getTempAttribs().setL("PICKPOCK_DELAY", System.currentTimeMillis());
 			int level = Utils.getRandomInclusive(thievingLevel);
-			double ratio = level / (Utils.random(target.getSkills().getLevel(Constants.THIEVING)) + 6);
+			double ratio = (double) level / (Utils.random(target.getSkills().getLevel(Constants.THIEVING)) + 6);
 			if (!(Math.round(ratio * thievingLevel) > target.getSkills().getLevel(Constants.THIEVING)))
 				player.sendMessage("You fail to pickpocket " + Utils.formatPlayerNameForDisplay(target.getDisplayName()) + ".");
 			else {
@@ -417,7 +417,7 @@ public class StealingCreationController extends Controller {
 						} else
 							player.getPrayer().restorePrayer((int) (Math.floor(player.getSkills().getLevelForXp(Constants.PRAYER) * .5 + (superPotion ? 250 : 200))));
 						player.setNextAnimation(new Animation(829));
-						player.soundEffect(4580);
+						player.soundEffect(4580, false);
 					}
 					return false;
 				}
@@ -482,11 +482,11 @@ public class StealingCreationController extends Controller {
 			final int y = object.getTile().getChunkY() - (game.getArea().getMinY() >> 3);
 			final int weaponId = player.getEquipment().getWeaponId();
 			AttackStyle attackStyle = player.getCombatDefinitions().getAttackStyle();
-			final int combatDelay = PlayerCombat.getMeleeCombatDelay(player, weaponId);
+			final int combatDelay = PlayerCombatKt.getMeleeCombatDelay(weaponId);
 			if (player.getActionManager().getAction() != null || player.getActionManager().getActionDelay() > 0)
 				return false;
 			player.getActionManager().addActionDelay(combatDelay);
-			player.setNextAnimation(new Animation(PlayerCombat.getWeaponAttackEmote(weaponId, attackStyle)));
+			player.setNextAnimation(new Animation(PlayerCombatKt.getWeaponAttackEmote(weaponId, attackStyle)));
 			WorldTasks.schedule(new Task() {
 				@Override
 				public void run() {
@@ -629,7 +629,9 @@ public class StealingCreationController extends Controller {
 
 		SWARM(10618, 14152, Constants.HUNTER);
 
-		private int baseAnimation, baseItem, skillRequested;
+		private final int baseAnimation;
+        private final int baseItem;
+        private final int skillRequested;
 
 		private CreationChunks(int baseAnimation, int baseItem, int skillRequested) {
 			this.baseAnimation = baseAnimation;
@@ -687,7 +689,7 @@ public class StealingCreationController extends Controller {
 				otherPlayer.lock(3);
 			}
 			player.lock(2);
-			WorldTasks.schedule(new Task() {
+			WorldTasks.scheduleLooping(new Task() {
 				private int step = 0;
 
 				@Override
@@ -751,7 +753,7 @@ public class StealingCreationController extends Controller {
 					return false;
 				}
 				player.lock(2);
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					private int step = 0;
 
 					@Override
@@ -787,7 +789,7 @@ public class StealingCreationController extends Controller {
 			player.unlock();
 		final Player p = player;
 		final GameObject o = object;
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			private int step = 0;
 
 			@Override
@@ -817,7 +819,7 @@ public class StealingCreationController extends Controller {
 
 	@Override
 	public boolean sendDeath() {
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int loop;
 
 			@Override

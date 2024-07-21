@@ -65,9 +65,9 @@ public class Smelting extends PlayerAction {
 		ABYSSSALBANE(80, 50, new Item[]{new Item(21782)}, new Item(21786, 1), 12)
 		;
 
-		private static Map<Integer, SmeltingBar> bars = new HashMap<>();
-		private static Map<Integer, SmeltingBar> forOres = new HashMap<>();
-		private static Map<Integer, SmeltingBar> forBars = new HashMap<>();
+		private static final Map<Integer, SmeltingBar> bars = new HashMap<>();
+		private static final Map<Integer, SmeltingBar> forOres = new HashMap<>();
+		private static final Map<Integer, SmeltingBar> forBars = new HashMap<>();
 
 		public static SmeltingBar forId(int buttonId) {
 			return bars.get(buttonId);
@@ -115,11 +115,11 @@ public class Smelting extends PlayerAction {
 				}
 		}
 
-		private int levelRequired;
-		private double experience;
-		private Item[] itemsRequired;
-		private int buttonId;
-		private Item producedBar;
+		private final int levelRequired;
+		private final double experience;
+		private final Item[] itemsRequired;
+		private final int buttonId;
+		private final Item producedBar;
 
 		private SmeltingBar(int levelRequired, double experience, Item[] itemsRequired, Item producedBar, int buttonId) {
 			this.levelRequired = levelRequired;
@@ -246,7 +246,15 @@ public class Smelting extends PlayerAction {
 	);
 
 	public void smeltBar(Player player) {
-		for (Item required : bar.getItemsRequired())
+		Item[] requiredItems = bar.getItemsRequired();
+
+		// Previously, if the varrock armour effect triggers when you only have materials
+		// for a single bar, it will still create two. Validate player has all required
+		// materials prior to smelting.
+		if (!Smithing.hasRequiredItems(player, requiredItems))
+			return;
+
+		for (Item required : requiredItems)
 			if (required.getId() == 453 && player.getInventory().containsItem(18339) && player.getI("coalBag") > 0) {
 				int coalBag = player.getI("coalBag");
 				if (coalBag > required.getAmount())

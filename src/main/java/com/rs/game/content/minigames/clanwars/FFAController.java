@@ -17,8 +17,8 @@
 package com.rs.game.content.minigames.clanwars;
 
 import com.rs.game.content.Effect;
-import com.rs.game.content.Potions;
-import com.rs.game.content.minigames.MinigameUtil;
+import com.rs.game.content.Potion;
+import com.rs.game.content.minigames.MinigameUtilKt;
 import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.player.Controller;
@@ -26,6 +26,7 @@ import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Animation;
+import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
 import com.rs.plugin.annotations.PluginEventHandler;
 import com.rs.plugin.handlers.ButtonClickHandler;
@@ -34,17 +35,15 @@ import com.rs.plugin.handlers.ObjectClickHandler;
 @PluginEventHandler
 public final class FFAController extends Controller {
 	
-	public static ObjectClickHandler handleFFAPortals = new ObjectClickHandler(new Object[] { 38698, 38699 }, e -> {
-		WorldTasks.delay(0, () -> {
-			e.getPlayer().getVars().setVarBit(5279, e.getObjectId() == 38699 ? 1 : 0);
-			if (e.getPlayer().getVars().getVarBit(5294 + e.getPlayer().getVars().getVarBit(5279)) == 1) {
-				e.getPlayer().tele(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
-				e.getPlayer().getControllerManager().startController(new FFAController(e.getPlayer().getVars().getVarBit(5279) == 1));
-				return;
-			}
-			e.getPlayer().getInterfaceManager().sendInterface(793);
-		});
-	});
+	public static ObjectClickHandler handleFFAPortals = new ObjectClickHandler(new Object[] { 38698, 38699 }, e -> WorldTasks.delay(0, () -> {
+        e.getPlayer().getVars().setVarBit(5279, e.getObjectId() == 38699 ? 1 : 0);
+        if (e.getPlayer().getVars().getVarBit(5294 + e.getPlayer().getVars().getVarBit(5279)) == 1) {
+            e.getPlayer().tele(Tile.of(e.getPlayer().getVars().getVarBit(5279) == 1 ? 3007 : 2815, 5511, 0));
+            e.getPlayer().getControllerManager().startController(new FFAController(e.getPlayer().getVars().getVarBit(5279) == 1));
+            return;
+        }
+        e.getPlayer().getInterfaceManager().sendInterface(793);
+    }));
 	
 	public static ButtonClickHandler confirmOp = new ButtonClickHandler(793, e -> {
 		switch(e.getComponentId()) {
@@ -61,7 +60,7 @@ public final class FFAController extends Controller {
 	});
 
 	private transient boolean wasInArea;
-	private boolean dangerous;
+	private final boolean dangerous;
 	
 	public FFAController(boolean dangerous) {
 		this.dangerous = dangerous;
@@ -70,7 +69,7 @@ public final class FFAController extends Controller {
 	@Override
 	public void start() {
 		if (dangerous) {
-			Potions.checkOverloads(player);
+			Potion.checkPVPPotionBoosts(player);
 			player.addEffect(Effect.OVERLOAD_PVP_REDUCTION, Integer.MAX_VALUE);
 		}
 		sendInterfaces();
@@ -125,7 +124,8 @@ public final class FFAController extends Controller {
 	}
 
 	private void remove(boolean needRemove) {
-		MinigameUtil.checkAndDeleteFoodAndPotions(player);
+		MinigameUtilKt.checkAndDeleteFoodAndPotions(player);
+		player.reset();
 		if (needRemove)
 			removeController();
 		if (wasInArea)
@@ -142,7 +142,7 @@ public final class FFAController extends Controller {
 				player.useStairs(-1, Tile.of(2993, 9679, 0), 0, 1);
 				return false;
 			}
-			case 42023 -> MinigameUtil.giveFoodAndPotions(player);
+			case 42023 -> MinigameUtilKt.giveFoodAndPotions(player);
 		}
 		return true;
 	}
@@ -157,6 +157,12 @@ public final class FFAController extends Controller {
 			player.setCanPvp(false);
 			wasInArea = false;
 		}
+	}
+
+	@Override
+	public boolean canDepositItem(Item item) {
+		player.sendMessage("You can't bank items here.");
+		return false;
 	}
 
 	@Override

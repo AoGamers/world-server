@@ -33,14 +33,14 @@ import com.rs.plugin.handlers.NPCClickHandler;
 @PluginEventHandler
 public class Muncher07D extends Conversation {
 
-	private static Animation FLINCH = new Animation(6563);
-	private static Animation BITE = new Animation(6565);
+	private static final Animation FLINCH = new Animation(6563);
+	private static final Animation BITE = new Animation(6565);
 
 	public Muncher07D(Player player, NPC muncher) {
 		super(player);
 		addPlayer(HeadE.CHEERFUL, "Here, boy!");
 		addPlayer(HeadE.TERRIFIED, "Whoaah!", () -> {
-			muncher.faceEntity(player);
+			muncher.faceEntityTile(player);
 			muncher.forceTalk("Grrrrrr");
 			muncher.setNextAnimation(FLINCH);
 		});
@@ -58,12 +58,12 @@ public class Muncher07D extends Conversation {
 		op.addPlayer(HeadE.LAUGH, "Hehe. This'll make him think twice!")
 		.addNext(() -> {
 			player.lock();
-			WorldTasks.schedule(new Task() {
+			WorldTasks.scheduleLooping(new Task() {
 				int stage = 0;
 				@Override
 				public void run() {
 					if (stage == 0)
-						player.faceEntity(muncher);
+						player.faceEntityTile(muncher);
 					else if (stage == 1)
 						player.setNextAnimation(Emote.RASPBERRY.getAnim());
 					else if (stage == 3) {

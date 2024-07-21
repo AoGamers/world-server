@@ -19,14 +19,21 @@ package com.rs.game.content.commands.debug;
 import com.rs.Settings;
 import com.rs.cache.loaders.ItemDefinitions;
 import com.rs.engine.command.Commands;
+import com.rs.engine.miniquest.Miniquest;
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
 import com.rs.game.content.combat.CombatDefinitions.Spellbook;
 import com.rs.game.content.minigames.fightkiln.FightKilnController;
+import com.rs.game.content.minigames.shadesofmortton.TempleWall;
+import com.rs.game.content.quests.death_plateau.instances.PlayerVSTheMapController;
 import com.rs.game.content.quests.demonslayer.PlayerVSDelrithController;
 import com.rs.game.content.quests.demonslayer.WallyVSDelrithCutscene;
 import com.rs.game.content.quests.dragonslayer.DragonSlayer_BoatScene;
+import com.rs.game.content.quests.gunnars_ground.cutscene.GunnarsGroundCutscenes;
 import com.rs.game.content.quests.merlinscrystal.MerlinsCrystalCrateScene;
+import com.rs.game.content.quests.plague_city.cutscene.PlagueCityCutscene;
+import com.rs.game.model.entity.Hit;
+import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.entity.player.Skills;
 import com.rs.lib.Constants;
@@ -39,6 +46,8 @@ import com.rs.plugin.annotations.PluginEventHandler;
 import com.rs.plugin.annotations.ServerStartupEvent;
 import com.rs.plugin.handlers.EnterChunkHandler;
 import com.rs.utils.music.Music;
+import com.rs.game.content.minigames.shadesofmortton.ShadesOfMortton;
+
 
 import java.util.Arrays;
 
@@ -69,8 +78,11 @@ public class Debug {
 		//
 		//		});
 
-		Commands.add(Rights.ADMIN, "shapemusic", "Starts showing music shape.", (p, args) -> {
-			musicMoveOn = !musicMoveOn;
+		Commands.add(Rights.ADMIN, "shapemusic", "Starts showing music shape.", (p, args) -> musicMoveOn = !musicMoveOn);
+
+		Commands.add(Rights.ADMIN, "cleartoolbelt", "Clears your toolbelt.", (p, args) -> {
+			p.clearToolbelt();
+			p.sendMessage("You have cleared your toolbelt.");
 		});
 
 		Commands.add(Rights.PLAYER, "coords,getpos,mypos,pos,loc", "Gets the coordinates for the tile.", (p, args) -> {
@@ -94,26 +106,18 @@ public class Debug {
 		});
 
 		Commands.add(Rights.PLAYER, "cutscene2 [id]", "Starts crate scene.", (p, args) -> {
-			switch (Integer.valueOf(args[0])) {
-				case 0 -> {
-					p.playCutscene(new WallyVSDelrithCutscene());
-				}
-				case 1 -> {
-					p.getControllerManager().startController(new PlayerVSDelrithController());
-				}
-				case 2 -> {
-					p.getControllerManager().startController(new DragonSlayer_BoatScene());
-				}
-				case 3 -> {
-					p.getControllerManager().startController(new MerlinsCrystalCrateScene());
-				}
+			switch (Integer.parseInt(args[0])) {
+				case 0 -> p.playCutscene(new WallyVSDelrithCutscene());
+				case 1 -> p.getControllerManager().startController(new PlayerVSDelrithController());
+				case 2 -> p.getControllerManager().startController(new DragonSlayer_BoatScene());
+				case 3 -> p.getControllerManager().startController(new MerlinsCrystalCrateScene());
+				case 4 -> new GunnarsGroundCutscenes(p);
+				case 5 -> new PlagueCityCutscene(p);
+				case 6 -> p.getControllerManager().startController(new PlayerVSTheMapController());
 			}
-
 		});
 
-		Commands.add(Rights.PLAYER, "getcontroller", "Shows current controller", (p, args) -> {
-			p.sendMessage("Controller -> " + (p.getControllerManager().getController() == null ? "does not exist..." : p.getControllerManager().getController().getClass().getName()));
-		});
+		Commands.add(Rights.PLAYER, "getcontroller", "Shows current controller", (p, args) -> p.sendMessage("Controller -> " + (p.getControllerManager().getController() == null ? "does not exist..." : p.getControllerManager().getController().getClass().getName())));
 
 		Commands.add(Rights.PLAYER, "fightkiln [wave]", "Starts Fight kiln at a wave", (p, args) -> {
 			if(args.length != 1) {
@@ -124,20 +128,41 @@ public class Debug {
 				p.sendMessage("You are already in a minigame, dedicated area(controller)!");
 				return;
 			}
-			if(Integer.valueOf(args[0]) > 37 || Integer.valueOf(args[0]) < 1) {
+			if(Integer.parseInt(args[0]) > 37 || Integer.parseInt(args[0]) < 1) {
 				p.sendMessage("Invalid wave, must be between 1 and 37.");
 				return;
 			}
-			p.getControllerManager().startController(new FightKilnController(Integer.valueOf(args[0]), true));
+			p.getControllerManager().startController(new FightKilnController(Integer.parseInt(args[0]), true));
 		});
 
-		Commands.add(Rights.PLAYER, "random", "Forces a random event.", (p, args) -> {
-			attemptSpawnRandom(p, true);
+		Commands.add(Rights.PLAYER, "random", "Forces a random event.", (p, args) -> attemptSpawnRandom(p, true));
+
+		Commands.add(Rights.PLAYER, "resetgoutweedguards", "Resets the patrolling Goutweed Guards at Troll Stronghold.", (p, args) -> {
+			int[] guardIDs = {1142, 1143, 1144, 1145, 1146, 1147, 1148, 1149, 1150};
+			for (NPC npc : World.getNPCs()) {
+				for (int npcId : guardIDs) {
+					if (npc.getId() == npcId) {
+						npc.applyHit(new Hit(p, 10000, Hit.HitLook.TRUE_DAMAGE));
+						break;
+					}
+				}
+			}
 		});
 
-		Commands.add(Rights.PLAYER, "fightcaves", "Marks fight caves as having been completed.", (p, args) -> {
-			p.incrementCount("Fight Caves clears");
+		Commands.add(Rights.PLAYER, "shadesresources", "Sets Shades of Morton to requested amount (0-100).", (p, args) -> {
+			p.save("shadeResources", Utils.clampI(Integer.parseInt(args[0]), 0, 100));
+			p.sendMessage("Your Shades of Mort'ton resources has been set to " + Utils.clampI(Integer.parseInt(args[0]), 0, 100) + ".");
 		});
+
+		Commands.add(Rights.PLAYER, "shadesrepairwalls", "Sets repair percentage of all known about walls in Shades of Mort'ton to requested amount (0-100).", (player, args) -> {
+			for (TempleWall wall : ShadesOfMortton.getWalls()) {
+				wall.setRepairPerc(Utils.clampI(Integer.parseInt(args[0]), 0, 100));
+				wall.update();
+			}
+			player.sendMessage("All known about walls in Shades of Mort'ton have been set to " + Utils.clampI(Integer.parseInt(args[0]), 0, 100) + "% build progress.");
+		});
+
+		Commands.add(Rights.PLAYER, "fightcaves", "Marks fight caves as having been completed.", (p, args) -> p.incrementCount("Fight Caves clears"));
 		
 		Commands.add(Rights.PLAYER, "showhitchance", "Toggles the display of your hit chance when attacking opponents.", (p, args) -> {
 			p.getNSV().setB("hitChance", !p.getNSV().getB("hitChance"));
@@ -145,15 +170,15 @@ public class Debug {
 		});
 
 		Commands.add(Rights.PLAYER, "item,spawn [itemId (amount)]", "Spawns an item with specified id and amount.", (p, args) -> {
-			if (ItemDefinitions.getDefs(Integer.valueOf(args[0])).getName().equals("null")) {
+			if (ItemDefinitions.getDefs(Integer.parseInt(args[0])).getName().equals("null")) {
 				p.sendMessage("That item is unused.");
 				return;
 			}
-			p.getInventory().addItem(Integer.valueOf(args[0]), args.length >= 2 ? Integer.valueOf(args[1]) : 1);
+			p.getInventory().addItem(Integer.parseInt(args[0]), args.length >= 2 ? Integer.parseInt(args[1]) : 1);
 			p.stopAll();
 		});
 
-		Commands.add(Rights.PLAYER, "setqstage [questName, stage]", "Resets the specified quest.", (p, args) -> {
+		Commands.add(Rights.PLAYER, "setqstage [questName, stage]", "Sets the specified quest's stage.", (p, args) -> {
 			for (Quest quest : Quest.values())
 				if (quest.name().toLowerCase().contains(args[0]) && quest.isImplemented()) {
 					int stage = Integer.parseInt(args[1]);
@@ -162,21 +187,49 @@ public class Debug {
 					return;
 				}
 		});
+
+		Commands.add(Rights.PLAYER, "setmqstage [miniquestName, stage]", "Sets the specified miniquest's stage.", (p, args) -> {
+			for (Miniquest miniquest : Miniquest.values())
+				if (miniquest.name().toLowerCase().contains(args[0]) && miniquest.isImplemented()) {
+					int stage = Integer.parseInt(args[1]);
+					p.getMiniquestManager().setStage(miniquest, stage);
+					p.sendMessage("Set " + miniquest.name() + " to stage " + stage);
+					return;
+				}
+		});
 		
 		Commands.add(Rights.PLAYER, "resetquest [questName]", "Resets the specified quest.", (p, args) -> {
 			for (Quest quest : Quest.values())
 				if (quest.name().toLowerCase().contains(args[0]) && quest.isImplemented()) {
 					p.getQuestManager().resetQuest(quest);
-					p.sendMessage("Resetted quest: " + quest.name());
+					p.sendMessage("Reset quest: " + quest.name());
 					return;
 				}
 		});
 
-		Commands.add(Rights.PLAYER, "completequest [questName]", "Resets the specified quest.", (p, args) -> {
+		Commands.add(Rights.PLAYER, "resetminiquest [questName]", "Resets the specified miniquest.", (p, args) -> {
+			for (Miniquest miniquest : Miniquest.values())
+				if (miniquest.name().toLowerCase().contains(args[0]) && miniquest.isImplemented()) {
+					p.getMiniquestManager().reset(miniquest);
+					p.sendMessage("Reset quest: " + miniquest.name());
+					return;
+				}
+		});
+
+		Commands.add(Rights.PLAYER, "completequest [questName]", "Completes the specified quest.", (p, args) -> {
 			for (Quest quest : Quest.values())
 				if (quest.name().toLowerCase().contains(args[0])) {
 					p.getQuestManager().completeQuest(quest);
 					p.sendMessage("Completed quest: " + quest.name());
+					return;
+				}
+		});
+
+		Commands.add(Rights.PLAYER, "completeminiquest [miniquestName]", "Completes the specified miniquest.", (p, args) -> {
+			for (Miniquest miniquest : Miniquest.values())
+				if (miniquest.name().toLowerCase().contains(args[0])) {
+					p.getMiniquestManager().complete(miniquest);
+					p.sendMessage("Completed quest: " + miniquest.name());
 					return;
 				}
 		});
@@ -197,7 +250,16 @@ public class Debug {
 				}
 		});
 
-		Commands.add(Rights.PLAYER, "getqstage [questName]", "Resets the specified quest.", (p, args) -> {
+		Commands.add(Rights.PLAYER, "getmqstage [questName]", "Gets the specified miniquest stage.", (p, args) -> {
+			for (Miniquest miniquest : Miniquest.values())
+				if (miniquest.name().toLowerCase().contains(args[0]) && miniquest.isImplemented()) {
+					int stage = p.getMiniquestStage(miniquest);
+					p.sendMessage(miniquest.name() + " is at stage " + stage);
+					return;
+				}
+		});
+
+		Commands.add(Rights.PLAYER, "getqstage [questName]", "Gets the specified quest stage.", (p, args) -> {
 			for (Quest quest : Quest.values())
 				if (quest.name().toLowerCase().contains(args[0]) && quest.isImplemented()) {
 					int stage = p.getQuestManager().getStage(quest);
@@ -241,9 +303,7 @@ public class Debug {
 			p.getSkills().init();
 		});
 		
-		Commands.add(Rights.PLAYER, "spec", "Restores special attack energy to full.", (p, args) -> {
-			p.getCombatDefinitions().resetSpecialAttack();
-		});
+		Commands.add(Rights.PLAYER, "spec", "Restores special attack energy to full.", (p, args) -> p.getCombatDefinitions().resetSpecialAttack());
 
 		Commands.add(Rights.PLAYER, "copy [player name]", "Copies the other player's levels, equipment, and inventory.", (p, args) -> {
 			Player target = World.getPlayerByDisplay(Utils.concat(args));
@@ -316,12 +376,10 @@ public class Debug {
 					i.setAmount(10500000);
 		});
 
-		Commands.add(Rights.PLAYER, "clearbank,emptybank", "Empties the players bank entirely.", (p, args) -> {
-			p.sendOptionDialogue("Clear bank?", ops -> {
-				ops.add("Yes", () -> p.getBank().clear());
-				ops.add("No");
-			});
-		});
+		Commands.add(Rights.PLAYER, "clearbank,emptybank", "Empties the players bank entirely.", (p, args) -> p.sendOptionDialogue("Clear bank?", ops -> {
+            ops.add("Yes", () -> p.getBank().clear());
+            ops.add("No");
+        }));
 
 		Commands.add(Rights.PLAYER, "god", "Toggles god mode for the player.", (p, args) -> {
 			boolean god = p.getNSV().getB("godMode");
@@ -334,9 +392,7 @@ public class Debug {
 			p.sendMessage("INFINITE RUNES: " + p.getNSV().getB("infRunes"));
 		});
 
-		Commands.add(Rights.PLAYER, "deletesave [string/ID]", "Deletes save attributes", (p, args) -> {
-			p.delete(args[0]);
-		});
+		Commands.add(Rights.PLAYER, "deletesave [string/ID]", "Deletes save attributes", (p, args) -> p.delete(args[0]));
 
 		Commands.add(Rights.PLAYER, "owner", "Makes you owner if your username is the owner.", (p, args) -> {
 			if (p.getUsername().equals(Settings.getConfig().getOwnerName())) {

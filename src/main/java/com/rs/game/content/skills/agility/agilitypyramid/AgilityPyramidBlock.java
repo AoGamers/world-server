@@ -34,7 +34,7 @@ import java.util.List;
 public class AgilityPyramidBlock extends NPC {
 
 	private int timer;
-	private Tile dangerTile;
+	private final Tile dangerTile;
 
 	public AgilityPyramidBlock(int id, Tile tile) {
 		super(id, tile);
@@ -62,6 +62,8 @@ public class AgilityPyramidBlock extends NPC {
 				p.setNextAnimation(new Animation(3066));
 				final Tile tile = p.transform(getId() == 3125 ? dist : 0, getId() == 3125 ? 0 : dist, -1);
 				p.forceMove(tile, 10, 30, () -> p.applyHit(new Hit(null, 80, HitLook.TRUE_DAMAGE)));
+				int virtualPlane = p.getTempAttribs().getI("AgilityPyramidVirtualPlane");
+				p.getTempAttribs().setI("AgilityPyramidVirtualPlane", Math.max(virtualPlane - 1, 0));
 			}
 		if (timer == 4)
 			for (Player player : World.getPlayersInChunkRange(getChunkId(), 1))
@@ -79,6 +81,6 @@ public class AgilityPyramidBlock extends NPC {
 		return players;
 	}
 
-	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 3124, 2125 }, (npcId, tile) -> new AgilityPyramidBlock(npcId, tile));
+	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 3124, 3125 }, AgilityPyramidBlock::new);
 
 }

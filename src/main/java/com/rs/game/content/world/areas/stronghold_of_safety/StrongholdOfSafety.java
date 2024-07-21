@@ -1,5 +1,6 @@
 package com.rs.game.content.world.areas.stronghold_of_safety;
 
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.World;
 import com.rs.game.model.entity.player.managers.EmotesManager;
 import com.rs.lib.game.Item;
@@ -10,13 +11,9 @@ import com.rs.utils.Ticks;
 
 @PluginEventHandler
 public class StrongholdOfSafety {
-    public static ObjectClickHandler handleTrainingCentreStairsDown = new ObjectClickHandler(new Object[] { 29592 }, Tile.of(3084, 3452, 0), e -> {
-        e.getPlayer().useStairs(827, Tile.of(3086, 4247, 0));
-    });
+    public static ObjectClickHandler handleTrainingCentreStairsDown = new ObjectClickHandler(new Object[] { 29592 }, Tile.of(3084, 3452, 0), e -> e.getPlayer().useStairs(827, Tile.of(3086, 4247, 0)));
 
-    public static ObjectClickHandler handleTrainingCentreStairsUp = new ObjectClickHandler(new Object[] { 29589 }, Tile.of(3086, 4244, 0), e -> {
-        e.getPlayer().useStairs(827, Tile.of(3084, 3452, 0), 1, 2);
-    });
+    public static ObjectClickHandler handleTrainingCentreStairsUp = new ObjectClickHandler(new Object[] { 29589 }, Tile.of(3086, 4244, 0), e -> e.getPlayer().useStairs(827, Tile.of(3084, 3452, 0), 1, 2));
 
     public static ObjectClickHandler handleSecureZoneLever = new ObjectClickHandler(new Object[]{ 29736 }, Tile.of(3146, 4278, 3), e -> {
         e.getObject().setIdTemporary(29731, Ticks.fromSeconds(20));
@@ -29,7 +26,7 @@ public class StrongholdOfSafety {
             e.getPlayer().sendMessage("This door is locked, maybe there is a way to unlock it?");
         else
         e.getPlayer().useStairs(Tile.of(3177, 4266, 0));
-        e.getPlayer().faceEast();
+        e.getPlayer().faceDir(Direction.EAST);
     });
 
     public static ObjectClickHandler handleSecureZoneDoorWest = new ObjectClickHandler(new Object[] { 29624 }, Tile.of(3141, 4272, 1), e -> {
@@ -37,7 +34,7 @@ public class StrongholdOfSafety {
             e.getPlayer().sendMessage("This door is locked, maybe there is a way to unlock it?");
         else{
         e.getPlayer().useStairs(Tile.of(3143, 4270, 0));
-        e.getPlayer().faceWest();
+        e.getPlayer().faceDir(Direction.WEST);
         }
     });
 

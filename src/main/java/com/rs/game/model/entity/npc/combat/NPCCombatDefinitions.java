@@ -29,6 +29,7 @@ import com.rs.plugin.annotations.ServerStartupEvent.Priority;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @PluginEventHandler
 public class NPCCombatDefinitions {
@@ -36,13 +37,13 @@ public class NPCCombatDefinitions {
 	private final static String PATH = "data/npcs/combatdefs/";
 	public static HashMap<Object, NPCCombatDefinitions> COMBAT_DEFINITIONS = new HashMap<>();
 	public static NPCCombatDefinitions DEFAULT_DEF;
-	
+
 	private static Map<Skill, Integer> DEFAULT_LEVELS = new HashMap<>();
 
 	static {
 		for (Skill skill : Skill.values())
 			DEFAULT_LEVELS.put(skill, 0);
-		
+
 		NPCCombatDefinitions def = new NPCCombatDefinitions();
 		def.attackStyle = AttackStyle.MELEE;
 		def.agressivenessType = AggressiveType.PASSIVE;
@@ -52,7 +53,7 @@ public class NPCCombatDefinitions {
 	public enum AttackStyle {
 		MELEE, RANGE, MAGE
 	}
-	
+
 	public enum Skill {
 		ATTACK, STRENGTH, DEFENSE, RANGE, MAGE
 	}
@@ -72,6 +73,7 @@ public class NPCCombatDefinitions {
 	private int deathDelay;
 	private int deathSound = -1;
 	private int respawnDelay;
+	private int respawnAnim = -1;
 	private int hitpoints;
 	private int maxHit;
 	private AttackStyle attackStyle;
@@ -155,7 +157,8 @@ public class NPCCombatDefinitions {
 	private static void loadPackedCombatDefinitions() {
 		try {
 			File[] dropFiles = new File(PATH).listFiles();
-			for (File f : dropFiles)
+            assert dropFiles != null;
+            for (File f : dropFiles)
 				loadFile(f);
 		} catch (Throwable e) {
 			Logger.handle(NPCCombatDefinitions.class, "loadPackedCombatDefinitions", e);
@@ -165,7 +168,7 @@ public class NPCCombatDefinitions {
 	private static void loadFile(File f) {
 		try {
 			if (f.isDirectory()) {
-				for (File dir : f.listFiles())
+				for (File dir : Objects.requireNonNull(f.listFiles()))
 					loadFile(dir);
 				return;
 			}
@@ -181,6 +184,10 @@ public class NPCCombatDefinitions {
 		} catch(Throwable e) {
 			System.err.println("Error loading file: " + f.getPath());
 		}
+	}
+
+	public int getRespawnAnim() {
+		return respawnAnim;
 	}
 
 	public int getRespawnDelay() {
@@ -252,7 +259,7 @@ public class NPCCombatDefinitions {
 	public String[] getNames() {
 		return names;
 	}
-	
+
 	public int getLevel(Skill skill) {
 		return getLevels().get(skill) == null ? 1 : getLevels().get(skill);
 	}
@@ -332,8 +339,7 @@ public class NPCCombatDefinitions {
 			if (id == npcId)
 				return;
 		int[] newIds = new int[ids.length+1];
-		for (int i = 0;i < ids.length;i++)
-			newIds[i] = ids[i];
+        System.arraycopy(ids, 0, newIds, 0, ids.length);
 		newIds[ids.length] = npcId;
 		ids = newIds;
 	}
@@ -372,7 +378,7 @@ public class NPCCombatDefinitions {
 	}
 
 	public boolean hasOverriddenBonuses() {
-		return bonuses != null && bonuses.size() > 0;
+		return bonuses != null && !bonuses.isEmpty();
 	}
 
 	public int getBonus(Bonus bonus) {
@@ -380,7 +386,7 @@ public class NPCCombatDefinitions {
 			return 1000;
 		if (bonuses.get(bonus) == null)
 			return 0;
-		return (Integer) bonuses.get(bonus);
+		return bonuses.get(bonus);
 	}
 
 	public int getAttackSound() {

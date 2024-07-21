@@ -3,6 +3,7 @@ package com.rs.game.content.quests.templeofikov;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
 import com.rs.game.content.quests.templeofikov.dialogues.GaurdianArmadylTempleOfIkov;
@@ -31,9 +32,7 @@ public class IkovDungeon {
 			e.getNPC().sendDrop(p, new Item(87));
 	});
 	
-	public static ObjectClickHandler handleIkovEmergencyExitLadder = new ObjectClickHandler(new Object[] { 32015 }, Tile.of(2637, 9808, 0), e -> {
-		e.getPlayer().useLadder(Tile.of(2637, 3409, 0));	
-	});
+	public static ObjectClickHandler handleIkovEmergencyExitLadder = new ObjectClickHandler(new Object[] { 32015 }, Tile.of(2637, 9808, 0), e -> e.getPlayer().useLadder(Tile.of(2637, 3409, 0)));
 
 	public static ItemOnObjectHandler leverIceDoor = new ItemOnObjectHandler(false, new Object[] { 86 }, new Object[] { 83 }, e -> {
 		e.getPlayer().getInventory().removeItems(new Item(83, 1));
@@ -41,7 +40,8 @@ public class IkovDungeon {
 	});
 
 	public static ObjectClickHandler handleIceLever = new ObjectClickHandler(new Object[]{ 87 }, e -> {
-		e.getObject().setId(36);
+		//e.getObject().setId(36);
+		e.getPlayer().sendMessage("You pull the lever and hear a click.");
 		if(e.getPlayer().getQuestManager().getStage(Quest.TEMPLE_OF_IKOV) == TempleOfIkov.HELP_LUCIEN)
 			e.getPlayer().getQuestManager().getAttribs(Quest.TEMPLE_OF_IKOV).setB("LeverIcePulled", true);
 	});
@@ -57,7 +57,7 @@ public class IkovDungeon {
 			if(npc instanceof FireWarrior warrior && warrior.getOwner() == e.getPlayer())
 				return;
 		NPC warrior = new FireWarrior(e.getPlayer(), 277, e.getPlayer().getTile().transform(0, -1));
-		warrior.faceEntity(e.getPlayer());
+		warrior.faceEntityTile(e.getPlayer());
 		warrior.forceTalk("You will not pass!");
 		warrior.setRandomWalk(false);
 	});
@@ -85,7 +85,7 @@ public class IkovDungeon {
 							.addNext(()->{
 								for(NPC npc : World.getNPCsInChunkRange(e.getPlayer().getChunkId(), 3))
 									if(npc instanceof FireWarrior warrior && warrior.getOwner() == e.getPlayer())
-										warrior.setTarget(e.getPlayer());
+										warrior.setCombatTarget(e.getPlayer());
 							})
 					);
 					option("A humble pilgrim.", new Dialogue()
@@ -99,9 +99,7 @@ public class IkovDungeon {
 	public static NPCClickHandler handleGaurdianTalk = new NPCClickHandler(new Object[]{274, 275}, new String[]{"Talk-to"}, e -> {
 		if(e.getPlayer().getEquipment().getAmuletId() == 86) {//Lucien amulet
 			e.getPlayer().startConversation(new Dialogue().addNPC(e.getNPCId(), HeadE.FRUSTRATED, "Thou art a foul agent of Lucien! Such an agent must die!"));
-			WorldTasks.delay(3, () -> {
-				e.getNPC().setTarget(e.getPlayer());
-			});
+			WorldTasks.delay(3, () -> e.getNPC().setCombatTarget(e.getPlayer()));
 			return;
 		}
 		e.getPlayer().startConversation(new GaurdianArmadylTempleOfIkov(e.getPlayer(), e.getNPC()).getStart());
@@ -147,7 +145,7 @@ public class IkovDungeon {
 			handleDoubleDoor(e.getPlayer(), e.getObject());
 			return;
 		}
-		e.getPlayer().faceNorth();
+		e.getPlayer().faceDir(Direction.NORTH);
 		e.getPlayer().startConversation(new Dialogue().addPlayer(HeadE.SCARED, "Gah!"));
 		e.getPlayer().sendMessage("An immense feeling of terror overwhelms you...");
 	});
@@ -157,7 +155,7 @@ public class IkovDungeon {
 			handleDoubleDoor(e.getPlayer(), e.getObject());
 			return;
 		}
-		e.getPlayer().faceSouth();
+		e.getPlayer().faceDir(Direction.SOUTH);
 		e.getPlayer().startConversation(new Dialogue().addPlayer(HeadE.SKEPTICAL_THINKING, "It seems locked..."));
 		e.getPlayer().sendMessage("The door is firmly shut...");
 	});

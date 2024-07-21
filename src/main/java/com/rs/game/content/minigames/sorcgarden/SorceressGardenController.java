@@ -31,8 +31,11 @@ import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Animation;
+import com.rs.lib.game.SpotAnim;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
+import com.rs.plugin.annotations.PluginEventHandler;
+import com.rs.plugin.handlers.ItemClickHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,12 +52,13 @@ public class SorceressGardenController extends Controller {
 		AUTUMN(21731, 45, Tile.of(2913, 5462, 0), Tile.of(2913, 5463, 0), 229),
 		SUMMER(21687, 65, Tile.of(2910, 5481, 0), Tile.of(2910, 5480, 0), 230);
 
-		private int objectId;
-		private int levelReq;
-		private int musicId;
-		private Tile inside, outside;
+		private final int objectId;
+		private final int levelReq;
+		private final int musicId;
+		private final Tile inside;
+        private final Tile outside;
 
-		private static Map<Integer, Gate> Gates = new HashMap<>();
+		private static final Map<Integer, Gate> Gates = new HashMap<>();
 
 		private Gate(int objectId, int lvlReq, Tile inside, Tile outside, int musicId) {
 			this.objectId = objectId;
@@ -130,7 +134,20 @@ public class SorceressGardenController extends Controller {
 		if (!broomstick)
 			Magic.sendNormalTeleportSpell(player, 0, 0, MIDDLE, () -> player.getControllerManager().startController(new SorceressGardenController()));
 		else
-			Magic.sendTeleportSpell(player, 10538, 10537, -1, -1, 0, 0, MIDDLE, 4, true, TeleType.MAGIC, () -> player.getControllerManager().startController(new SorceressGardenController()));
+			Magic.sendTeleportSpell(player, 10538, 10537, 1867, 1868, 0, 0, MIDDLE, 4, true, TeleType.MAGIC, () -> player.getControllerManager().startController(new SorceressGardenController()));
+
+		}
+
+
+	@PluginEventHandler
+	public class Broomstick {
+
+		public static ItemClickHandler Broomstick = new ItemClickHandler(new Object[]{14057}, new String[]{"Sweep"}, e -> {
+			e.getPlayer().setNextAnimation(new Animation(10532));
+			e.getPlayer().setNextSpotAnim(new SpotAnim(1866));
+
+		});
+
 	}
 
 	@Override

@@ -27,12 +27,12 @@ import java.util.Map;
 
 public class ItemOnNPCEvent implements PluginEvent {
 
-	private static Map<Object, ItemOnNPCHandler> HANDLERS = new HashMap<>();
+	private static final Map<Object, ItemOnNPCHandler> HANDLERS = new HashMap<>();
 
-	private Player player;
-	private NPC npc;
-	private Item item;
-	private boolean atNPC;
+	private final Player player;
+	private final NPC npc;
+	private final Item item;
+	private final boolean atNPC;
 
 	public ItemOnNPCEvent(Player player, NPC npc, Item item, boolean atNPC) {
 		this.player = player;
@@ -51,6 +51,18 @@ public class ItemOnNPCEvent implements PluginEvent {
 
 	public Item getItem() {
 		return item;
+	}
+
+	public Player component1() {
+		return player;
+	}
+
+	public Item component2() {
+		return item;
+	}
+
+	public NPC component3() {
+		return npc;
 	}
 
 	public boolean isAtNPC() {

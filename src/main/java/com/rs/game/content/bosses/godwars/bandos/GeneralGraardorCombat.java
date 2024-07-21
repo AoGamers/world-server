@@ -26,6 +26,7 @@ import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions;
 import com.rs.game.model.entity.npc.combat.NPCCombatDefinitions.AttackStyle;
 import com.rs.lib.game.Animation;
 import com.rs.lib.util.Utils;
+import kotlin.Pair;
 
 public class GeneralGraardorCombat extends CombatScript {
 
@@ -41,11 +42,11 @@ public class GeneralGraardorCombat extends CombatScript {
 			switch (Utils.getRandomInclusive(10)) {
 			case 0:
 				npc.setNextForceTalk(new ForceTalk("Death to our enemies!"));
-				npc.voiceEffect(3219);
+				npc.voiceEffect(target, 3219, true);
 				break;
 			case 1:
 				npc.setNextForceTalk(new ForceTalk("Brargh!"));
-				npc.voiceEffect(3209);
+				npc.voiceEffect(target, 3209, true);
 				break;
 			case 2:
 				npc.setNextForceTalk(new ForceTalk("Break their bones!"));
@@ -55,27 +56,27 @@ public class GeneralGraardorCombat extends CombatScript {
 				break;
 			case 4:
 				npc.setNextForceTalk(new ForceTalk("Split their skulls!"));
-				npc.voiceEffect(3229);
+				npc.voiceEffect(target, 3229, true);
 				break;
 			case 5:
 				npc.setNextForceTalk(new ForceTalk("We feast on the bones of our enemies tonight!"));
-				npc.voiceEffect(3206);
+				npc.voiceEffect(target, 3206, true);
 				break;
 			case 6:
 				npc.setNextForceTalk(new ForceTalk("CHAAARGE!"));
-				npc.voiceEffect(3220);
+				npc.voiceEffect(target, 3220, true);
 				break;
 			case 7:
 				npc.setNextForceTalk(new ForceTalk("Crush them underfoot!"));
-				npc.voiceEffect(3224);
+				npc.voiceEffect(target, 3224, true);
 				break;
 			case 8:
 				npc.setNextForceTalk(new ForceTalk("All glory to Bandos!"));
-				npc.voiceEffect(3205);
+				npc.voiceEffect(target, 3205, true);
 				break;
 			case 9:
 				npc.setNextForceTalk(new ForceTalk("GRAAAAAAAAAR!"));
-				npc.voiceEffect(3207);
+				npc.voiceEffect(target, 3207, true);
 				break;
 			case 10:
 				npc.setNextForceTalk(new ForceTalk("FOR THE GLORY OF THE BIG HIGH WAR GOD!"));
@@ -84,7 +85,7 @@ public class GeneralGraardorCombat extends CombatScript {
 		if (Utils.getRandomInclusive(2) == 0) { // range magical attack
 			npc.setNextAnimation(new Animation(7063));
 			for (Entity t : npc.getPossibleTargets()) {
-				WorldProjectile p = World.sendProjectile(npc, target, 1200, 60, 32, 50, 1, 0, 0);
+				WorldProjectile p = World.sendProjectile(npc, target, 1200, new Pair<>(60, 32), 50, 5, 0);
 				delayHit(npc, p.getTaskDelay(), t, getRangeHit(npc, getMaxHit(npc, 355, AttackStyle.RANGE, t)));
 			}
 		} else { // melee attack

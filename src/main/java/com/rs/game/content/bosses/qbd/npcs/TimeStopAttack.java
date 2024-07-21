@@ -16,14 +16,13 @@
 //
 package com.rs.game.content.bosses.qbd.npcs;
 
+import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.util.Utils;
-
-import java.util.Iterator;
 
 /**
  * Handles the Queen Black Dragon's time stop attack.
@@ -41,11 +40,7 @@ public final class TimeStopAttack implements QueenAttack {
 
 	@Override
 	public int attack(final QueenBlackDragon npc, final Player victim) {
-		for (Iterator<TorturedSoul> it = npc.getSouls().iterator(); it.hasNext();) {
-			TorturedSoul soul = it.next();
-			if (soul.isDead())
-				it.remove();
-		}
+        npc.getSouls().removeIf(Entity::isDead);
 		if (npc.getSouls().isEmpty())
 			return 1;
 		final TorturedSoul soul = npc.getSouls().get(Utils.random(npc.getSouls().size()));
@@ -53,13 +48,13 @@ public final class TimeStopAttack implements QueenAttack {
 		soul.setNextSpotAnim(TorturedSoul.TELEPORT_GRAPHIC);
 		soul.setNextAnimation(TorturedSoul.TELEPORT_ANIMATION);
 		soul.setLocked(true);
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int stage = -1;
 
 			@Override
 			public void run() {
 				stage++;
-				if (stage == 8) {
+				if (stage >= 8) {
 					stop();
 					npc.getTempAttribs().setI("_time_stop_atk", npc.getTicks() + Utils.random(50) + 40);
 					for (TorturedSoul s : npc.getSouls())

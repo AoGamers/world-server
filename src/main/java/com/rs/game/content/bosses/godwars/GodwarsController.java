@@ -16,12 +16,13 @@
 //
 package com.rs.game.content.bosses.godwars;
 
+import com.rs.engine.dialogue.Dialogue;
 import com.rs.game.World;
 import com.rs.game.content.bosses.godwars.zaros.NexArena;
+import com.rs.game.content.bosses.godwars.zaros.NexController;
 import com.rs.game.content.skills.magic.Magic;
 import com.rs.game.content.skills.magic.TeleType;
-import com.rs.game.content.world.unorganized_dialogue.NexEntrance;
-import com.rs.game.model.entity.pathing.RouteEvent;
+import com.rs.engine.pathfinder.RouteEvent;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Skills;
 import com.rs.game.model.object.GameObject;
@@ -31,6 +32,7 @@ import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
 import com.rs.plugin.annotations.PluginEventHandler;
 import com.rs.plugin.handlers.ObjectClickHandler;
+import kotlin.Pair;
 
 @PluginEventHandler
 public class GodwarsController extends Controller {
@@ -41,7 +43,7 @@ public class GodwarsController extends Controller {
 	public static int BANDOS = 3;
 	public static int ZAMORAK = 4;
 
-	private int[] killcount = new int[5];
+	private final int[] killcount = new int[5];
 	private long lastPrayerRecharge;
 
 	@Override
@@ -65,22 +67,19 @@ public class GodwarsController extends Controller {
 		return false; // so doesnt remove script
 	}
 
-	public static ObjectClickHandler handleZamorakEnter = new ObjectClickHandler(false, new Object[] { 26439 }, e -> {
-		e.getPlayer().setRouteEvent(new RouteEvent(Tile.of(e.getObject().getTile()), () -> {
-			if (e.getPlayer().withinDistance(e.getObject().getTile(), 3)) {
-				if (e.getPlayer().getY() < 5334) {
-					if (e.getPlayer().getSkills().getLevel(Constants.HITPOINTS) >= 70) {
-						e.getPlayer().useStairs(6999, Tile.of(2885, 5347, 2), 1, 1);
-						e.getPlayer().getPrayer().drainPrayer(e.getPlayer().getPrayer().getPoints());
-						e.getPlayer().sendMessage("You jump over the broken bridge. You feel the power of Zamorak take sap away at your prayer points.");
-					} else
-						e.getPlayer().sendMessage("You need a Constitution level of 70 to enter this area.");
-				} else
-					e.getPlayer().useStairs(6999, Tile.of(2885, 5330, 2), 1, 1);
-				return;
-			}
-		}, true));
-	});
+	public static ObjectClickHandler handleZamorakEnter = new ObjectClickHandler(false, new Object[] { 26439 }, e -> e.getPlayer().setRouteEvent(new RouteEvent(Tile.of(e.getObject().getTile()), () -> {
+        if (e.getPlayer().withinDistance(e.getObject().getTile(), 3)) {
+            if (e.getPlayer().getY() < 5334) {
+                if (e.getPlayer().getSkills().getLevel(Constants.HITPOINTS) >= 70) {
+                    e.getPlayer().useStairs(6999, Tile.of(2885, 5347, 2), 1, 1);
+                    e.getPlayer().getPrayer().drainPrayer(e.getPlayer().getPrayer().getPoints());
+                    e.getPlayer().sendMessage("You jump over the broken bridge. You feel the power of Zamorak take sap away at your prayer points.");
+                } else
+                    e.getPlayer().sendMessage("You need a Constitution level of 70 to enter this area.");
+            } else
+                e.getPlayer().useStairs(6999, Tile.of(2885, 5330, 2), 1, 1);
+        }
+    })));
 
 	@Override
 	public boolean processObjectClick1(final GameObject object) {
@@ -143,7 +142,7 @@ public class GodwarsController extends Controller {
 					case 3 -> player.setNextAnimation(new Animation(16635));
 					case 4 -> {
 						player.getAppearance().setHidden(true);
-						World.sendProjectile(Tile.of(player.getTile()), tile, 605, 18, 18, 20, 0.6, 30, 0).getTaskDelay();
+						World.sendProjectile(Tile.of(player.getTile()), tile, 605, new Pair<>(18, 18), 20, 10, 30).getTaskDelay();
 						player.forceMove(tile, 0, 180, false, () -> {
 							player.getAppearance().setHidden(false);
 							player.setNextAnimation(new Animation(16672));
@@ -254,7 +253,13 @@ public class GodwarsController extends Controller {
 		}
 
 		if (object.getId() == 57225) {
-			player.startConversation(new NexEntrance(NexArena.getGlobalInstance(), player));
+			final NexArena globalInstance = NexArena.getGlobalInstance();
+			player.startConversation(new Dialogue().addSimple("The room beyond this point is a prison! There is no way out other than death or teleport. Only those who endure dangerous encounters should proceed.")
+					.addOption("There are currently " + globalInstance.getPlayersCount() + " people fighting.<br>Do you wish to join them?", "Climb down.", "Stay here.")
+					.addNext(() -> {
+						player.tele(Tile.of(2911, 5204, 0));
+						player.getControllerManager().startController(new NexController(globalInstance));
+					}));
 			return false;
 		}
 		return true;

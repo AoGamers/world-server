@@ -67,9 +67,10 @@ public class TravelMethods {
 		EDGEVILLE_CANOE(null, null, Tile.of(3130, 3505, 0), null),
 		WILDERNESS_CANOE(null, null, Tile.of(3147, 3799, 0), null);
 
-		private int[] fares;
-		private Tile destination, origin;
-		private String secondDest;
+		private final int[] fares;
+		private final Tile destination;
+        private final Tile origin;
+		private final String secondDest;
 
 		private Carrier(int[] fare, String secondDest, Tile destination, Tile origin) {
 			fares = fare;
@@ -209,9 +210,9 @@ public class TravelMethods {
 			player.getInventory().removeCoins(cost);
 			player.sendMessage("You pay the fare and sail to " + ship.getFixedName(returning) + ".");
 		}
-		final boolean isFare = ship.toString().contains("Fare");
+		final boolean isFare = ship.toString().contains("FARE");
 		if (isFare) {
-			if (ship.ordinal() == 10 && !returning) {
+			if (ship.ordinal() == Carrier.ENTRANA_FARE.ordinal() && !returning) {
 				boolean hasEquip = false;
 				for (Item item : player.getInventory().getItems().array()) {
 					if (item == null)
@@ -247,7 +248,7 @@ public class TravelMethods {
 		else {
 			player.lock();
 			if(getComponentForMap(ship, returning) == 54 || getComponentForMap(ship, returning) == 46)
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					int tick;
 					@Override
 					public void run() {
@@ -273,7 +274,7 @@ public class TravelMethods {
 					}
 				}, 0, 1);
 			else
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					int tick;
 					@Override
 					public void run() {

@@ -55,8 +55,7 @@ public class KalGerWarmonger extends DungeonBoss {
 	};
 
 	private WarpedSphere sphere;
-	private Tile nextFlyTile;
-	private GameObject nextWeapon;
+    private GameObject nextWeapon;
 	private int type, typeTicks, pullTicks, annoyanceMeter;
 	private boolean stolenEffects;
 
@@ -180,7 +179,7 @@ public class KalGerWarmonger extends DungeonBoss {
 		if (typeTicks == 1) {
 			setNextSpotAnim(new SpotAnim(2870));
 			final int[] FLY_LOCATION = FLY_COORDINATES[type - 1];
-			nextFlyTile = getManager().getTile(getReference(), FLY_LOCATION[0], FLY_LOCATION[1], SIZE, SIZE);
+            Tile nextFlyTile = getManager().getTile(getReference(), FLY_LOCATION[0], FLY_LOCATION[1], SIZE, SIZE);
 			forceMove(nextFlyTile, 14995, 25, 150, () -> spotAnim(2870));
 		} else if (typeTicks == 9) {
 			if (type == 1) {
@@ -203,7 +202,7 @@ public class KalGerWarmonger extends DungeonBoss {
 		} else if (typeTicks == 13)
 			setNextAnimation(new Animation(14923 + (type - 1)));
 		else if (typeTicks == 14) {
-			setNextNPCTransformation(getId() + 17);
+			transformIntoNPC(getId() + 17);
 			World.removeObject(nextWeapon);
 		} else if (typeTicks == 17) {
 			if (type == 6)
@@ -219,7 +218,7 @@ public class KalGerWarmonger extends DungeonBoss {
 		setNextForceTalk(new ForceTalk("You dare hide from me? BURN!"));
 		setNextAnimation(new Animation(14996));
 		final NPC boss = this;
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			private int ticks;
 			private List<Entity> possibleTargets;
 

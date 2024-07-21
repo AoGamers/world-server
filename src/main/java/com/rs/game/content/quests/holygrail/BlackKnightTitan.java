@@ -20,7 +20,7 @@ import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Tile;
@@ -47,9 +47,7 @@ public class BlackKnightTitan extends NPC {
 			boolean isRun = player.getRun();
 			player.setRunHidden(false);
 			player.addWalkSteps(Tile.of(player.getX() >= 2791 ? 2790 : 2792, 4722, 0), 4, false);
-			WorldTasks.delay(2, () -> {
-				player.setRunHidden(isRun);
-			});
+			WorldTasks.delay(2, () -> player.setRunHidden(isRun));
 			return;
 		}
 		resetHP();
@@ -62,11 +60,9 @@ public class BlackKnightTitan extends NPC {
 
 	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(221, (npcId, tile) -> new BlackKnightTitan(npcId, tile, false));
 
-	public static NPCClickHandler handleDialogue = new NPCClickHandler(new Object[]{221}, new String[]{"Talk-to"}, e -> {
-		e.getPlayer().startConversation(new Dialogue()
-				.addNPC(221, HeadE.CHILD_CALM_TALK, "I am the Black Knight Titan! You must pass through me before you can continue in this realm!")
-				.addPlayer(HeadE.HAPPY_TALKING, "Ok, have at ye oh evil knight!")
-				.addPlayer(HeadE.HAPPY_TALKING, "Actually I think I'll run away!")
-		);
-	});
+	public static NPCClickHandler handleDialogue = new NPCClickHandler(new Object[]{221}, new String[]{"Talk-to"}, e -> e.getPlayer().startConversation(new Dialogue()
+            .addNPC(221, HeadE.CHILD_CALM_TALK, "I am the Black Knight Titan! You must pass through me before you can continue in this realm!")
+            .addPlayer(HeadE.HAPPY_TALKING, "Ok, have at ye oh evil knight!")
+            .addPlayer(HeadE.HAPPY_TALKING, "Actually I think I'll run away!")
+    ));
 }

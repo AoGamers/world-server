@@ -55,7 +55,7 @@ public class HoleInTheWall extends NPC {
 						player.resetWalkSteps();
 						hasGrabbed = true;
 						if (Slayer.hasSpinyHelmet(player)) {
-							setNextNPCTransformation(7823);
+							transformIntoNPC(7823);
 							setNextAnimation(new Animation(1805));
 							setCantInteract(false);
 							player.sendMessage("The spines on your helmet repel the beast's hand.");
@@ -84,7 +84,7 @@ public class HoleInTheWall extends NPC {
 				}
 		} else if (!getCombat().process()) {
 			setCantInteract(true);
-			setNextNPCTransformation(2058);
+			transformIntoNPC(2058);
 		}
 	}
 
@@ -111,5 +111,5 @@ public class HoleInTheWall extends NPC {
 		});
 	}
 
-	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(2058, (npcId, tile) -> new HoleInTheWall(npcId, tile));
+	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(2058, HoleInTheWall::new);
 }

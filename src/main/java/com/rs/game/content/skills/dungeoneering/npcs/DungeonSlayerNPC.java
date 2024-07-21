@@ -101,7 +101,7 @@ public class DungeonSlayerNPC extends DungeonNPC {
 		int size = getSize();
 		List<Item> drops = type.drops.getDropList().genDrop();
 		for (Item item : drops)
-			World.addGroundItem(item, Tile.of(getCoordFaceX(size), getCoordFaceY(size), getPlane()));
+			World.addGroundItemNoExpire(item, Tile.of(getCoordFaceX(size), getCoordFaceY(size), getPlane()));
 	}
 
 	public DungeonSlayerType getType() {
@@ -117,7 +117,7 @@ public class DungeonSlayerNPC extends DungeonNPC {
 						monsters.add(type.id);
 				}
 		Collections.shuffle(monsters);
-		return !monsters.isEmpty() ? monsters.get(0) : -1;
+		return !monsters.isEmpty() ? monsters.getFirst() : -1;
 	}
 
 }

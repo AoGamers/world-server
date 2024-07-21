@@ -19,6 +19,8 @@ package com.rs.game.content.skills.dungeoneering;
 import com.rs.Settings;
 import com.rs.cache.loaders.ItemDefinitions;
 import com.rs.cache.loaders.ObjectType;
+import com.rs.engine.dialogue.Dialogue;
+import com.rs.engine.dialogue.HeadE;
 import com.rs.game.World;
 import com.rs.game.World.DropMethod;
 import com.rs.game.content.combat.AttackType;
@@ -48,7 +50,6 @@ import com.rs.game.content.skills.util.Category;
 import com.rs.game.content.skills.util.CreateActionD;
 import com.rs.game.content.skills.util.CreationActionD;
 import com.rs.game.content.skills.util.ReqItem;
-import com.rs.game.content.world.unorganized_dialogue.SmugglerD;
 import com.rs.game.map.ChunkManager;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
@@ -56,7 +57,7 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Inventory;
 import com.rs.game.model.entity.player.Player;
@@ -158,20 +159,20 @@ public class DungeonController extends Controller {
 	@Override
 	public boolean canMove(Direction dir) {
 		VisibleRoom vr = dungeon.getVisibleRoom(dungeon.getCurrentRoomReference(player.getTile()));
-		Tile to = Tile.of(player.getX() + dir.getDx(), player.getY() + dir.getDy(), 0);
+		Tile to = Tile.of(player.getX() + dir.dx, player.getY() + dir.dy, 0);
 		if(vr != null && !vr.canMove(player, to))
 			return false;
 
 		Room room = dungeon.getRoom(dungeon.getCurrentRoomReference(player.getTile()));
 		if (room != null)
 			if (room.getRoom() == DungeonUtils.getBossRoomWithChunk(DungeonConstants.FROZEN_FLOORS, 26, 624)) {
-				if (!player.isCantWalk() && World.getObjectWithType(Tile.of(player.getX() + dir.getDx(), player.getY() + dir.getDy(), 0), ObjectType.GROUND_DECORATION) == null) {
+				if (!player.isCantWalk() && World.getObjectWithType(Tile.of(player.getX() + dir.dx, player.getY() + dir.dy, 0), ObjectType.GROUND_DECORATION) == null) {
 					player.getAppearance().setBAS(1429);
 					player.setRun(true);
 					player.setCantWalk(true);
 				}
 				if (player.isCantWalk()) {
-					Tile nextStep = Tile.of(player.getX() + dir.getDx() * 2, player.getY() + dir.getDy() * 2, 0);
+					Tile nextStep = Tile.of(player.getX() + dir.dx * 2, player.getY() + dir.dy * 2, 0);
 					NPC boss = getNPC(player, "Plane-freezer Lakhrahnaz");
 					boolean collides = boss != null && WorldUtil.collides(nextStep.getX(), nextStep.getY(), player.getSize(), boss.getX(), boss.getY(), boss.getSize());
 					player.resetWalkSteps();
@@ -205,7 +206,7 @@ public class DungeonController extends Controller {
 		if (hit.getLook() == HitLook.MELEE_DAMAGE)
 			meleeDamage += hit.getDamage();
 		else if (hit.getLook() == HitLook.RANGE_DAMAGE) {
-			if (player.getDungManager().getActivePerk() == KinshipPerk.KEEN_EYE && player.getCombatDefinitions().getAttackStyle().getAttackType() == AttackType.ACCURATE) {
+			if (player.getDungManager().getActivePerk() == KinshipPerk.KEEN_EYE && player.getCombatDefinitions().getAttackStyle().attackType == AttackType.ACCURATE) {
 				int procChance = (int) (40 + (player.getDungManager().getKinshipTier(KinshipPerk.KEEN_EYE) * 6.5));
 				if (Utils.random(100) < procChance)
 					if (target instanceof NPC npc)
@@ -221,7 +222,7 @@ public class DungeonController extends Controller {
 				int damage = hit.getDamage() / 10;
 				if (Utils.random(100) < procChance)
 					for (int i = 1;i <= 5;i++)
-						WorldTasks.delay(2*i, () -> target.applyHit(new Hit(player, damage, HitLook.MAGIC_DAMAGE).setData("blazerBleed", true)));
+						target.getTasks().schedule(2*i, () -> target.applyHit(new Hit(player, damage, HitLook.MAGIC_DAMAGE).setData("blazerBleed", true)));
 			}
 		}
 	}
@@ -268,18 +269,18 @@ public class DungeonController extends Controller {
 		if (player.getInventory().containsItem(DungeonConstants.GROUP_GATESTONE, 1)) {
 			Tile tile = Tile.of(player.getTile());
 			dungeon.setGroupGatestone(Tile.of(player.getTile()));
-			World.addGroundItem(new Item(DungeonConstants.GROUP_GATESTONE), tile);
+			World.addGroundItemNoExpire(new Item(DungeonConstants.GROUP_GATESTONE), tile);
 			player.getInventory().deleteItem(DungeonConstants.GROUP_GATESTONE, 1);
 			player.sendMessage("Your group gatestone drops to the floor as you die.");
 		}
 		if (player.getInventory().containsItem(DungeonConstants.GATESTONE, 1)) {
 			Tile tile = Tile.of(player.getTile());
 			setGatestone(Tile.of(player.getTile()));
-			World.addGroundItem(new Item(DungeonConstants.GATESTONE), tile);
+			World.addGroundItemNoExpire(new Item(DungeonConstants.GATESTONE), tile);
 			player.getInventory().deleteItem(DungeonConstants.GATESTONE, 1);
 			player.sendMessage("Your gatestone drops to the floor as you die.");
 		}
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int loop;
 
 			@Override
@@ -458,7 +459,7 @@ public class DungeonController extends Controller {
 		if (vRoom == null || !vRoom.processNPCClick1(player, npc))
 			return false;
 		if (npc.getId() == DungeonConstants.FISH_SPOT_NPC_ID) {
-			player.faceEntity(npc);
+			player.faceEntityTile(npc);
 			player.getActionManager().setAction(new DungeoneeringFishing((DungeonFishSpot) npc));
 			return false;
 		}
@@ -468,8 +469,46 @@ public class DungeonController extends Controller {
 			return false;
 		}
 		if (npc.getId() == DungeonConstants.SMUGGLER) {
-			npc.faceEntity(player);
-			player.startConversation(new SmugglerD(player, dungeon.getParty().getComplexity()));
+			npc.faceEntityTile(player);
+			player.startConversation(new Dialogue()
+					.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "Hail, " + player.getDisplayName() + ". Need something?")
+					.addOptions(ops -> {
+						ops.add("What can you tell me about this place?")
+								.addPlayer(HeadE.CONFUSED, "What can you tell me about this place?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "You know all that I can teach you already, friend, having conquered many floors yourself.");
+
+						ops.add("Who are you?")
+								.addPlayer(HeadE.CONFUSED, "Who are you?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.SECRETIVE, "A friend.")
+								.addPlayer(HeadE.CONFUSED, "Okay, what are you doing here, friend?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.SECRETIVE, "I'm here to help out.")
+								.addPlayer(HeadE.CONFUSED, "With what?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.SECRETIVE, "Well, let's say you find yourself in need of an adventuring kit, and you've a heavy pile of rusty coins weighing you down. I can help you with both those problems. Savvy?")
+								.addPlayer(HeadE.AMAZED, "Ah, so your a trader?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.ANGRY, "Keep it down, you fool!")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.SECRETIVE, "Yes, I'm a trader. But I'm not supposed to be trading here.")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.SECRETIVE, "If you want my goods, you'll learn not to talk about me.")
+								.addPlayer(HeadE.CALM_TALK, "Right, got you.")
+								.addPlayer(HeadE.CONFUSED, "Is there anything else you can do for me?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "Well, there's the job I'm supposed to be doing down here.")
+								.addPlayer(HeadE.CONFUSED, "Which is?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "Say you chance upon an object that you know little about. Show it to me, and I'll tell you what it's used for.")
+								.addPlayer(HeadE.CALM_TALK, "That's good to know.")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "I can also offer you knowledge about the behaviour of powerful opponents you might meet in the area. I've spent a long time down here, observing them.")
+								.addPlayer(HeadE.CALM_TALK, "I'll be sure to come back if I find a particularly strong opponent, then.")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "You'd be wise to " + player.getDisplayName() + ".")
+								.addPlayer(HeadE.CONFUSED, "How do you know my name?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "Nothing gets in or out of Daemonhiem without me knowing about it.")
+								.addPlayer(HeadE.CALM_TALK, "Fair enough.");
+
+						ops.add("Do I have any rewards to claim?")
+								.addPlayer(HeadE.CONFUSED, "Do I have any rewards to claim?")
+								.addNPC(DungeonConstants.SMUGGLER, HeadE.CALM_TALK, "I have no rewards for you at the moment.");
+
+						ops.add("I'm here to trade.")
+								.addPlayer(HeadE.CALM_TALK, "I'm here to trade.")
+								.addNext(() -> DungeonResourceShop.openResourceShop(player, dungeon.getParty().getComplexity()));
+			}));
 			return false;
 		} else if (npc.getId() >= 11076 && npc.getId() <= 11085) {
 			DungeoneeringTraps.removeTrap(player, (MastyxTrap) npc, dungeon);
@@ -629,6 +668,7 @@ public class DungeonController extends Controller {
 			player.lock(1);
 			player.sendMessage("You unlock the door.");
 			player.setNextAnimation(new Animation(13798));// unlock key
+			object.animate(13594);
 			dungeon.setKey(key, false);
 			room.setDoor(index, null);
 			World.removeObject(object);
@@ -1187,11 +1227,11 @@ public class DungeonController extends Controller {
 			dungeon.setGroupGatestone(currentTile);
 		else if (item.getId() == DungeonConstants.GATESTONE) {
 			setGatestone(currentTile);
-			World.addGroundItem(item, currentTile, player, true, -1, DropMethod.NORMAL, -1);
+			World.addGroundItemNoExpire(item, currentTile, player);
 			player.sendMessage("You place the gatestone. You can teleport back to it at any time.");
 			return false;
 		}
-		World.addGroundItem(item, currentTile);
+		World.addGroundItemNoExpire(item, currentTile);
 		return false;
 	}
 

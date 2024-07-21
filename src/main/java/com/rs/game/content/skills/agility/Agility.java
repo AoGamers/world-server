@@ -19,7 +19,7 @@ package com.rs.game.content.skills.agility;
 import com.rs.engine.dialogue.Conversation;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.game.World;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.WorldTasks;
@@ -33,6 +33,11 @@ import com.rs.plugin.handlers.NPCClickHandler;
 @PluginEventHandler
 public class Agility {
 
+	public static final String AGILITY_PYRAMID = "AgilityPyramid";
+	public static final String GNOME_COURSE = "GnomeCourse";
+	public static final String WILDERNESS_COURSE = "WildernessCourse";
+	public static final String BARBARIAN_OUTPOST_COURSE = "BarbarianOutpost";
+
 	static class GunnjornD extends Conversation {
 		public GunnjornD(Player player) {
 			super(player);
@@ -40,9 +45,7 @@ public class Agility {
 			addPlayer(HeadE.CONFUSED, "Can I get any rewards?");
 			if (player.getCounterValue("Barbarian advanced laps") >= 250) {
 				addNPC(607, HeadE.HAPPY_TALKING, "As promised, I'll give you an item you may find useful: an Agile top. You'll find yourself lighter than usual while wearing it.");
-				addNPC(607, HeadE.HAPPY_TALKING, "We barbarians are tough folks, as you know, so it'll even keep you safe if you get drawn into combat.", () -> {
-					player.getInventory().addItem(14936, 1);
-				});
+				addNPC(607, HeadE.HAPPY_TALKING, "We barbarians are tough folks, as you know, so it'll even keep you safe if you get drawn into combat.", () -> player.getInventory().addItem(14936, 1));
 			} else
 				addNPC(607, HeadE.HAPPY_TALKING, "Of course! Once you've completed 250 laps of the advanced course, I have something in mind. You've completed " + player.getCounterValue("Barbarian advanced laps") + " laps so far.");
 
@@ -60,9 +63,7 @@ public class Agility {
 			if (player.getCounterValue("Gnome advanced laps") >= 250) {
 				addNPC(162, HeadE.HAPPY_TALKING, "Well, it looks like you've completed our challenge!");
 				addNPC(162, HeadE.HAPPY_TALKING, "Take this as a reward: an Agile leg. You'll find yourself much lighter than usual while wearing them.");
-				addNPC(162, HeadE.HAPPY_TALKING, "They are made from the toughest material we gnomes could find, so it might even protect you in combat.", () -> {
-					player.getInventory().addItem(14938, 1);
-				});
+				addNPC(162, HeadE.HAPPY_TALKING, "They are made from the toughest material we gnomes could find, so it might even protect you in combat.", () -> player.getInventory().addItem(14938, 1));
 				addNPC(162, HeadE.HAPPY_TALKING, "There you go. Enjoy!");
 			} else
 				addNPC(162, HeadE.HAPPY_TALKING, "Well, you've still got work to do. Your lap count is  " + player.getCounterValue("Gnome advanced laps") + ". It's 250 successful laps for the reward!");
@@ -117,15 +118,14 @@ public class Agility {
 	}
 
 	public static void crossMonkeybars(final Player player, Tile startTile, final Tile endTile, final double xp) {
-		player.lock(2);
+		player.lock(5);
 		player.walkToAndExecute(startTile, () -> {
-			player.lock();
-			WorldTasks.schedule(0, () -> player.faceTile(endTile));
-			WorldTasks.schedule(1, () -> {
+			player.getTasks().schedule(0, () -> player.faceTile(endTile));
+			player.getTasks().schedule(1, () -> {
 				player.anim(742);
 				player.setBas(2405);
 			});
-			WorldTasks.schedule(2, () -> walkToAgility(player, 2405, Direction.forDelta(endTile.getX()-startTile.getX(), endTile.getY()-startTile.getY()), Utils.getDistanceI(startTile, endTile), Utils.getDistanceI(startTile, endTile), xp, 743));
+			player.getTasks().schedule(2, () -> walkToAgility(player, 2405, Direction.forDelta(endTile.getX()-startTile.getX(), endTile.getY()-startTile.getY()), Utils.getDistanceI(startTile, endTile), Utils.getDistanceI(startTile, endTile), xp, 743));
 		});
 	}
 
@@ -149,9 +149,9 @@ public class Agility {
 		player.setRunHidden(false);
 		WorldTasks.schedule(1, () -> {
 			player.setBas(renderEmote);
-			player.addWalkSteps(player.transform(direction.getDx()*distance, direction.getDy()*distance), distance,false);
+			player.addWalkSteps(player.transform(direction.dx * distance, direction.dy * distance), distance, false);
 		});
-		WorldTasks.schedule(delay+1, () -> {
+		WorldTasks.schedule(delay + 1, () -> {
 			if (xp > 0)
 				player.getSkills().addXp(Constants.AGILITY, xp);
 			if (stopAnim != -1)
@@ -160,6 +160,70 @@ public class Agility {
 			player.unlockNextTick();
 			player.setRunHidden(running);
 		});
+	}
+
+	public static boolean rollSuccess(final Player player, final int rate1, final int rate99) {
+		if (player.getAuraManager().isSurefootedAura()) return true;
+		else return Utils.skillSuccess(player.getSkills().getLevel(Constants.AGILITY), rate1, rate99);
+	}
+
+	public static boolean rollSuccess(final Player player, final int rate1, final int rate99, final String stageName, int stageIdx) {
+		boolean stageCompleted = Agility.getStageProgress(player, stageName, stageIdx);
+
+		// only apply aura effect if obstacle hasn't been completed already
+        return (!stageCompleted && player.getAuraManager().isSurefootedAura())
+				|| Utils.skillSuccess(player.getSkills().getLevel(Constants.AGILITY), rate1, rate99);
+	}
+
+	public static boolean rollSuccess(final Player player, final double successProbability, final String stageName, int stageIdx) {
+		boolean stageCompleted = Agility.getStageProgress(player, stageName, stageIdx);
+
+		// only apply aura effect if obstacle hasn't been completed already
+		return (!stageCompleted && player.getAuraManager().isSurefootedAura())
+				|| Math.random() <= successProbability;
+	}
+
+	public static void initStages(final Player player, final String stageName, int nStages) {
+		player.getTempAttribs().setO(stageName, new boolean[nStages]);
+	}
+
+	public static void initStagesIfNotAlready(final Player player, final String stageName, int nStages) {
+		if (player.getTempAttribs().getO(stageName) == null)
+			player.getTempAttribs().setO(stageName, new boolean[nStages]);
+	}
+
+	public static boolean[] getStages(final Player player, final String stageName) {
+		return player.getTempAttribs().getO(stageName);
+	}
+
+	public static void setStageProgress(final Player player, final String stageName, int stageIdx, boolean completedStage) {
+		boolean[] stageProgress = player.getTempAttribs().getO(stageName);
+		if (stageProgress == null || stageIdx < 0 || stageIdx >= stageProgress.length)
+			return;
+		stageProgress[stageIdx] = completedStage;
+	}
+
+	public static boolean getStageProgress(final Player player, final String stageName, int stageIdx) {
+		boolean[] stageProgress = player.getTempAttribs().getO(stageName);
+		if (stageProgress == null || stageIdx < 0 || stageIdx >= stageProgress.length)
+			return false;
+		return stageProgress[stageIdx];
+	}
+
+	public static boolean completedCourse(final Player player, final String stageName) {
+		boolean[] stageProgress = player.getTempAttribs().getO(stageName);
+		if (stageProgress == null)
+			return false;
+
+		for (boolean stage : stageProgress)
+			if (!stage)
+				return false;
+
+		return true;
+	}
+
+	public static void removeStage(final Player player, final String stageName) {
+		player.getTempAttribs().removeO(stageName);
 	}
 
 }

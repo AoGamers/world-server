@@ -2,7 +2,7 @@ package com.rs.game.content.world.npcs.max.tasks;
 
 import com.rs.game.content.skills.magic.Magic;
 import com.rs.game.content.world.npcs.max.Max;
-import com.rs.game.model.entity.pathing.RouteEvent;
+import com.rs.engine.pathfinder.RouteEvent;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
 
@@ -14,7 +14,8 @@ public class MaxTaskAlch implements Task {
 		VARROCK(Tile.of(3212, 3423, 0), Tile.of(3185, 3436, 0)),
 		;
 		
-		private Tile tele, alchSpot;
+		private final Tile tele;
+        private final Tile alchSpot;
 		
 		AlchLocation(Tile tele, Tile alchSpot) {
 			this.tele = tele;
@@ -25,7 +26,7 @@ public class MaxTaskAlch implements Task {
 	private boolean started = false;
 	private boolean atLocation = false;
 	private int itemsAlched = Utils.random(85, 150);
-	private AlchLocation loc = AlchLocation.values()[Utils.random(AlchLocation.values().length)];
+	private final AlchLocation loc = AlchLocation.values()[Utils.random(AlchLocation.values().length)];
 	
 	@Override
 	public int tick(Max max) {

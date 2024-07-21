@@ -4,7 +4,6 @@ import com.rs.cache.loaders.ItemDefinitions
 import com.rs.engine.dialogue.HeadE
 import com.rs.engine.dialogue.startConversation
 import com.rs.game.content.ItemConstants
-import com.rs.game.content.skills.summoning.Summoning
 import com.rs.game.model.entity.player.Player
 import com.rs.game.model.entity.player.Skills
 import com.rs.lib.net.ClientPacket
@@ -13,10 +12,10 @@ import com.rs.plugin.annotations.ServerStartupEvent
 import com.rs.plugin.kts.onButtonClick
 import com.rs.plugin.kts.onItemOnNpc
 import com.rs.plugin.kts.onNpcClick
-import com.rs.tools.old.CharmDrop
 import com.rs.utils.DropSets
 import com.rs.utils.drop.DropTable
 import kotlin.math.floor
+import kotlin.math.min
 
 enum class Imbue(val itemId: Int, val imbuedItemId: Int, val zealCost: Int) {
     GOLD_RING(1635, 15009, 2),
@@ -107,7 +106,7 @@ fun mapRewardsPlugins() {
                             player.sendMessage("You need 2 Zeal to gamble.")
                             return@onButtonClick
                         }
-                        player.soulWarsZeal -= 2;
+                        player.soulWarsZeal -= 2
                         DropTable.calculateDrops(player, DropSets.getDropSet("sw_gamble")).forEach { player.inventory.addItemDrop(it) }
                         if (Utils.random(50) == 0) {
                             player.npcDialogue(8526, HeadE.CHEERFUL, "Oi, guv! I'm feeling generous so I've conscripted one of my friends to gather charms for you.")
@@ -134,13 +133,11 @@ fun mapRewardsPlugins() {
                 player.startConversation {
                     npc(npc.id, HeadE.CALM_TALK, "Are you sure you'd like me to remove your enchantment? You won't be refunded any Zeal for this process.")
                     options {
-                        option("Yes, please restore my ring to its original state.") {
-                            exec {
-                                item.id = imbue.itemId
-                                player.inventory.refresh(item.slot)
-                            }
+                        opExec("Yes, please restore my ring to its original state.") {
+                            item.id = imbue.itemId
+                            player.inventory.refresh(item.slot)
                         }
-                        option("Nevermind.")
+                        op("Nevermind.")
                     }
                 }
             }
@@ -148,19 +145,15 @@ fun mapRewardsPlugins() {
                 player.startConversation {
                     npc(npc.id, HeadE.CALM_TALK, "I can imbue that ring for you for " + imbue.zealCost + " Zeal. Is that alright with you?")
                     options {
-                        option("Yes, please imbue my ring.") {
-                            if (player.soulWarsZeal >= imbue.zealCost)
-                                exec {
-                                    if (player.soulWarsZeal >= imbue.zealCost) {
-                                        player.soulWarsZeal -= imbue.zealCost
-                                        item.id = imbue.imbuedItemId
-                                        player.inventory.refresh(item.slot)
-                                    }
-                                }
-                            else
-                                npc(npc.id, HeadE.CALM_TALK, "You don't have enough Zeal.")
+                        opExec("Yes, please imbue my ring.") {
+                            if (player.soulWarsZeal >= imbue.zealCost) {
+                                player.soulWarsZeal -= imbue.zealCost
+                                item.id = imbue.imbuedItemId
+                                player.inventory.refresh(item.slot)
+                            } else
+                                player.npcDialogue(npc.id, HeadE.CALM_TALK, "You don't have enough Zeal.")
                         }
-                        option("Nevermind.")
+                        op("Nevermind.")
                     }
                 }
             }
@@ -184,10 +177,10 @@ fun buyXp(player: Player, skillId: Int, packet: ClientPacket) {
 
 fun getXpPerZeal(level: Int, skillId: Int): Int {
     return when(skillId) {
-        Skills.ATTACK, Skills.STRENGTH, Skills.DEFENSE, Skills.HITPOINTS -> floor((level*level) / 600.0).toInt() * 525
-        Skills.RANGE, Skills.MAGIC -> floor((level*level) / 600.0).toInt() * 480
-        Skills.PRAYER -> floor((level*level) / 600.0).toInt() * 270
-        Skills.SLAYER -> floor((level*level) / 349.0).toInt() * 45
+        Skills.ATTACK, Skills.STRENGTH, Skills.DEFENSE, Skills.HITPOINTS -> floor(min(1.0, (level*level) / 600.0)).toInt() * 525
+        Skills.RANGE, Skills.MAGIC -> floor(min(1.0, (level*level) / 600.0)).toInt() * 480
+        Skills.PRAYER -> floor(min(1.0, (level*level) / 600.0)).toInt() * 270
+        Skills.SLAYER -> floor(min(1.0, (level*level) / 349.0)).toInt() * 45
         else -> 1
     }
 }

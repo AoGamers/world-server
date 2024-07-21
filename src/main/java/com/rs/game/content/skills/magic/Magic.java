@@ -18,11 +18,7 @@ package com.rs.game.content.skills.magic;
 
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
-import com.rs.game.content.bosses.godwars.GodwarsController;
 import com.rs.game.content.combat.CombatSpell;
-import com.rs.game.content.skills.construction.HouseController;
-import com.rs.game.content.skills.dungeoneering.DamonheimController;
-import com.rs.game.content.world.areas.wilderness.WildernessController;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.interactions.PlayerCombatInteraction;
@@ -40,37 +36,28 @@ import com.rs.plugin.handlers.InterfaceOnPlayerHandler;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.rs.game.content.quests.plague_city.utils.PlagueCityConstantsKt.ARDOUGNE_TELEPORT_UNLOCKED;
+import static com.rs.game.content.world.areas.yanille.npcs.AleckKt.DEFAULT_TELEPORT_LOCATION;
+import static com.rs.game.content.world.areas.yanille.npcs.AleckKt.WATCHTOWER_TELEPORT_LOCATION_KEY;
+
 @PluginEventHandler
 public class Magic {
 
 	public static boolean isSlayerStaff(int weaponId) {
-		switch (weaponId) {
-			case 4170:
-			case 15486:
-			case 15502:
-			case 22207:
-			case 22213:
-			case 22211:
-			case 22209:
-				return true;
-		}
-		return false;
-	}
+        return switch (weaponId) {
+            case 4170, 15486, 15502, 22207, 22213, 22211, 22209 -> true;
+            default -> false;
+        };
+    }
 
 	public static boolean hasStaffOfLight(int weaponId) {
-		switch (weaponId) {
-			case 15486:
-			case 15502:
-			case 22207:
-			case 22213:
-			case 22211:
-			case 22209:
-				return true;
-		}
-		return false;
-	}
+        return switch (weaponId) {
+            case 15486, 15502, 22207, 22213, 22211, 22209 -> true;
+            default -> false;
+        };
+    }
 
-	public static final boolean checkCombatSpell(Player player, CombatSpell spell, int set, boolean delete) {
+	public static boolean checkCombatSpell(Player player, CombatSpell spell, int set, boolean delete) {
 		if (spell == CombatSpell.STORM_OF_ARMADYL && !player.isQuestComplete(Quest.RITUAL_OF_MAHJARRAT, "to cast Storm of Armadyl."))
 			return false;
 		if (set >= 0)
@@ -81,7 +68,7 @@ public class Magic {
 		return true;
 	}
 
-	public static final void manualCast(Player player, Entity target, CombatSpell spell) {
+	public static void manualCast(Player player, Entity target, CombatSpell spell) {
 		if (checkCombatSpell(player, spell, 1, false)) {
 			player.setNextFaceTile(target.getMiddleTile());
 			player.getInteractionManager().setInteraction(new PlayerCombatInteraction(player, target));
@@ -151,14 +138,14 @@ public class Magic {
 			Magic.processLunarSpell(e.getPlayer(), e.getComponentId(), e.getPacket());
 	});
 
-	public static final void setCombatSpell(Player player, CombatSpell spell) {
+	public static void setCombatSpell(Player player, CombatSpell spell) {
 		if (player.getCombatDefinitions().getAutoCast() == spell)
 			player.getCombatDefinitions().resetSpells(true);
 		else
 			checkCombatSpell(player, spell, 0, false);
 	}
 
-	public static final void processLunarSpell(Player player, int componentId, ClientPacket packetId) {
+	public static void processLunarSpell(Player player, int componentId, ClientPacket packetId) {
 		switch (componentId) {
 			case 39:
 				player.stopAll(false);
@@ -270,8 +257,12 @@ public class Magic {
 				Lunars.handleDisruptionShield(player);
 				break;
 			case 75:
-				player.stopAll(false);
-				sendLunarTeleportSpell(player, 92, 101, Tile.of(2814, 3677, 0), new RuneSet(Rune.LAW, 3, Rune.ASTRAL, 3, Rune.WATER, 10));
+				if (player.isQuestComplete(Quest.EADGARS_RUSE)) {
+					player.stopAll(false);
+					sendLunarTeleportSpell(player, 92, 101, Tile.of(2814, 3677, 0), new RuneSet(Rune.LAW, 3, Rune.ASTRAL, 3, Rune.WATER, 10));
+				} else {
+					player.sendMessage("You have not yet learned this spell.");
+				}
 				break;
 			case 76:
 				player.stopAll(false);
@@ -296,7 +287,7 @@ public class Magic {
 		}
 	}
 
-	public static final void processAncientSpell(Player player, int componentId, ClientPacket packetId) {
+	public static void processAncientSpell(Player player, int componentId, ClientPacket packetId) {
 		player.stopAll(false);
 		CombatSpell combatSpell = CombatSpell.forId(193, componentId);
 		if (combatSpell != null) {
@@ -334,7 +325,7 @@ public class Magic {
 		}
 	}
 
-	public static final void processNormalSpell(Player player, int componentId, ClientPacket packetId) {
+	public static void processNormalSpell(Player player, int componentId, ClientPacket packetId) {
 		player.stopAll(false);
 		CombatSpell combatSpell = CombatSpell.forId(192, componentId);
 		if (combatSpell != null) {
@@ -350,40 +341,52 @@ public class Magic {
 				player.stopAll();
 				player.getInterfaceManager().sendInterface(432);
 				break;
-			case 24:
+			case 24: // Home teleport
 				useHomeTele(player);
 				break;
-			case 37: // mobi
+			case 37: // Mobilising Armies teleport
 				sendNormalTeleportSpell(player, 10, 19, Tile.of(2413, 2848, 0), new RuneSet(Rune.LAW, 1, Rune.WATER, 1, Rune.AIR, 1));
 				break;
-			case 40: // varrock
+			case 40: // Varrock teleport
 				sendNormalTeleportSpell(player, 25, 19, Tile.of(3212, 3424, 0), new RuneSet(Rune.FIRE, 1, Rune.AIR, 3, Rune.LAW, 1));
 				break;
-			case 43: // lumby
+			case 43: // Lumbridge teleport
 				sendNormalTeleportSpell(player, 31, 41, Tile.of(3222, 3218, 0), new RuneSet(Rune.EARTH, 1, Rune.AIR, 3, Rune.LAW, 1));
 				break;
-			case 46: // fally
+			case 46: // Falador teleport
 				sendNormalTeleportSpell(player, 37, 48, Tile.of(2964, 3379, 0), new RuneSet(Rune.WATER, 1, Rune.AIR, 3, Rune.LAW, 1));
 				break;
-			case 48:
+			case 48: // PoH teleport
 				sendNormalTeleportSpell(player, 40, 48, Tile.of(player.getHouse().getLocation().getTile()), new RuneSet(Rune.AIR, 1, Rune.EARTH, 1, Rune.LAW, 1), () -> {
 					player.tele(Tile.of(player.getTile())); //cancel teleport tile movement
 					enterHouseAndResetDamage(player);
 				});
 				break;
-			case 51: // camelot
+			case 51: // Camelot teleport
 				sendNormalTeleportSpell(player, 45, 55.5, Tile.of(2757, 3478, 0), new RuneSet(Rune.AIR, 5, Rune.LAW, 1));
 				break;
-			case 57: // ardy
-				sendNormalTeleportSpell(player, 51, 61, Tile.of(2664, 3305, 0), new RuneSet(Rune.WATER, 2, Rune.LAW, 2));
+			case 57: // Ardougne teleport
+				if (player.isQuestComplete(Quest.PLAGUE_CITY) && player.getBool(ARDOUGNE_TELEPORT_UNLOCKED)) {
+					sendNormalTeleportSpell(player, 51, 61, Tile.of(2664, 3305, 0), new RuneSet(Rune.WATER, 2, Rune.LAW, 2));
+				} else {
+					player.sendMessage("You have not yet learned this spell.");
+				}
 				break;
-			case 62: // watch
-				sendNormalTeleportSpell(player, 58, 68, Tile.of(2547, 3113, 2), new RuneSet(Rune.EARTH, 2, Rune.LAW, 2));
+			case 62: // Watchtower teleport
+				final Tile WATCHTOWER_TILE = Tile.of(2547, 3113, 2);
+				final Tile YANILLE_TILE = Tile.of(2576, 3089, 0);
+				Boolean teleportLocation = (Boolean) player.getSavingAttributes().getOrDefault(WATCHTOWER_TELEPORT_LOCATION_KEY, DEFAULT_TELEPORT_LOCATION);
+				Tile teleportTile = teleportLocation ? YANILLE_TILE : WATCHTOWER_TILE;
+				sendNormalTeleportSpell(player, 58, 68, teleportTile, new RuneSet(Rune.EARTH, 2, Rune.LAW, 2));
 				break;
-			case 69: // troll
-				sendNormalTeleportSpell(player, 61, 68, Tile.of(2888, 3674, 0), new RuneSet(Rune.FIRE, 2, Rune.LAW, 2));
+			case 69: // Trollheim teleport
+				if (player.isQuestComplete(Quest.EADGARS_RUSE)) {
+					sendNormalTeleportSpell(player, 51, 61, Tile.of(2882, 3668, 0), new RuneSet(Rune.FIRE, 2, Rune.LAW, 2));
+				} else {
+					player.sendMessage("You have not yet learned this spell.");
+				}
 				break;
-			case 72: // ape
+			case 72: // Ape Atoll teleport
 				sendNormalTeleportSpell(player, 64, 76, Tile.of(2797, 2798, 1), new RuneSet(Rune.FIRE, 2, Rune.WATER, 2, Rune.LAW, 2));
 				break;
 		}
@@ -412,59 +415,63 @@ public class Magic {
 		return true;
 	}
 
-	public static final void sendNormalTeleportNoType(Player player, Tile tile) {
+	public static void sendNormalTeleportNoType(Player player, Tile tile) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, 0, 0, tile, 3, true, TeleType.BYPASS_HOOKS, null);
 	}
 
-	public static final void sendDamonheimTeleport(Player player, Tile tile) {
+	public static void sendDamonheimTeleport(Player player, Tile tile) {
 		sendTeleportSpell(player, 13652, 13654, 2602, 2603, 0, 0, tile, 10, true, TeleType.MAGIC, null);
 	}
 
-	public static final void sendLunarTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
+	public static void sendLunarTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
 		sendTeleportSpell(player, 9606, -1, 1685, -1, level, xp, tile, 5, true, TeleType.MAGIC, runes, null);
 	}
 
-	public static final void sendLunarTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
+	public static void sendLunarTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
 		sendTeleportSpell(player, 9606, -1, 1685, -1, level, xp, tile, 5, true, TeleType.MAGIC, runes, onArrive);
 	}
 
-	public static final void sendAncientTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
+	public static void sendAncientTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
 		sendTeleportSpell(player, 9599, -2, 1681, -1, level, xp, tile, 5, true, TeleType.MAGIC, runes, onArrive);
 	}
 
-	public static final void sendAncientTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
+	public static void sendAncientTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
 		sendTeleportSpell(player, 9599, -2, 1681, -1, level, xp, tile, 5, true, TeleType.MAGIC, runes, null);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile) {
+	public static void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, level, xp, tile, 3, true, TeleType.MAGIC, (RuneSet) null, null);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
+	public static void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, level, xp, tile, 3, true, TeleType.MAGIC, runes, null);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
+	public static void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, RuneSet runes, Runnable onArrive) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, level, xp, tile, 3, true, TeleType.MAGIC, runes, onArrive);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, Runnable onArrive) {
+	public static void sendNormalTeleportSpell(Player player, int level, double xp, Tile tile, Runnable onArrive) {
 		sendNormalTeleportSpell(player, level, xp, tile, null, onArrive);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, Tile tile) {
+	public static void sendNormalTeleportSpell(Player player, Tile tile) {
 		sendNormalTeleportSpell(player, 0, 0, tile);
 	}
 
-	public static final void sendNormalTeleportSpell(Player player, Tile tile, Runnable onArrive) {
+	public static void sendNormalTeleportSpell(Player player, Tile tile, Runnable onArrive) {
 		sendNormalTeleportSpell(player, 0, 0, tile, onArrive);
 	}
 
-	public static final void sendItemTeleportSpell(Player player, boolean randomize, int upEmoteId, int upGraphicId, int delay, Tile tile) {
+	public static void sendItemTeleportSpell(Player player, boolean randomize, int upEmoteId, int upGraphicId, int delay, Tile tile) {
 		sendItemTeleportSpell(player, randomize, upEmoteId, upGraphicId, delay, tile, null);
 	}
 
-	public static final void sendItemTeleportSpell(Player player, boolean randomize, int upEmoteId, int upGraphicId, int delay, Tile tile, Runnable onArrive) {
+	public static boolean sendItemTeleportSpell(Player player, boolean randomize, int upEmoteId, int upGraphicId, int downEmoteId, int downGraphicId, int delay, Tile tile) {
+		return sendTeleportSpell(player, upEmoteId, downEmoteId, upGraphicId, downGraphicId, 0, 0, tile, delay, randomize, TeleType.ITEM, null);
+	}
+
+	public static void sendItemTeleportSpell(Player player, boolean randomize, int upEmoteId, int upGraphicId, int delay, Tile tile, Runnable onArrive) {
 		player.getTempAttribs().setB("glory", true);
 		sendTeleportSpell(player, upEmoteId, -2, upGraphicId, -1, 0, 0, tile, delay, randomize, TeleType.ITEM, onArrive);
 	}
@@ -474,32 +481,32 @@ public class Magic {
 		player.getTasks().schedule(1, () -> Magic.sendObjectTeleportSpell(player, false, tile, null));
 	}
 
-	public static final void sendObjectTeleportSpell(Player player, boolean randomize, Tile tile) {
+	public static void sendObjectTeleportSpell(Player player, boolean randomize, Tile tile) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, 0, 0, tile, 3, randomize, TeleType.OBJECT, (RuneSet) null, null);
 	}
 
-	public static final void sendObjectTeleportSpell(Player player, boolean randomize, Tile tile, Runnable onArrive) {
+	public static void sendObjectTeleportSpell(Player player, boolean randomize, Tile tile, Runnable onArrive) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, 0, 0, tile, 3, randomize, TeleType.OBJECT, (RuneSet) null, onArrive);
 	}
 
-	public static final void sendDelayedObjectTeleportSpell(Player player, int delay, boolean randomize, Tile tile, Runnable onArrive) {
+	public static void sendDelayedObjectTeleportSpell(Player player, int delay, boolean randomize, Tile tile, Runnable onArrive) {
 		sendTeleportSpell(player, 8939, 8941, 1576, 1577, 0, 0, tile, delay, randomize, TeleType.OBJECT, (RuneSet) null, onArrive);
 	}
 
-	public static final boolean sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, Runnable onArrive) {
+	public static boolean sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, Runnable onArrive) {
 		sendTeleportSpell(player, upEmoteId, downEmoteId, upGraphicId, downGraphicId, level, xp, tile, delay, randomize, teleType, (RuneSet) null, onArrive);
 		return randomize;
 	}
 
-	public static final void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, RuneSet runes, Runnable onArrive) {
+	public static void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, RuneSet runes, Runnable onArrive) {
 		sendTeleportSpell(player, upEmoteId, downEmoteId, upGraphicId, downGraphicId, level, xp, tile, delay, randomize, teleType, runes, null, onArrive);
 	}
 
-	public static final void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, Runnable onCast, Runnable onArrive) {
+	public static void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, Runnable onCast, Runnable onArrive) {
 		sendTeleportSpell(player, upEmoteId, downEmoteId, upGraphicId, downGraphicId, level, xp, tile, delay, randomize, teleType, null, onCast, onArrive);
 	}
 
-	public static final void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, RuneSet runes, Runnable onCast, Runnable onArrive) {
+	public static void sendTeleportSpell(final Player player, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, int level, final double xp, final Tile tile, int delay, final boolean randomize, final TeleType teleType, RuneSet runes, Runnable onCast, Runnable onArrive) {
 		Teleport tele = new Teleport(Tile.of(player.getTile()), tile, teleType, () -> {
 			if (player.isLocked())
 				return false;
@@ -525,7 +532,7 @@ public class Magic {
 			if (upGraphicId != -1)
 				player.setNextSpotAnim(new SpotAnim(upGraphicId));
 			if (teleType == TeleType.MAGIC)
-				player.voiceEffect(5527);
+				player.voiceEffect(5527, true);
 			player.lock(3 + delay);
 		}, () -> {
 			Tile toTile = tile;
@@ -547,7 +554,7 @@ public class Magic {
 			if (downGraphicId != -1)
 				player.spotAnim(downGraphicId);
 			if (teleType == TeleType.MAGIC) {
-				player.voiceEffect(5524);
+				player.voiceEffect(5524, true);
 				player.setNextFaceTile(Tile.of(toTile.getX(), toTile.getY() - 1, toTile.getPlane()));
 				player.setFaceAngle(6);
 			}
@@ -558,7 +565,7 @@ public class Magic {
 		}, true);
 		Teleport.execute(player, tele, delay);
 	}
-	
+
 	public static void npcTeleport(NPC npc, int upEmoteId, final int downEmoteId, int upGraphicId, final int downGraphicId, final Tile tile, int delay, final boolean randomize, Consumer<NPC> onArrive) {
 		npc.resetWalkSteps();
 		npc.setRouteEvent(null);
@@ -589,24 +596,24 @@ public class Magic {
 			npc.resetReceivedHits();
 		});
 	}
-	
-	public static final void npcNormalTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
+
+	public static void npcNormalTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
 		npcTeleport(npc, 8939, 8941, 1576, 1577, tile, 3, randomize, onArrive);
 	}
-	
-	public static final void npcAncientTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
+
+	public static void npcAncientTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
 		npcTeleport(npc, 9599, -2, 1681, -1, tile, 5, randomize, onArrive);
 	}
-	
-	public static final void npcLunarTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
+
+	public static void npcLunarTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
 		npcTeleport(npc, 9606, -1, 1685, -1, tile, 5, randomize, onArrive);
 	}
-	
-	public static final void npcDaemonheimTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
+
+	public static void npcDaemonheimTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
 		npcTeleport(npc, 13652, 13654, 2602, 2603, tile, 10, randomize, onArrive);
 	}
-	
-	public static final void npcItemTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
+
+	public static void npcItemTeleport(NPC npc, Tile tile, boolean randomize, Consumer<NPC> onArrive) {
 		npcTeleport(npc, 9603, -2, 1684, -1, tile, 4, randomize, onArrive);
 	}
 

@@ -4,8 +4,8 @@ import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.miniquest.Miniquest;
 import com.rs.engine.quest.Quest;
-import com.rs.game.content.skills.thieving.PickPocketDummy;
-import com.rs.game.content.skills.thieving.PickPocketDummyMK2;
+import com.rs.game.content.skills.thieving.thievesGuild.PickPocketDummy;
+import com.rs.game.content.skills.thieving.thievesGuild.PickPocketDummyMK2;
 import com.rs.game.ge.GE;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.player.Skills;
@@ -19,15 +19,15 @@ import com.rs.utils.shop.ShopsHandler;
 public class TheivesGuild {
 
     public static LoginHandler login = new LoginHandler(e -> {
-        if (Miniquest.A_GUILD_OF_OUR_OWN.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.A_GUILD_OF_OUR_OWN, null)) {
+        if (Miniquest.A_GUILD_OF_OUR_OWN.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.A_GUILD_OF_OUR_OWN, false)) {
             e.getPlayer().getVars().saveVarBit(7792, 40);
             return;
         }
-        if (Miniquest.LOST_HER_MARBLES.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.LOST_HER_MARBLES, null)) {
+        if (Miniquest.LOST_HER_MARBLES.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.LOST_HER_MARBLES, false)) {
             e.getPlayer().getVars().saveVarBit(7792, 20);
             return;
         }
-        if (Miniquest.FROM_TINY_ACORNS.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.FROM_TINY_ACORNS, null)) {
+        if (Miniquest.FROM_TINY_ACORNS.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.FROM_TINY_ACORNS, false)) {
             e.getPlayer().getVars().saveVarBit(7792, 10);
             return;
         }
@@ -44,20 +44,20 @@ public class TheivesGuild {
             e.getPlayer().sendMessage("The cellar is securely locked.");
             return;
         }
-        if (Miniquest.A_GUILD_OF_OUR_OWN.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.A_GUILD_OF_OUR_OWN, null)) {
+        if (Miniquest.A_GUILD_OF_OUR_OWN.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.A_GUILD_OF_OUR_OWN, false)) {
             e.getPlayer().useLadder(Tile.of(4762, 5763, 0));
             e.getPlayer().getVars().saveVarBit(7792, 40); //Darren T4
             e.getPlayer().getMusicsManager().unlockMusic(840);
             return;
         }
-        if (Miniquest.LOST_HER_MARBLES.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.LOST_HER_MARBLES, null)) {
+        if (Miniquest.LOST_HER_MARBLES.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.LOST_HER_MARBLES, false)) {
             e.getPlayer().useLadder(Tile.of(4634, 5763, 0));
             e.getPlayer().getVars().saveVarBit(7792, 20); //Darren T3
             e.getPlayer().getMusicsManager().unlockMusic(838);
             return;
         }
-        if (Miniquest.FROM_TINY_ACORNS.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.FROM_TINY_ACORNS, null)) {
-            e.getPlayer().useLadder(Tile.of(4762, 5891, 0));
+        if (Miniquest.FROM_TINY_ACORNS.isImplemented() && e.getPlayer().isMiniquestComplete(Miniquest.FROM_TINY_ACORNS, false)) {
+            e.getPlayer().useLadder(Tile.of(4634, 5763, 0));
             e.getPlayer().getMusicsManager().unlockMusic(839);
             return;
         }
@@ -105,11 +105,6 @@ public class TheivesGuild {
         }
     });
 
-    @ServerStartupEvent
-    public static void addLoSOverrides() {
-        Entity.addLOSOverride(11299);
-    }
-
     public static NPCInteractionDistanceHandler MrPinsworthDistance = new NPCInteractionDistanceHandler(new Object[] { 11299 }, (p, n) -> 1);
 
     public static NPCClickHandler MrPinsworth = new NPCClickHandler(new Object[] { 11299 }, e -> {
@@ -134,8 +129,6 @@ public class TheivesGuild {
         }
     });
 
-    public static NPCClickHandler PickpocketingVolunteer = new NPCClickHandler(new Object[]{ 11282, 11284, 11286 }, new String[]{"Talk-to"}, e -> {
-        e.getPlayer().npcDialogue(e.getNPCId(), HeadE.SHAKING_HEAD, "Alright there! I'm here for you to practise the ol' dippetydoodah on. If you want to know more, talk to the trainer.");
-    });
+    public static NPCClickHandler PickpocketingVolunteer = new NPCClickHandler(new Object[]{ 11282, 11284, 11286 }, new String[]{"Talk-to"}, e -> e.getPlayer().npcDialogue(e.getNPCId(), HeadE.SHAKING_HEAD, "Alright there! I'm here for you to practise the ol' dippetydoodah on. If you want to know more, talk to the trainer."));
 
 }

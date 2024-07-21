@@ -26,6 +26,7 @@ import com.rs.game.model.entity.player.Player;
 import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
 import com.rs.lib.util.Utils;
+import kotlin.Pair;
 
 public class KrilTsutsaroth extends CombatScript {
 
@@ -52,7 +53,7 @@ public class KrilTsutsaroth extends CombatScript {
 				break;
 			case 4:
 				npc.setNextForceTalk(new ForceTalk("The Dark One will have their souls!"));
-				npc.voiceEffect(3229);
+				npc.voiceEffect(target, 3229, true);
 				break;
 			case 5:
 				npc.setNextForceTalk(new ForceTalk("Zamorak curse them!"));
@@ -74,7 +75,7 @@ public class KrilTsutsaroth extends CombatScript {
 			npc.setNextSpotAnim(new SpotAnim(1210));
 			for (Entity t : npc.getPossibleTargets()) {
 				delayHit(npc, 1, t, getMagicHit(npc, getMaxHit(npc, 300, AttackStyle.MAGE, t)));
-				World.sendProjectile(npc, t, 1211, 41, 16, 41, 35, 16, 0);
+				World.sendProjectile(npc, t, 1211, new Pair<>(41, 16), 41, 5, 16);
 				if (Utils.getRandomInclusive(4) == 0)
 					t.getPoison().makePoisoned(168);
 			}

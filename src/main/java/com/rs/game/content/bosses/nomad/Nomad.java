@@ -58,7 +58,7 @@ public class Nomad extends NPC {
 
 	public void setTarget(Player player) {
 		target = player;
-		super.setTarget(player);
+		super.setCombatTarget(player);
 	}
 
 	public void setNextMovePerform() {
@@ -95,7 +95,7 @@ public class Nomad extends NPC {
 			target.lock();
 			target.getVars().setVarBit(6962, 0);
 			target.npcDialogue(getId(), HeadE.ANGRY, "You...<br>You have doomed this world.");
-			target.voiceEffect(8260);
+			target.voiceEffect(8260, false);
 			WorldTasks.schedule(new Task() {
 				@Override
 				public void run() {
@@ -122,17 +122,17 @@ public class Nomad extends NPC {
 				}
 				final Player player = (Player) target;
 				setNextForceTalk(new ForceTalk("Face me!"));
-				player.voiceEffect(7992);
+				player.voiceEffect(7992, false);
 			} else if (notAttacked == 20) {
 				final Player player = (Player) target;
 				setNextForceTalk(new ForceTalk("Coward."));
-				player.voiceEffect(8055);
+				player.voiceEffect(8055, false);
 				reset();
 				setNextFaceEntity(null);
 				sendTeleport(getThroneTile());
 			}
 		} else if (target instanceof Familiar && this.target != null)
-			super.setTarget(this.target);
+			super.setCombatTarget(this.target);
 		else
 			notAttacked = 0;
 		super.processNPC();
@@ -204,7 +204,7 @@ public class Nomad extends NPC {
 					n.setCantFollowUnderCombat(true);
 					n.setNextAnimation(new Animation(12730));
 					n.setNextSpotAnim(new SpotAnim(1577));
-					n.setTarget(target);
+					n.setCombatTarget(target);
 				}
 
 			}
@@ -213,17 +213,12 @@ public class Nomad extends NPC {
 
 	public Tile getCopySpot(int index) {
 		Tile throneTile = getThroneTile();
-		switch (index) {
-		case 0:
-			return throneTile;
-		case 1:
-			return throneTile.transform(-3, -3, 0);
-		case 2:
-			return throneTile.transform(3, -3, 0);
-		case 3:
-		default:
-			return throneTile.transform(0, -6, 0);
-		}
+        return switch (index) {
+            case 0 -> throneTile;
+            case 1 -> throneTile.transform(-3, -3, 0);
+            case 2 -> throneTile.transform(3, -3, 0);
+            default -> throneTile.transform(0, -6, 0);
+        };
 
 	}
 

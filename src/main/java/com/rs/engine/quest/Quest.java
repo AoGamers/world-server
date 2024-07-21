@@ -220,8 +220,8 @@ public enum Quest {
 	SONG_FROM_DEPTHS(202, 192)
 	;
 
-	private static HashMap<Integer, Quest> QUESTS_BY_ID = new HashMap<>();
-	private static HashMap<Integer, Quest> QUESTS_BY_SLOTID = new HashMap<>();
+	private static final HashMap<Integer, Quest> QUESTS_BY_ID = new HashMap<>();
+	private static final HashMap<Integer, Quest> QUESTS_BY_SLOTID = new HashMap<>();
 
 	static {
 		for (Quest quest : Quest.values()) {
@@ -238,7 +238,7 @@ public enum Quest {
 				QuestHandler handler = clazz.getAnnotation(QuestHandler.class);
 				if (handler == null || clazz.getSuperclass() != QuestOutline.class)
 					continue;
-				handler.value().handler = (QuestOutline) clazz.getConstructor().newInstance();
+				handler.quest().handler = (QuestOutline) clazz.getConstructor().newInstance();
 			}
 		} catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
@@ -253,7 +253,8 @@ public enum Quest {
 		return QUESTS_BY_SLOTID.get(id);
 	}
 
-	private int id, slotId;
+	private final int id;
+    private final int slotId;
 	private QuestOutline handler;
 
 	private Quest(int id, int slotId) {
@@ -353,7 +354,7 @@ public enum Quest {
 				player.getPackets().sendRunScript(4249, 81461283, 81461284, 81461285, 81461286, 81461291, questState, height, "<col=ebe076>" + "Rewards:" + "</col>", rewardsStr);
 				height += Utils.getIFStringHeightAbs(rewardsStr, 495, 388);
 
-				player.getPackets().sendRunScript(5510, -1, 81461264, height, 0);
+				//player.getPackets().sendRunScript(5510, -1, 81461264, height, 0); //TODO figure out what -1 is for and proper value
 				player.getPackets().sendRunScript(31, 81461292, 81461264, 5666, 5663, 5664, 5665, 5686, 5685);
 			});
 		} else
@@ -386,28 +387,28 @@ public enum Quest {
 		QuestOutline handler = getHandler();
 		if (handler == null)
 			return getQuestPointRewardLine().replace("<br>", "");
-		return getQuestPointRewardLine()+getHandler().getRewardsString();
+		return getHandler().getRewardsString();
 	}
 
 	public String getRequirementsString(Player player) {
 		StringBuilder lines = new StringBuilder();
 		QuestInformation info = getDefs().getExtraInfo();
 
-		if (info.getPreReqs().size() > 0) {
+		if (!info.getPreReqs().isEmpty()) {
 			for (Quest preReq : info.getPreReqs())
-				lines.append(Utils.strikeThroughIf(preReq.getDefs().getExtraInfo().getName(), () -> player.isQuestComplete(preReq)) + "<br>");
+				lines.append(Utils.strikeThroughIf(preReq.getDefs().getExtraInfo().getName(), () -> player.isQuestComplete(preReq))).append("<br>");
 		}
 
-		if (info.getSkillReq().size() > 0) {
+		if (!info.getSkillReq().isEmpty()) {
 			for (int skillId : info.getSkillReq().keySet()) {
 				if (info.getSkillReq().get(skillId) == 0)
 					continue;
-				lines.append(Utils.strikeThroughIf(info.getSkillReq().get(skillId) + " " + Skills.SKILL_NAME[skillId], () -> player.getSkills().getLevelForXp(skillId) >= info.getSkillReq().get(skillId)) + "<br>");
+				lines.append(Utils.strikeThroughIf(info.getSkillReq().get(skillId) + " " + Skills.SKILL_NAME[skillId], () -> player.getSkills().getLevelForXp(skillId) >= info.getSkillReq().get(skillId))).append("<br>");
 			}
 		}
 
 		if (info.getQpReq() > 0)
-			lines.append(info.getQpReq() + " quest points<br>");
+			lines.append(info.getQpReq()).append(" quest points<br>");
 		return lines.toString().isEmpty() ? "None." : lines.toString();
 	}
 

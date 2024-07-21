@@ -1,11 +1,11 @@
 package com.rs.game.content.skills.hunter;
 
+import com.rs.engine.pathfinder.collision.CollisionStrategyType;
 import com.rs.game.content.skills.hunter.FlyingEntityHunter.FlyingEntities;
 import com.rs.game.content.skills.hunter.puropuro.ImpDefender;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.ClipType;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
@@ -16,9 +16,9 @@ import com.rs.utils.Ticks;
 @PluginEventHandler
 public class Impling extends NPC {
 
-    private boolean dynamic;
-    private boolean puropuro;
-    private Tile respawnTile;
+    private final boolean dynamic;
+    private final boolean puropuro;
+    private final Tile respawnTile;
 
     public Impling(int id, Tile tile, boolean dynamic) {
         super(id, tile);
@@ -28,7 +28,7 @@ public class Impling extends NPC {
         if (!puropuro)
             finishAfterTicks(Ticks.fromMinutes(30));
         setRandomWalk(true);
-        setClipType(ClipType.FLYING);
+        setCollisionStrategyType(CollisionStrategyType.FLY);
         addLOSOverrides(id);
     }
 
@@ -56,7 +56,7 @@ public class Impling extends NPC {
     public void onRespawn() {
         if (dynamic || !puropuro) {
             setHidden(true);
-            WorldTasks.schedule(Ticks.fromMinutes(Utils.randomInclusive(1, 3)), () -> { setHidden(false); });
+            WorldTasks.schedule(Ticks.fromMinutes(Utils.randomInclusive(1, 3)), () -> setHidden(false));
         }
     }
 
@@ -226,7 +226,7 @@ public class Impling extends NPC {
             new Impling(Impling.rollLowTierOverworldImp(), tile, false);
         }
 
-        WorldTasks.schedule(Ticks.fromMinutes(2), Ticks.fromMinutes(30), () -> {
+        WorldTasks.scheduleLooping(Ticks.fromMinutes(2), Ticks.fromMinutes(30), () -> {
             for (Tile tile : DYNAMIC_OVERWORLD_ALL_IMPLING_SPAWNS) {
                 for (int i = 0; i < 3; i++) {
                     int npcId = rollTier();

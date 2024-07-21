@@ -16,11 +16,10 @@
 //
 package com.rs.game.content.minigames.shadesofmortton;
 
+import com.rs.engine.pathfinder.collision.CollisionStrategyType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.ClipType;
 import com.rs.game.model.entity.player.Player;
-import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
 import com.rs.plugin.annotations.PluginEventHandler;
@@ -29,19 +28,19 @@ import com.rs.plugin.handlers.NPCInstanceHandler;
 @PluginEventHandler
 public class Shade extends NPC {
 
-	private int baseId;
+	private final int baseId;
 	private int attack;
 
 	public Shade(int id, Tile tile) {
 		super(id, tile);
 		baseId = id;
 		setForceAggroDistance(15);
-		setClipType(ClipType.FLYING);
+		setCollisionStrategyType(CollisionStrategyType.FLY);
 		setNoDistanceCheck(true);
 		attack = 0;
 	}
 
-	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 1240, 1241, 1243, 1244, 1245, 1246, 1247, 1248, 1249, 1250 }, (npcId, tile) -> new Shade(npcId, tile));
+	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(new Object[] { 1240, 1241, 1243, 1244, 1245, 1246, 1247, 1248, 1249, 1250 }, Shade::new);
 
 	@Override
 	public void onRespawn() {
@@ -64,13 +63,13 @@ public class Shade extends NPC {
 			if (withinArea(3503, 3313, 3509, 3319)) {
 				if (getId() == baseId) {
 					transformIntoNPC(baseId+1);
-					setNextAnimation(new Animation(1288));
+					anim(1288);
 				} else {
 					resetWalkSteps();
 					if (attack-- <= 0) {
 						attack = 5;
 						faceTile(Tile.of(3506, 3316, 0));
-						setNextAnimation(new Animation(1284));
+						anim(1284);
 						TempleWall wall = ShadesOfMortton.getRandomWall();
 						if (wall != null)
 							wall.decreaseProgress();
@@ -83,7 +82,7 @@ public class Shade extends NPC {
 		}
 		if (getId() == baseId && inCombat(10000)) {
 			transformIntoNPC(baseId + 1);
-			setNextAnimation(new Animation(1288));
+			anim(1288);
 		} else if (getId() != baseId && !inCombat(10000)) {
 			transformIntoNPC(baseId);
 			resetHP();

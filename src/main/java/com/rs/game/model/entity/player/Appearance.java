@@ -35,7 +35,6 @@ public class Appearance {
 	private int[] lookI;
 	private int[] colour;
 	private boolean male;
-	private transient boolean glowRed;
 	private transient byte[] appearanceData;
 	private transient byte[] md5AppearanceDataHash;
 	private transient short transformedNpcId;
@@ -57,11 +56,6 @@ public class Appearance {
 		resetAppearance();
 	}
 
-	public void setGlowRed(boolean glowRed) {
-		this.glowRed = glowRed;
-		generateAppearanceData();
-	}
-
 	public void setPlayer(Player player) {
 		this.player = player;
 		transformedNpcId = -1;
@@ -74,11 +68,6 @@ public class Appearance {
 		generateAppearanceData();
 	}
 
-	public void switchHidden() {
-		hidePlayer = !hidePlayer;
-		generateAppearanceData();
-	}
-
 	public void setHidden(boolean hidden) {
 		hidePlayer = hidden;
 		generateAppearanceData();
@@ -86,10 +75,6 @@ public class Appearance {
 
 	public boolean isHidden() {
 		return hidePlayer;
-	}
-
-	public boolean isGlowRed() {
-		return glowRed;
 	}
 
 	private int getHatHairStyle(int baseStyle, boolean isFaceMask) {
@@ -104,8 +89,6 @@ public class Appearance {
 		OutputStream stream = new OutputStream();
 		boolean pvpArea = World.isPvpArea(player);
 		boolean showSkillTotal = player.getTempAttribs().getB("showSkillTotal") && !pvpArea;
-		if (glowRed && player.getNextBodyGlow() == null)
-			player.setNextBodyGlow(new BodyGlow(90, 0, 0, 0, 255));
 		int flag = 0;
 		if (!male)
 			flag |= 0x1;
@@ -322,10 +305,8 @@ public class Appearance {
 		if (title >= 58 && title <= 65)
 			return true;
 
-		if (title == 40 || title == 43 || title == 45 || title == 47 || title == 49 || title == 53 || title == 55 || title == 56 || title == 72 || title == 73)
-			return true;
-		return false;
-	}
+        return title == 40 || title == 43 || title == 45 || title == 47 || title == 49 || title == 53 || title == 55 || title == 56 || title == 72 || title == 73;
+    }
 
 	public int getTransformedNPC() {
 		return transformedNpcId;
@@ -567,22 +548,15 @@ public class Appearance {
 	}
 
 	private static int getSetStruct(StructDefinitions struct, int slot, boolean female) {
-		switch (slot) {
-		case 0:
-			return struct.getIntValue(female ? 1175 : 1169, -1);
-		case 1:
-			return struct.getIntValue(female ? 1176: 1170, -1);
-		case 2:
-			return struct.getIntValue(female ? 1177 : 1171, -1);
-		case 3:
-			return struct.getIntValue(female ? 1178 : 1172, -1);
-		case 4:
-			return struct.getIntValue(female ? 1179 : 1173, -1);
-		case 5:
-			return struct.getIntValue(female ? 1180 : 1174, -1);
-		default:
-			return -1;
-		}
+        return switch (slot) {
+            case 0 -> struct.getIntValue(female ? 1175 : 1169, -1);
+            case 1 -> struct.getIntValue(female ? 1176 : 1170, -1);
+            case 2 -> struct.getIntValue(female ? 1177 : 1171, -1);
+            case 3 -> struct.getIntValue(female ? 1178 : 1172, -1);
+            case 4 -> struct.getIntValue(female ? 1179 : 1173, -1);
+            case 5 -> struct.getIntValue(female ? 1180 : 1174, -1);
+            default -> -1;
+        };
 	}
 
 	public void printDebug() {

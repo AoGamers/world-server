@@ -4,7 +4,8 @@ import com.rs.cache.loaders.ObjectType
 import com.rs.engine.dialogue.HeadE
 import com.rs.engine.dialogue.startConversation
 import com.rs.game.World
-import com.rs.game.content.minigames.MinigameUtil
+import com.rs.game.content.minigames.checkAndDeleteFoodAndPotions
+import com.rs.game.content.minigames.giveFoodAndPotions
 import com.rs.game.model.entity.Entity
 import com.rs.game.model.entity.Hit
 import com.rs.game.model.entity.Teleport
@@ -164,8 +165,9 @@ fun mapSoulwars() {
         }
     }
 
-    WorldTasks.schedule(1, 0) {
+    WorldTasks.scheduleTimer(0, 0) { _ ->
         processSoulwars()
+        return@scheduleTimer true
     }
 }
 
@@ -223,7 +225,7 @@ fun attemptStartGame() {
         ACTIVE_GAME = SoulWars()
 }
 
-class SoulAvatar(val redTeam: Boolean, val game: SoulWars, var level: Int = 100) : NPC(if (redTeam) 8596 else 8597, if (redTeam) Tile.of(1965, 3249, 0) else Tile.of(1805, 3208, 0)) {
+class SoulAvatar(private val redTeam: Boolean, val game: SoulWars, var level: Int = 100) : NPC(if (redTeam) 8596 else 8597, if (redTeam) Tile.of(1965, 3249, 0) else Tile.of(1805, 3208, 0)) {
     init {
         capDamage = 700
     }
@@ -297,15 +299,15 @@ class SoulWars {
         }
     }
 
-    private fun getObelisk(): GameObject {
+    private fun getObelisk(): GameObject? {
         return World.getObjectWithType(Tile.of(1886, 3231, 0), ObjectType.SCENERY_INTERACT)
     }
 
-    private fun getEastBarrier(): GameObject {
+    private fun getEastBarrier(): GameObject? {
         return World.getObjectWithType(Tile.of(1933, 3243, 0), ObjectType.WALL_STRAIGHT)
     }
 
-    private fun getWestBarrier(): GameObject {
+    private fun getWestBarrier(): GameObject? {
         return World.getObjectWithType(Tile.of(1842, 3220, 0), ObjectType.WALL_STRAIGHT)
     }
 
@@ -354,7 +356,9 @@ class SoulWars {
         }
     }
 
-    private fun updateObjectTeam(obj: GameObject, redId: Int, blueId: Int, neutralId: Int, capVal: Int): String? {
+    private fun updateObjectTeam(obj: GameObject?, redId: Int, blueId: Int, neutralId: Int, capVal: Int): String? {
+        if (obj == null)
+            return null
         val newId = when {
             capVal >= 25 -> redId
             capVal <= 5 -> blueId
@@ -368,7 +372,18 @@ class SoulWars {
     }
 
     private fun endGame() {
-        val winningTeam = if (redDeaths == blueDeaths) null else if (redDeaths > blueDeaths) blueTeam else redTeam
+        val winningTeam =
+            if (redDeaths == blueDeaths)
+                if (blueAvatar.hitpoints == redAvatar.hitpoints)
+                    null
+                else if (blueAvatar.hitpoints > redAvatar.hitpoints)
+                    blueTeam
+                else
+                    redTeam
+            else if (redDeaths > blueDeaths)
+                blueTeam
+            else
+                redTeam
         arrayOf(blueAvatar, redAvatar).forEach { avatar ->
             avatar.finish()
             avatar.cancelRespawnTask()
@@ -377,7 +392,7 @@ class SoulWars {
             team.forEach { player ->
                 player.tele(exitArea.randomTile)
                 player.controllerManager.forceStop()
-                val zeal = if (winningTeam == null) 2 else if (winningTeam == team) 3 else 1
+                val zeal = if (winningTeam == team) 3 else 1
                 player.soulWarsZeal += zeal
                 player.incrementCount("Soul Wars Zeal earned", zeal)
                 when (zeal) {
@@ -438,7 +453,7 @@ class SoulWarsGameController(val redTeam: Boolean, @Transient val game: SoulWars
                 it.add("Yes, leave. (You won't receive any rewards for doing so)") { player.controllerManager.forceStop() }
                 it.add("Nevermind.")
             }
-            42023, 42024 -> MinigameUtil.giveFoodAndPotions(player)
+            42023, 42024 -> giveFoodAndPotions(player)
             42015 -> checkPositionAndPassThrough(player.x < obj.x, -1, 0)
             42018 -> checkPositionAndPassThrough(player.x >= obj.x, 0, 0)
             in arrayOf(42016, 42013, 42019) -> checkPositionAndPassThrough(player.y > obj.y, 0, -1)
@@ -485,7 +500,7 @@ class SoulWarsGameController(val redTeam: Boolean, @Transient val game: SoulWars
                         killer.removeDamage(player)
                         killer.increaseKillCount(player)
                     }
-                    val soulFrags = player.inventory.getItemById(SOUL_FRAGMENT);
+                    val soulFrags = player.inventory.getItemById(SOUL_FRAGMENT)
                     if (soulFrags != null) {
                         World.addGroundItem(soulFrags, Tile.of(player.tile))
                         player.inventory.deleteItem(soulFrags)
@@ -509,7 +524,7 @@ class SoulWarsGameController(val redTeam: Boolean, @Transient val game: SoulWars
 
     override fun process() {
         if (player.inCombat())
-            activity = Utils.clampI(activity + 10, 0, 1000);
+            activity = Utils.clampI(activity + 10, 0, 1000)
         else
             activity -= 2
         player.vars.setVar(PLAYER_ACTIVITY_BAR_VAR, activity)
@@ -533,10 +548,24 @@ class SoulWarsGameController(val redTeam: Boolean, @Transient val game: SoulWars
         }
     }
 
+    override fun canAttack(target: Entity): Boolean {
+        if (target is NPC)
+            return true
+        return if (redTeam)
+            game?.blueTeam?.contains(target) ?: false
+        else
+            game?.redTeam?.contains(target) ?: false
+    }
+
     override fun login(): Boolean {
         clearMinigameValues(player)
         player.tele(Tile.of(1886, 3172, 0))
         player.controllerManager.forceStop()
+        return false
+    }
+
+    override fun canDepositItem(item: Item?): Boolean {
+        player.sendMessage("You can't bank items here.")
         return false
     }
 
@@ -571,10 +600,13 @@ class SoulWarsGameController(val redTeam: Boolean, @Transient val game: SoulWars
 
 fun clearMinigameValues(player: Player) {
     player.isCanPvp = false
-    MinigameUtil.checkAndDeleteFoodAndPotions(player)
+    checkAndDeleteFoodAndPotions(player)
+    player.inventory.deleteItem(BONES, 28)
+    player.inventory.deleteItem(SOUL_FRAGMENT, Integer.MAX_VALUE)
     player.equipment.setNoPluginTrigger(Equipment.CAPE, null)
     player.equipment.refresh(Equipment.CAPE)
     player.appearance.generateAppearanceData()
+    player.reset()
 }
 
 fun getQuickchatVar(varId: Int): Int {

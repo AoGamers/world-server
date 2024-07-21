@@ -39,6 +39,7 @@ import com.rs.plugin.handlers.ButtonClickHandler;
 import com.rs.plugin.handlers.ItemOnNPCHandler;
 import com.rs.plugin.handlers.NPCClickHandler;
 import com.rs.plugin.handlers.ObjectClickHandler;
+import kotlin.Pair;
 
 @PluginEventHandler
 public class RunespanController extends Controller {
@@ -226,7 +227,8 @@ public class RunespanController extends Controller {
 		GREATER_MISSILE1(4371, 6032, 4376, 6037),
 		GREATER_MISSILE(4325, 6076, 4331, 6076);
 
-		private Tile smallIsland, largeIsland;
+		private final Tile smallIsland;
+        private final Tile largeIsland;
 
 		private HandledPlatforms(int largeIslandX, int largeIslandY, int smallIslandX, int smallIslandY) {
 			largeIsland = Tile.of(largeIslandX, largeIslandY, 1);
@@ -245,10 +247,19 @@ public class RunespanController extends Controller {
 		}
 	}
 
-	private static int AIR_RUNE = 24215, EARTH_RUNE = 24216, WATER_RUNE = 24214,
-			MIND_RUNE = 24217, ELEMENTAL_RUNE = -1, BODY_RUNE = 24218,
-			CHAOS_RUNE = 24221, NATURE_RUNE = 24220, COSMIC_RUNE = 24223,
-			ASTRAL_RUNE = 24224, LAW_RUNE = 24222, BLOOD_RUNE = 24225, DEATH_RUNE = 24219;
+	private static final int AIR_RUNE = 24215;
+    private static final int EARTH_RUNE = 24216;
+    private static final int WATER_RUNE = 24214;
+    private static final int MIND_RUNE = 24217;
+    private static final int ELEMENTAL_RUNE = -1;
+    private static final int BODY_RUNE = 24218;
+    private static final int CHAOS_RUNE = 24221;
+    private static final int NATURE_RUNE = 24220;
+    private static final int COSMIC_RUNE = 24223;
+    private static final int ASTRAL_RUNE = 24224;
+    private static final int LAW_RUNE = 24222;
+    private static final int BLOOD_RUNE = 24225;
+    private static final int DEATH_RUNE = 24219;
 
 	private static enum Platforms {
 		EARTH(70478, 16645, 3072, -1, -1, -1, -1, false, EARTH_RUNE),
@@ -280,9 +291,15 @@ public class RunespanController extends Controller {
 		FLOAT3(70483, 16654, 3082, 16652, 3084, 16651, 3083, false, AIR_RUNE),
 		FLOAT4(70494, 16654, 3082, 16652, 3084, 16651, 3083, false, AIR_RUNE);
 
-		private int objectId, startEmote, startGraphic, middleEmote, middleGraphic, endEmote, endGraphic;
-		private boolean invisible;
-		private int[] runes;
+		private final int objectId;
+        private final int startEmote;
+        private final int startGraphic;
+        private final int middleEmote;
+        private final int middleGraphic;
+        private final int endEmote;
+        private final int endGraphic;
+		private final boolean invisible;
+		private final int[] runes;
 
 		private Platforms(int objectId, int startEmote, int startGraphic, int middleEmote, int middleGraphic, int endEmote, int endGraphic, boolean invisible, int... runes) {
 			this.objectId = objectId;
@@ -336,13 +353,11 @@ public class RunespanController extends Controller {
 		}
 	});
 	
-	public static ObjectClickHandler runespanPortal = new ObjectClickHandler(new Object[] { 38279 }, new Tile[] { Tile.of(3107, 3160, 1) }, e -> {
-		e.getPlayer().startConversation(new Dialogue().addOptions("Where would you like to travel to?", ops -> {
-			ops.add("The Runecrafting Guild", () -> e.getPlayer().useStairs(-1, Tile.of(1696, 5460, 2), 0, 1));
-			ops.add("The Runespan (Low level)", () -> RunespanController.enterRunespan(e.getPlayer(), false));
-			ops.add("The Runespan (High level)", () -> RunespanController.enterRunespan(e.getPlayer(), true));
-		}));
-	});
+	public static ObjectClickHandler runespanPortal = new ObjectClickHandler(new Object[] { 38279 }, new Tile[] { Tile.of(3107, 3160, 1) }, e -> e.getPlayer().startConversation(new Dialogue().addOptions("Where would you like to travel to?", ops -> {
+        ops.add("The Runecrafting Guild", () -> e.getPlayer().useStairs(-1, Tile.of(1696, 5460, 2), 0, 1));
+        ops.add("The Runespan (Low level)", () -> RunespanController.enterRunespan(e.getPlayer(), false));
+        ops.add("The Runespan (High level)", () -> RunespanController.enterRunespan(e.getPlayer(), true));
+    })));
 
 	private static void openRewards(Player player) {
 		refreshPoints(player);
@@ -451,7 +466,7 @@ public class RunespanController extends Controller {
 		player.lock();
 		player.addWalkSteps(object.getX(), object.getY(), 1, false);
 		World.sendSpotAnim(object.getTile(), new SpotAnim(getPlatformSpotAnim(plataform.runes.length)));
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 
 			private int stage;
 
@@ -476,7 +491,7 @@ public class RunespanController extends Controller {
 							gfx = 2718;
 						else
 							gfx = 2729;
-						World.sendProjectile(player, toTile, gfx, 18, 18, 20, 50, 145, 0);
+						World.sendProjectile(player, toTile, gfx, new Pair<>(18, 18), 20, 10, 145);
 					} else if (plataform.middleGraphic == -3) {
 						int gfx;
 						if (plataform.runes[0] == AIR_RUNE)
@@ -487,7 +502,7 @@ public class RunespanController extends Controller {
 							gfx = 2719;
 						else
 							gfx = 2731;
-						World.sendProjectile(player, toTile, gfx, 18, 18, 20, 50, 145, 0);
+						World.sendProjectile(player, toTile, gfx, new Pair<>(18, 18), 20, 10, 145);
 					} else if (plataform.middleGraphic != -1)
 						player.setNextSpotAnim(new SpotAnim(plataform.middleGraphic));
 					if (plataform.invisible)
@@ -502,7 +517,8 @@ public class RunespanController extends Controller {
 				} else if (stage == 6)
 					World.sendSpotAnim(toTile, new SpotAnim(getPlatformSpotAnim(plataform.runes.length)));
 				stage++;
-
+				if (stage >= 7)
+					stop();
 			}
 
 		}, 0, 0);
@@ -615,7 +631,7 @@ public class RunespanController extends Controller {
 				player.addWalkSteps(object.getX(), object.getY(), 0, false);
 				player.lock();
 				final Tile dest = Tile.of(4367, 6033, 1);
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					private int stage;
 
 					@Override
@@ -637,7 +653,7 @@ public class RunespanController extends Controller {
 				player.addWalkSteps(object.getX(), object.getY(), 0, false);
 				player.lock();
 				final Tile dest = Tile.of(4367, 6062, 1);
-				WorldTasks.schedule(new Task() {
+				WorldTasks.scheduleLooping(new Task() {
 					private int stage;
 
 					@Override

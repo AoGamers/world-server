@@ -34,7 +34,7 @@ import java.util.List;
 @PluginEventHandler
 public class Herblore extends PlayerAction {
 
-	private CraftablePotion potion;
+	private final CraftablePotion potion;
 	private int ticks;
 
 	public Herblore(CraftablePotion potion, int amount) {
@@ -76,7 +76,11 @@ public class Herblore extends PlayerAction {
 		player.getInventory().addItemDrop(potion.getProduct().clone());
 		player.incrementCount(potion.getProduct().getName() + " mixed");
 		String potName = potion.getProduct().getName().toLowerCase();
-		player.sendMessage("You mix " + Utils.addArticle(potName) + ".", true);
+		if (potion.getProduct().getId() != 3265) {
+			player.sendMessage("You mix " + Utils.addArticle(potName) + ".", true);
+		} else {
+			player.sendMessage("You add the ground Troll Thistle to the potion.");
+		}
 		player.getSkills().addXp(Constants.HERBLORE, potion.getXp());
 		if (ticks > 0)
 			return cleansingProc ? 0 : 1;

@@ -23,7 +23,7 @@ import com.rs.engine.quest.Quest;
 import com.rs.game.World;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.OwnedNPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.Task;
@@ -38,7 +38,7 @@ import com.rs.utils.Ticks;
 
 @PluginEventHandler
 public class CountDraynorBoss extends OwnedNPC {
-	private static int COUNT_DRAYNOR_ID = 9356;
+	private static final int COUNT_DRAYNOR_ID = 9356;
 
 	//Vampyre animations
 	static final int STUNNED = 1568;
@@ -76,15 +76,15 @@ public class CountDraynorBoss extends OwnedNPC {
 
 	@Override
 	public void sendDeath(Entity source) {
-		removeTarget();
+		removeCombatTarget();
 		setAttackedBy(null);
 		resetHP();
 		setLocked(true);
-		faceEntity(source);
+		faceEntityTile(source);
 
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int tick = 0;
-			int finalTick = Ticks.fromSeconds(12);
+			final int finalTick = Ticks.fromSeconds(12);
 
 			@Override
 			public void run() {
@@ -95,7 +95,7 @@ public class CountDraynorBoss extends OwnedNPC {
 				if(tick == finalTick - 1)
 					setLocked(false);
 				if(tick == finalTick) {
-					setTarget(source);
+					setCombatTarget(source);
 					stop();
 				}
 				tick++;
@@ -115,7 +115,7 @@ public class CountDraynorBoss extends OwnedNPC {
             player.sendMessage("This is not your vampyre to kill!");
             return;
         }
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int tick = 0;
 
 			@Override
@@ -185,7 +185,7 @@ public class CountDraynorBoss extends OwnedNPC {
 			}
 		}, Ticks.fromMinutes(3));
 
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int tick = 0;
 
 			@Override
@@ -232,8 +232,8 @@ public class CountDraynorBoss extends OwnedNPC {
 					countDraynor.setRandomWalk(true);
 				}
 				if(tick == 20) {
-					countDraynor.setTarget(p);
-					p.faceEntity(countDraynor);
+					countDraynor.setCombatTarget(p);
+					p.faceEntityTile(countDraynor);
 				}
 				if(tick == 22) {
 					if(p.getInventory().containsItem(GARLIC, 1)) {

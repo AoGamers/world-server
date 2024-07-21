@@ -38,7 +38,7 @@ public enum TaskMonster {
 	ICE_GIANTS(15, 1, "ice giant"),
 	FIRE_GIANTS(16, 1, "fire giant"),
 	MOSS_GIANTS(17, 1, "moss giant"),
-	TROLLS(18, 1, "troll"),
+	TROLLS(18, 1, "troll", "kraka", "stick", "pee hat", "dad"),
 	ICE_WARRIORS(19, 1, "ice warrior"),
 	OGRES(20, 1, "ogre"),
 	HOBGOBLINS(21, 1, "hobgoblin"),
@@ -58,10 +58,10 @@ public enum TaskMonster {
 	DAGANNOTH(35, 1, "dagannoth"),
 	TUROTH(36, 55, "turoth"),
 	CAVE_CRAWLERS(37, 10, "cave crawler"),
-	BANSHEES(38, 15, "banshee"),
+	BANSHEES(38, 15, Quest.PRIEST_IN_PERIL, "banshee"),
 	CRAWLING_HANDS(39, 5, " hand"),
 	INFERNAL_MAGES(40, 45, "infernal mage"),
-	ABERRANT_SPECTRES(41, 60, "aberrant spectre"),
+	ABERRANT_SPECTRES(41, 60, Quest.PRIEST_IN_PERIL, "aberrant spectre"),
 	ABYSSAL_DEMONS(42, 85, "abyssal demon"),
 	BASILISKS(43, 40, "basilisk"),
 	COCKATRICE(44, 25, "cockatrice"),
@@ -134,7 +134,7 @@ public enum TaskMonster {
 	//111 GELATINOUS_ABOMINATIONS
 	GROTWORMS(112, 1, "grotworm");
 
-	private static HashMap<Integer, TaskMonster> MAP = new HashMap<>();
+	private static final HashMap<Integer, TaskMonster> MAP = new HashMap<>();
 
 	static {
 		for (TaskMonster creature : TaskMonster.values())
@@ -145,8 +145,9 @@ public enum TaskMonster {
 		return MAP.get(enumId);
 	}
 
-	private int enumId, level;
-	private String[] monsterNames;
+	private final int enumId;
+    private final int level;
+	private final String[] monsterNames;
 	private Quest questReq;
 
 	private TaskMonster(int enumId, int level, Quest questReq, String... monsterNames) {

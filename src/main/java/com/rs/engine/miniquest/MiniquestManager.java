@@ -27,8 +27,8 @@ import java.util.Map;
 public class MiniquestManager {
 	private transient Player player;
 
-	private Map<Miniquest, Integer> questStages;
-	private Map<Miniquest, GenericAttribMap> questAttribs;
+	private final Map<Miniquest, Integer> questStages;
+	private final Map<Miniquest, GenericAttribMap> questAttribs;
 
 	public MiniquestManager() {
 		questStages = new HashMap<>();
@@ -76,12 +76,8 @@ public class MiniquestManager {
 	}
 
 	public GenericAttribMap getAttribs(Miniquest quest) {
-		GenericAttribMap map = questAttribs.get(quest);
-		if (map == null) {
-			map = new GenericAttribMap();
-			questAttribs.put(quest, map);
-		}
-		return map;
+        GenericAttribMap map = questAttribs.computeIfAbsent(quest, k -> new GenericAttribMap());
+        return map;
 	}
 
 	public boolean completedAll() {
@@ -94,18 +90,23 @@ public class MiniquestManager {
 		return true;
 	}
 
-	public boolean isComplete(Miniquest quest, String actionForUnimplemented) {
+	public boolean isComplete(Miniquest quest, String actionForUnimplemented, boolean outputReqs) {
 		if (!quest.isImplemented())
-			return quest.meetsReqs(player, actionForUnimplemented);
+			return quest.meetsReqs(player, actionForUnimplemented, outputReqs);
 		if (getStage(quest) == quest.getHandler().getCompletedStage())
 			return true;
 		if (actionForUnimplemented != null)
+			if (outputReqs)
 			player.sendMessage("You must have completed " + quest.getName() + " " + actionForUnimplemented);
 		return false;
 	}
-	
+
 	public boolean isComplete(Miniquest quest) {
-		return isComplete(quest, null);
+		return isComplete(quest, null, false);
+	}
+
+	public boolean isComplete(Miniquest quest, boolean outputReqs) {
+		return isComplete(quest, null, outputReqs);
 	}
 
 	public void updateAllStages() {

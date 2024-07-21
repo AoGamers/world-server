@@ -27,7 +27,14 @@ import java.util.List;
 import static com.rs.game.content.world.doors.Doors.handleDoor;
 import static com.rs.game.content.world.doors.Doors.handleDoubleDoor;
 
-@QuestHandler(Quest.WITCHS_HOUSE)
+@QuestHandler(
+		quest = Quest.WITCHS_HOUSE,
+		startText = "Talk to Harvey, the crying boy west of Falador.",
+		itemsText = "Cheese or cheese wheel, leather gloves, some combat equipment and food.",
+		combatText = "You will need to defeat a shapeshifting enemy with forms up to level 49.",
+		rewardsText = "6,325 Constitution XP",
+		completedStage = 2
+)
 @PluginEventHandler
 public class WitchsHouse extends QuestOutline {
 	public final static int NOT_STARTED = 0;
@@ -49,11 +56,6 @@ public class WitchsHouse extends QuestOutline {
 	protected final static int EXPERIMENT2 = 898;
 	protected final static int EXPERIMENT3 = 899;
 	protected final static int EXPERIMENT4 = 900;
-
-	@Override
-	public int getCompletedStage() {
-		return QUEST_COMPLETE;
-	}
 
 	@Override
 	public List<String> getJournalLines(Player player, int stage) {
@@ -141,7 +143,7 @@ public class WitchsHouse extends QuestOutline {
 				for (NPC npc : World.getNPCsInChunkRange(e.getPlayer().getChunkId(), 1))
 					if (npc.getId() == EXPERIMENT1 || npc.getId() == EXPERIMENT2 || npc.getId() == EXPERIMENT3 || npc.getId() == EXPERIMENT4)
 						return;
-				World.spawnNPC(EXPERIMENT1, Tile.of(2927, 3359, 0), -1, false, true);
+				World.spawnNPC(EXPERIMENT1, Tile.of(2927, 3359, 0), true, true);
 			}
 		} else
 			p.startConversation(new Conversation(e.getPlayer()) {
@@ -153,18 +155,18 @@ public class WitchsHouse extends QuestOutline {
 	});
 
 	public static NPCDeathHandler handleExperiment1 = new NPCDeathHandler(EXPERIMENT1, e -> {
-		NPC n = World.spawnNPC(EXPERIMENT2, Tile.of(2927, 3363, 0), -1, false, true);
-		n.setTarget(e.getKiller());
+		NPC n = World.spawnNPC(EXPERIMENT2, Tile.of(2927, 3363, 0), true, true);
+		n.setCombatTarget(e.getKiller());
 	});
 
 	public static NPCDeathHandler handleExperiment2 = new NPCDeathHandler(EXPERIMENT2, e -> {
-		NPC n = World.spawnNPC(EXPERIMENT3, Tile.of(2927, 3363, 0), -1, false, true);
-		n.setTarget(e.getKiller());
+		NPC n = World.spawnNPC(EXPERIMENT3, Tile.of(2927, 3363, 0), true, true);
+		n.setCombatTarget(e.getKiller());
 	});
 
 	public static NPCDeathHandler handleExperiment3 = new NPCDeathHandler(EXPERIMENT3, e -> {
-		NPC n = World.spawnNPC(EXPERIMENT4, Tile.of(2927, 3363, 0), -1, false, true);
-		n.setTarget(e.getKiller());
+		NPC n = World.spawnNPC(EXPERIMENT4, Tile.of(2927, 3363, 0), true, true);
+		n.setCombatTarget(e.getKiller());
 	});
 
 	public static NPCDeathHandler handleExperiment4 = new NPCDeathHandler(EXPERIMENT4, e-> {
@@ -185,7 +187,7 @@ public class WitchsHouse extends QuestOutline {
 		if(!p.getQuestManager().getAttribs(Quest.WITCHS_HOUSE).getB("KILLED_EXPERIMENT")) {
 			for(NPC npc : World.getNPCsInChunkRange(e.getPlayer().getChunkId(), 1))
 				if(npc.getId() == EXPERIMENT1 || npc.getId() == EXPERIMENT2 || npc.getId() == EXPERIMENT3 || npc.getId() == EXPERIMENT4)
-					npc.setTarget(p);
+					npc.setCombatTarget(p);
 			e.cancelPickup();
 			p.sendMessage("The experiment won't let you pick up the ball");
 		}
@@ -242,13 +244,13 @@ public class WitchsHouse extends QuestOutline {
 					create();
 				}
 			});
-			WorldTasks.schedule(new Task() {
+			WorldTasks.scheduleLooping(new Task() {
 				int tick;
 				NPC mouse;
 				@Override
 				public void run() {
 					if(tick == 0 )
-						mouse = World.spawnNPC(MOUSE, Tile.of(obj.getX()-1, obj.getY(), obj.getPlane()), -1, false, true);
+						mouse = World.spawnNPC(MOUSE, Tile.of(obj.getX()-1, obj.getY(), obj.getPlane()), true, true);
 					if(tick == 30) {
 						if(!mouse.hasFinished())
 							mouse.finish();
@@ -288,9 +290,7 @@ public class WitchsHouse extends QuestOutline {
         else
             p.startConversation(new Conversation(e.getPlayer()) {
                 {
-                    addSimple("As your bare hands touch the gate you feel a shock", () -> {
-                        p.applyHit(new Hit(76, Hit.HitLook.TRUE_DAMAGE));
-                    });
+                    addSimple("As your bare hands touch the gate you feel a shock", () -> p.applyHit(new Hit(76, Hit.HitLook.TRUE_DAMAGE)));
                     addPlayer(HeadE.SCARED, "I will need some gloves to stop the electric current...");
                     create();
                 }
@@ -327,26 +327,6 @@ public class WitchsHouse extends QuestOutline {
 	public void complete(Player player) {
 		player.getSkills().addXpQuest(Constants.HITPOINTS, 6325);
 		sendQuestCompleteInterface(player, BALL);
-	}
-
-	@Override
-	public String getStartLocationDescription() {
-		return "Talk to Harvey, the crying boy west of Falador.";
-	}
-
-	@Override
-	public String getRequiredItemsString() {
-		return "Cheese or cheese wheel, leather gloves, some combat equipment and food.";
-	}
-
-	@Override
-	public String getCombatInformationString() {
-		return "You will need to defeat a shapeshifting enemy with forms up to level 49.";
-	}
-
-	@Override
-	public String getRewardsString() {
-		return "6,325 Constitution XP";
 	}
 
 }

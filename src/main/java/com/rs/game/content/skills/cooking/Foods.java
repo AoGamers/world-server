@@ -77,6 +77,7 @@ public class Foods {
         player.getInventory().refresh();
         if (food.effect != null)
             food.effect.accept(player);
+        player.soundEffect(2393,false);
         return true;
     }
 
@@ -133,7 +134,6 @@ public class Foods {
         CHILLI_CON_CARNIE(new int[] { 7062 }, 1923, 50),
         CHILLI_POTATO(7054, 140),
         CHOCCHIP_CRUNCHIES(2209, 70),
-        CHOCOLATEY_MILK(1977, 40),
         CHOCOLATE_BAR(1973, 30),
         CHOCOLATE_BOMB(2185, 150),
         CHOCOLATE_CAKE(new int[] { 1897, 1899, 1901 }, 50),
@@ -150,7 +150,7 @@ public class Foods {
         CHOPPED_TOMATO(new int[] { 1869 }, 1923, 50),
         CHOPPED_TUNA(new int[] { 7086 }, 1923, 50),
         COATED_FROGS_LEGS(10963, 20),
-        COD(339, 180),
+        COD(339, 70),
         COMMON_FRUIT(21376, 150),
         COOKED_CHICKEN(2140, 30),
         COOKED_CHOMPY(2878, 30),
@@ -248,7 +248,6 @@ public class Foods {
         JANGERBERRIES(247, 20),
         JUBBLY(7568, 150),
         JUJU_GUMBO(19949, 320, p -> p.addEffect(Effect.BARON_SHARK, Ticks.fromSeconds(12))),
-        KARAMBWANI(3144, 30),
         KARAMBWANJI(3151, 30),
         KEBAB(1971, 0, KEBAB_EFFECT),
         KING_WORM(2162, 20),
@@ -434,7 +433,7 @@ public class Foods {
         YULE_LOGS(15430, 20),
         ZAMORAK_FRUIT(21388, 200);
 
-        private static Map<Integer, Food> foods = new HashMap<>();
+        private static final Map<Integer, Food> foods = new HashMap<>();
 
         static {
             for (final Food food : Food.values())
@@ -497,7 +496,7 @@ public class Foods {
         }
     }
 
-    private static Consumer<Player> KEBAB_EFFECT = player -> {
+    private static final Consumer<Player> KEBAB_EFFECT = player -> {
         int roll = Utils.random(100);
         if (roll >= 95) {
             player.sendMessage("Wow, that was an amazing kebab! You feel really invigorated.");

@@ -34,12 +34,14 @@ import com.rs.plugin.handlers.NPCClickHandler;
 import com.rs.plugin.handlers.ObjectClickHandler;
 import com.rs.utils.shop.ShopsHandler;
 
+import static com.rs.game.content.quests.dragonslayer.DragonSlayer.*;
+
 @PluginEventHandler
 public class Edgeville  {
 
 	public static LoginHandler setSafetyStrongholdPosterPulled = new LoginHandler(e -> e.getPlayer().getVars().setVarBit(6278, 1));
 
-	public static ObjectClickHandler handleWildernessDitch = new ObjectClickHandler(new Object[] { 29319, 29320 }, e -> {
+	public static ObjectClickHandler handleEdgevilleWildernessDungeonGate = new ObjectClickHandler(new Object[] { 29319, 29320 }, e -> {
 		if (e.getPlayer().getY() <= 9917) {
 			e.getPlayer().getControllerManager().startController(new WildernessController());
 			e.getPlayer().handleOneWayDoor(e.getObject());
@@ -47,25 +49,15 @@ public class Edgeville  {
 			e.getPlayer().handleOneWayDoor(e.getObject());
 	});
 
-    public static ObjectClickHandler handleBlackKnightWall = new ObjectClickHandler(new Object[] { 2341 }, e -> {
-    	Doors.handleDoor(e.getPlayer(), e.getObject(), -1);
-    });
+	public static ObjectClickHandler handleBlackKnightWall = new ObjectClickHandler(new Object[] { 2341 }, e -> Doors.handleDoor(e.getPlayer(), e.getObject(), -1));
 
-	public static ObjectClickHandler handleJailEntrance = new ObjectClickHandler(new Object[] { 29603 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(3082, 4229, 0), 0, 1);
-	});
+	public static ObjectClickHandler handleJailEntrance = new ObjectClickHandler(new Object[] { 29603 }, e -> e.getPlayer().useStairs(-1, Tile.of(3082, 4229, 0), 0, 1));
 
-	public static ObjectClickHandler handleJailExit = new ObjectClickHandler(new Object[] { 29602 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(3074, 3456, 0), 0, 1);
-	});
+	public static ObjectClickHandler handleJailExit = new ObjectClickHandler(new Object[] { 29602 }, e -> e.getPlayer().useStairs(-1, Tile.of(3074, 3456, 0), 0, 1));
 
-	public static ObjectClickHandler handlePosterEntrance = new ObjectClickHandler(new Object[] { 29735 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(3140, 4230, 2), 0, 1);
-	});
+	public static ObjectClickHandler handlePosterEntrance = new ObjectClickHandler(new Object[] { 29735 }, e -> e.getPlayer().useStairs(-1, Tile.of(3140, 4230, 2), 0, 1));
 
-	public static ObjectClickHandler handlePosterExit = new ObjectClickHandler(new Object[] { 29623 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(3077, 4235, 0), 0, 1);
-	});
+	public static ObjectClickHandler handlePosterExit = new ObjectClickHandler(new Object[] { 29623 }, e -> e.getPlayer().useStairs(-1, Tile.of(3077, 4235, 0), 0, 1));
 
 	public static ObjectClickHandler handleJailDoors = new ObjectClickHandler(new Object[] { 29624 }, e -> {
 		if (e.getObject().getRotation() == 0) {
@@ -91,7 +83,7 @@ public class Edgeville  {
 			p.useLadder(Tile.of(p.getX(), p.getY(), p.getPlane()+1));
 		else
 			p.startConversation(new Conversation(p) {
-				int NPC = 801;
+				final int NPC = 801;
 				{
 					addNPC(NPC, HeadE.FRUSTRATED, "Hey! You are not part of the monastary!");
 					addPlayer(HeadE.HAPPY_TALKING, "Oh.");
@@ -102,16 +94,29 @@ public class Edgeville  {
 	});
 
 	public static NPCClickHandler handleOziachDialogue = new NPCClickHandler(new Object[] { 747 }, e -> {
+		int dragonSlayerStage = e.getPlayer().getQuestManager().getStage(Quest.DRAGON_SLAYER);
 		if (e.getOption().equalsIgnoreCase("trade"))
-			if(e.getPlayer().isQuestComplete(Quest.DRAGON_SLAYER))
-				ShopsHandler.openShop(e.getPlayer(), "oziach");
-			else
-				e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
-					{
-						addNPC(e.getNPCId(), HeadE.FRUSTRATED, "I don't have anything to sell...");
-						create();
-					}
-				});
+			switch (dragonSlayerStage) {
+				case NOT_STARTED, TALK_TO_OZIACH:
+					e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
+						{
+							addNPC(e.getNPCId(), HeadE.FRUSTRATED, "I don't have anything to sell.");
+							create();
+						}
+					});
+					break;
+				case TALK_TO_GUILDMASTER, PREPARE_FOR_CRANDOR, REPORT_TO_OZIACH:
+					e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
+						{
+							addNPC(e.getNPCId(), HeadE.FRUSTRATED, "I'm not sellin' ye anything till you've slayed that dragon! Now be off wi' ye.");
+							create();
+						}
+					});
+					break;
+				case QUEST_COMPLETE:
+					ShopsHandler.openShop(e.getPlayer(), "oziach");
+					break;
+			}
 		if(e.getOption().equalsIgnoreCase("Talk-to"))
 			if(e.getPlayer().isQuestComplete(Quest.DRAGON_SLAYER))
 				e.getPlayer().startConversation(new Conversation(e.getPlayer()) {
@@ -140,10 +145,8 @@ public class Edgeville  {
 																player.getInventory().deleteItem(1540, 1);
 																player.getInventory().addItem(11283, 1);
 															}) : new Dialogue().addNPC(747, HeadE.CALM_TALK, "Ye seem to be missing some stuff. Come see me when ye have an anti-dragon shield and my payment."))
-													));
-								option("Can I buy a rune platebody now, please?", new Dialogue().addPlayer(HeadE.CALM, "Can I buy a rune platebody now, please?").addNext(() -> {
-									ShopsHandler.openShop(player, "oziach");
-								}));
+											));
+								option("Can I buy a rune platebody now, please?", new Dialogue().addPlayer(HeadE.CALM, "Can I buy a rune platebody now, please?").addNext(() -> ShopsHandler.openShop(player, "oziach")));
 								if (!player.getInventory().containsItem(11286)) {
 									option("I'm not your friend.", new Dialogue().addPlayer(HeadE.CALM, "I'm not your friend.").addNPC(747, HeadE.FRUSTRATED, "I'm surprised if you're anyone's friend with those kind of manners."));
 									option("Yes, it's a very nice day.", new Dialogue().addPlayer(HeadE.CALM, "Yes, it's a very nice day.").addNPC(747, HeadE.HAPPY_TALKING, "Aye, may the gods walk by yer side. Now leave me alone."));
@@ -168,15 +171,13 @@ public class Edgeville  {
 						option("Can you heal me? I'm injured.", new Dialogue()
 								.addPlayer(HeadE.HAPPY_TALKING, "Can you heal me? I'm injured.")
 								.addNPC(NPC, HeadE.CALM_TALK, "Ok.")
-								.addSimple("Abbot Langley places his hands on your head. You feel a little better.", () ->{
-									p.heal(p.getMaxHitpoints());
-								})
-								);
+								.addSimple("Abbot Langley places his hands on your head. You feel a little better.", () -> p.heal(p.getMaxHitpoints()))
+						);
 						option("Isn't this place built a bit out of the way?", new Dialogue()
 								.addPlayer(HeadE.HAPPY_TALKING, "Isn't this place built a bit out of the way?")
 								.addNPC(NPC, HeadE.CALM_TALK, "We like it that way actually! We get disturbed less. We still get rather a large amount " +
 										"of travellers looking for sanctuary and healing here as it is!")
-								);
+						);
 						if(p.getSkills().getLevel(Constants.PRAYER)<31)
 							option("How do I get further into the monastery?", new Dialogue()
 									.addPlayer(HeadE.HAPPY_TALKING, "How do I get further into the monastery?")
@@ -188,13 +189,13 @@ public class Edgeville  {
 													.addPlayer(HeadE.HAPPY_TALKING, "Well can I join your order?")
 													.addNPC(NPC, HeadE.CALM_TALK, "No. I am sorry, but I feel you are not devout enough.")
 													.addSimple("You need 31 prayer to enter the inner monastary.")
-													);
+											);
 											option("Oh, sorry.", new Dialogue()
 													.addPlayer(HeadE.HAPPY_TALKING, "Oh, sorry.")
-													);
+											);
 										}
 									})
-									);
+							);
 					}
 				});
 				create();

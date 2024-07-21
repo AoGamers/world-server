@@ -22,7 +22,7 @@ import com.rs.cache.loaders.interfaces.IFEvents;
 import com.rs.cache.loaders.interfaces.IFEvents.UseFlag;
 import com.rs.game.content.Effect;
 import com.rs.game.content.ItemConstants;
-import com.rs.game.content.combat.special_attacks.SpecialAttacks;
+import com.rs.game.content.combat.special_attacks.SpecialAttacksKt;
 import com.rs.game.content.interfacehandlers.ItemsKeptOnDeath;
 import com.rs.game.content.skills.firemaking.Bonfire;
 import com.rs.game.content.transportation.ItemTeleports;
@@ -61,7 +61,7 @@ public final class Equipment {
 
 	public static final int SIZE = 15;
 
-	private ItemsContainer<Item> items;
+	private final ItemsContainer<Item> items;
 
 	private transient Player player;
 	private transient int equipmentHpIncrease;
@@ -185,14 +185,13 @@ public final class Equipment {
 				case 24974, 24975, 24977, 24978, 24980, 24981, 24983, 24984, 24986, 24987, 24989, 24990, 25058, 25060, 25062, 25064, 25066, 25068 -> hpIncrease += 25;
 			}
 		}
-		if (player.hasEffect(Effect.BONFIRE)) {
-			int maxhp = player.getSkills().getLevel(Constants.HITPOINTS) * 10 + (int) hpIncrease;
-			hpIncrease += (maxhp * Bonfire.getBonfireBoostMultiplier(player)) - maxhp;
-		}
-		if (player.getHpBoostMultiplier() != 0) {
-			int maxhp = player.getSkills().getLevel(Constants.HITPOINTS) * 10;
-			hpIncrease += maxhp * player.getHpBoostMultiplier();
-		}
+		int maxHp = player.getSkills().getLevel(Constants.HITPOINTS) * 10;
+		if (player.hasEffect(Effect.BONFIRE))
+			hpIncrease += (maxHp + (int) hpIncrease) * Bonfire.getBonfireBoostMultiplier(player);
+		if (player.hasEffect(Effect.OOG_THERMAL_POOL))
+			hpIncrease += (maxHp + (int) hpIncrease) * 0.03;
+		if (player.getHpBoostMultiplier() != 0)
+			hpIncrease += maxHp * player.getHpBoostMultiplier();
 		if (hpIncrease != equipmentHpIncrease) {
 			equipmentHpIncrease = (int) hpIncrease;
 			if (!init)
@@ -209,6 +208,8 @@ public final class Equipment {
 	}
 
 	public static boolean hideArms(Item item) {
+		if (item == null)
+			return false;
 		return item.getDefinitions().isEquipType(6);
 	}
 
@@ -463,29 +464,25 @@ public final class Equipment {
 
 	public boolean wearingBlackMask() {
 		if (items.get(HEAD) != null)
-			if (ItemDefinitions.getDefs(items.get(HEAD).getId()).getName().toLowerCase().contains("black mask"))
-				return true;
+            return ItemDefinitions.getDefs(items.get(HEAD).getId()).getName().toLowerCase().contains("black mask");
 		return false;
 	}
 
 	public boolean wearingHexcrest() {
 		if (items.get(HEAD) != null)
-			if (items.get(HEAD).getId() == 15488)
-				return true;
+            return items.get(HEAD).getId() == 15488;
 		return false;
 	}
 
 	public boolean wearingFocusSight() {
 		if (items.get(HEAD) != null)
-			if (items.get(HEAD).getId() == 15490)
-				return true;
+            return items.get(HEAD).getId() == 15490;
 		return false;
 	}
 
 	public boolean wearingSlayerHelmet() {
 		if (items.get(HEAD) != null)
-			if (items.get(HEAD).getId() == 15492 || items.get(HEAD).getId() == 15496 || items.get(HEAD).getId() == 15497)
-				return true;
+            return items.get(HEAD).getId() == 15492 || items.get(HEAD).getId() == 15496 || items.get(HEAD).getId() == 15497;
 		return false;
 	}
 
@@ -507,23 +504,19 @@ public final class Equipment {
 		Item helmet = items.get(HEAD);
 		if (helmet == null)
 			return false;
-		if (helmet.getDefinitions().getName().toLowerCase().contains("slayer helmet"))
-			return true;
-		return false;
-	}
+        return helmet.getDefinitions().getName().toLowerCase().contains("slayer helmet");
+    }
 
 	public boolean wearingFullCeremonial() {
 		if (items.get(HEAD) != null && items.get(CHEST) != null && items.get(LEGS) != null && items.get(HANDS) != null && items.get(FEET) != null)
-			if (items.get(HEAD).getId() == 20125 && items.get(CHEST).getId() == 20127 && items.get(LEGS).getId() == 20129 && items.get(HANDS).getId() == 20131 && items.get(FEET).getId() == 20133)
-				return true;
+            return items.get(HEAD).getId() == 20125 && items.get(CHEST).getId() == 20127 && items.get(LEGS).getId() == 20129 && items.get(HANDS).getId() == 20131 && items.get(FEET).getId() == 20133;
 		return false;
 	}
 
 	public boolean hasFirecape() {
 		if (items.get(CAPE) != null) {
 			String name = items.get(CAPE).getDefinitions().getName().toLowerCase();
-			if (name.contains("fire cape") || name.contains("tokhaar-kal") || name.contains("completionist cape"))
-				return true;
+            return name.contains("fire cape") || name.contains("tokhaar-kal") || name.contains("completionist cape");
 		}
 		return false;
 	}
@@ -542,7 +535,7 @@ public final class Equipment {
 
 	public static ButtonClickHandler handle = new ButtonClickHandler(884, e -> {
 		if (e.getComponentId() == 4)
-			SpecialAttacks.handleClick(e.getPlayer());
+			SpecialAttacksKt.handleClick(e.getPlayer());
 		else if (e.getComponentId() >= 7 && e.getComponentId() <= 10)
 			e.getPlayer().getCombatDefinitions().setAttackStyle(e.getComponentId() - 7);
 		else if (e.getComponentId() == 11)
@@ -571,44 +564,44 @@ public final class Equipment {
 			return;
 		}
 		p.getPackets().sendVarcString(321, "Comparison");
-		String categories = "";
-		String subCategories = "";
-		String item1Desc = item1.getDefinitions().name;
-		String item2Desc = item2.getDefinitions().name;
+		StringBuilder categories = new StringBuilder();
+		StringBuilder subCategories = new StringBuilder();
+		StringBuilder item1Desc = new StringBuilder(item1.getDefinitions().name);
+		StringBuilder item2Desc = new StringBuilder(item2.getDefinitions().name);
 		for (Bonus b : Bonus.values()) {
 			if (Equipment.getBonus(p, item1, b) != 0 || Equipment.getBonus(p, item2, b) != 0) {
-				if (!categories.contains("Attack Bonuses") && b.ordinal() >= Bonus.STAB_ATT.ordinal() && b.ordinal() <= Bonus.RANGE_ATT.ordinal()) {
-					categories += "<br>Attack Bonuses<br>";
-					subCategories += "<br><br>";
-					item1Desc += "<br>";
-					item2Desc += "<br>";
+				if (!categories.toString().contains("Attack Bonuses") && b.ordinal() >= Bonus.STAB_ATT.ordinal() && b.ordinal() <= Bonus.RANGE_ATT.ordinal()) {
+					categories.append("<br>Attack Bonuses<br>");
+					subCategories.append("<br><br>");
+					item1Desc.append("<br>");
+					item2Desc.append("<br>");
 				}
-				if (!categories.contains("Defense Bonuses") && b.ordinal() >= Bonus.STAB_DEF.ordinal() && b.ordinal() <= Bonus.ABSORB_RANGE.ordinal()) {
-					categories += "<br>Defense Bonuses<br>";
-					subCategories += "<br><br>";
-					item1Desc += "<br><br>";
-					item2Desc += "<br><br>";
+				if (!categories.toString().contains("Defense Bonuses") && b.ordinal() >= Bonus.STAB_DEF.ordinal() && b.ordinal() <= Bonus.ABSORB_RANGE.ordinal()) {
+					categories.append("<br>Defense Bonuses<br>");
+					subCategories.append("<br><br>");
+					item1Desc.append("<br><br>");
+					item2Desc.append("<br><br>");
 				}
-				if (!categories.contains("Other") && b.ordinal() >= Bonus.MELEE_STR.ordinal() && b.ordinal() <= Bonus.MAGIC_STR.ordinal()) {
-					categories += "<br>Other<br>";
-					subCategories += "<br><br>";
-					item1Desc += "<br><br>";
-					item2Desc += "<br><br>";
+				if (!categories.toString().contains("Other") && b.ordinal() >= Bonus.MELEE_STR.ordinal() && b.ordinal() <= Bonus.MAGIC_STR.ordinal()) {
+					categories.append("<br>Other<br>");
+					subCategories.append("<br><br>");
+					item1Desc.append("<br><br>");
+					item2Desc.append("<br><br>");
 				}
-				categories += "<br>";
-				subCategories += Utils.formatPlayerNameForDisplay(b.name().replace("_ATT", "").replace("_DEF", "")) + ":<br>";
-				item1Desc += "<br>" + wrapIfSuperior(Equipment.getBonus(p, item1, b) + (List.of(Bonus.ABSORB_MELEE, Bonus.ABSORB_MAGIC, Bonus.ABSORB_RANGE, Bonus.MAGIC_STR).contains(b) ? "%" : ""), Equipment.getBonus(p, item1, b), Equipment.getBonus(p, item2, b));
-				item2Desc += "<br>" + wrapIfSuperior(Equipment.getBonus(p, item2, b) + (List.of(Bonus.ABSORB_MELEE, Bonus.ABSORB_MAGIC, Bonus.ABSORB_RANGE, Bonus.MAGIC_STR).contains(b) ? "%" : ""), Equipment.getBonus(p, item2, b), Equipment.getBonus(p, item1, b));
+				categories.append("<br>");
+				subCategories.append(Utils.formatPlayerNameForDisplay(b.name().replace("_ATT", "").replace("_DEF", ""))).append(":<br>");
+				item1Desc.append("<br>").append(wrapIfSuperior(Equipment.getBonus(p, item1, b) + (List.of(Bonus.ABSORB_MELEE, Bonus.ABSORB_MAGIC, Bonus.ABSORB_RANGE, Bonus.MAGIC_STR).contains(b) ? "%" : ""), Equipment.getBonus(p, item1, b), Equipment.getBonus(p, item2, b)));
+				item2Desc.append("<br>").append(wrapIfSuperior(Equipment.getBonus(p, item2, b) + (List.of(Bonus.ABSORB_MELEE, Bonus.ABSORB_MAGIC, Bonus.ABSORB_RANGE, Bonus.MAGIC_STR).contains(b) ? "%" : ""), Equipment.getBonus(p, item2, b), Equipment.getBonus(p, item1, b)));
 			}
 		}
-		categories += "<br> ";
-		subCategories += "<br> ";
-		item1Desc += "<br> ";
-		item2Desc += "<br> ";
-		p.getPackets().sendVarcString(322, categories);
-		p.getPackets().sendVarcString(323, subCategories);
-		p.getPackets().sendVarcString(324, item1Desc);
-		p.getPackets().sendVarcString(325, item2Desc);
+		categories.append("<br> ");
+		subCategories.append("<br> ");
+		item1Desc.append("<br> ");
+		item2Desc.append("<br> ");
+		p.getPackets().sendVarcString(322, categories.toString());
+		p.getPackets().sendVarcString(323, subCategories.toString());
+		p.getPackets().sendVarcString(324, item1Desc.toString());
+		p.getPackets().sendVarcString(325, item2Desc.toString());
 	}
 
 	private static String wrapIfSuperior(String in, int bonus1, int bonus2) {
@@ -682,7 +675,7 @@ public final class Equipment {
 			return;
 		}
 		Item item = e.getPlayer().getEquipment().getItem(Equipment.getItemSlot(e.getSlotId2()));
-		if ((item == null) || PluginManager.handle(new ItemClickEvent(e.getPlayer(), item, e.getSlotId(), item.getDefinitions().getEquipmentOption(getOptionForPacket(e.getPacket())), true)))
+		if ((item == null) || PluginManager.handle(new ItemClickEvent(e.getPlayer(), item, Equipment.getItemSlot(e.getSlotId2()), item.getDefinitions().getEquipmentOption(getOptionForPacket(e.getPacket())), true)))
 			return;
 		if (e.getPacket() == ClientPacket.IF_OP10) {
 			e.getPlayer().getEquipment().sendExamine(Equipment.getItemSlot(e.getSlotId2()));
@@ -747,7 +740,7 @@ public final class Equipment {
 		Item item = player.getInventory().getItem(slotId);
 		if (item == null || item.getId() != itemId)
 			return false;
-		if (!overrideWear && (!item.getDefinitions().containsOption("Wear") && !item.getDefinitions().containsOption("Wield")))
+		if (!overrideWear && (!item.getDefinitions().containsOption("Wear") && !item.getDefinitions().containsOption("Wield") && !item.getDefinitions().containsOption("Equip")))
 			return false;
 		if (item.getDefinitions().isNoted() || !item.getDefinitions().isWearItem(player.getAppearance().isMale())) {
 			player.sendMessage("You can't wear that.");
@@ -817,7 +810,7 @@ public final class Equipment {
 
 		player.getAppearance().generateAppearanceData();
 		player.getPackets().sendVarc(779, player.getAppearance().getRenderEmote());
-		player.soundEffect(ItemConfig.get(item.getId()).getEquipSound());
+		player.soundEffect(ItemConfig.get(item.getId()).getEquipSound(), false);
 		if (targetSlot == WEAPON)
 			player.getCombatDefinitions().drainSpec(0);
 		return true;
@@ -826,34 +819,22 @@ public final class Equipment {
 	private static boolean fireEvent(Player player, Item item, boolean equip) {
 		ItemEquipEvent wear = new ItemEquipEvent(player, item, equip);
 		PluginManager.handle(wear);
-		if (wear.isCancelled())
-			return false;
-		return true;
-	}
+        return !wear.isCancelled();
+    }
 
 	private static int getOptionForPacket(ClientPacket packet) {
-		switch(packet) {
-			case IF_OP2:
-				return 0;
-			case IF_OP3:
-				return 1;
-			case IF_OP4:
-				return 2;
-			case IF_OP5:
-				return 3;
-			case IF_OP6:
-				return 4;
-			case IF_OP7:
-				return 5;
-			case IF_OP8:
-				return 6;
-			case IF_OP9:
-				return 7;
-			case IF_OP10:
-				return 8;
-			default:
-				return -1;
-		}
+        return switch (packet) {
+            case IF_OP2 -> 0;
+            case IF_OP3 -> 1;
+            case IF_OP4 -> 2;
+            case IF_OP5 -> 3;
+            case IF_OP6 -> 4;
+            case IF_OP7 -> 5;
+            case IF_OP8 -> 6;
+            case IF_OP9 -> 7;
+            case IF_OP10 -> 8;
+            default -> -1;
+        };
 	}
 
 	public static void openEquipmentBonuses(final Player player, boolean banking) {
@@ -903,14 +884,8 @@ public final class Equipment {
 	}
 
 	public static int getBonus(Player player, Item item, Bonus bonus) {
-		int value = item.getDefinitions().getBonuses()[bonus.ordinal()];
+		int value = getBonus(item, bonus);
 		switch(item.getId()) {
-			case 11283, 11284 -> {
-				return switch(bonus) {
-					case STAB_DEF, SLASH_DEF, CRUSH_DEF, RANGE_DEF -> value + item.getMetaDataI("dfsCharges", 0);
-					default -> value;
-				};
-			}
 			case 19152, 19157, 19162 -> {
 				return switch(bonus) {
 					case RANGE_STR -> value + Utils.clampI((int) (player.getSkills().getLevelForXp(Constants.RANGE) * 0.7), 0, 49);
@@ -921,6 +896,19 @@ public final class Equipment {
 				return value;
 			}
 		}
+	}
+
+	public static int getBonus(Item item, Bonus bonus) {
+		int value = item.getDefinitions().getBonuses()[bonus.ordinal()];
+		switch(item.getId()) {
+			case 11283, 11284 -> {
+				return switch (bonus) {
+					case STAB_DEF, SLASH_DEF, CRUSH_DEF, RANGE_DEF -> value + item.getMetaDataI("dfsCharges", 0);
+					default -> value;
+				};
+			}
+		}
+		return value;
 	}
 
 	public boolean wearingRingOfWealth() {

@@ -30,8 +30,8 @@ import java.util.LinkedList;
 
 public final class LocalNPCUpdate {
 
-	private Player player;
-	private LinkedList<NPC> localNPCs;
+	private final Player player;
+	private final LinkedList<NPC> localNPCs;
 
 	public void reset() {
 		localNPCs.clear();
@@ -75,16 +75,16 @@ public final class LocalNPCUpdate {
 					if (n.getDefinitions().movementType == MovementType.HALF_WALK) {
 						stream.writeBits(2, 2);
 						stream.writeBits(1, 0);
-						stream.writeBits(3, n.getNextWalkDirection().getId());
+						stream.writeBits(3, n.getNextWalkDirection().id);
 					} else {
 						stream.writeBits(2, 1);
-						stream.writeBits(3, n.getNextWalkDirection().getId());
+						stream.writeBits(3, n.getNextWalkDirection().id);
 					}
 				} else {
 					stream.writeBits(2, 2);
 					stream.writeBits(1, 1);
-					stream.writeBits(3, n.getNextWalkDirection().getId());
-					stream.writeBits(3, n.getNextRunDirection().getId());
+					stream.writeBits(3, n.getNextWalkDirection().id);
+					stream.writeBits(3, n.getNextRunDirection().id);
 				}
 				stream.writeBits(1, needUpdate ? 1 : 0);
 			} else if (needUpdate)
@@ -245,11 +245,11 @@ public final class LocalNPCUpdate {
 	}
 
 	private void applyTransformationMask(NPC n, OutputStream data) {
-		data.writeBigSmart(n.getNextTransformation().getToNPCId());
+		data.writeBigSmart(n.getNextTransformation().toNPCId());
 	}
 
 	private void applyForceTalkMask(NPC n, OutputStream data) {
-		data.writeString(n.getNextForceTalk().getText());
+		data.writeString(n.getNextForceTalk().text());
 	}
 
 	private void applyForceMovementMask(NPC n, OutputStream data) {
@@ -270,7 +270,7 @@ public final class LocalNPCUpdate {
 
 	private void applyHitMask(NPC n, OutputStream data) {
 		data.writeByte128(n.getNextHits().size());
-		for (Hit hit : n.getNextHits().toArray(new Hit[n.getNextHits().size()])) {
+		for (Hit hit : n.getNextHits().toArray(new Hit[0])) {
 			boolean interactingWith = hit.interactingWith(player, n);
 			if (hit.missed() && !interactingWith) {
 				data.writeSmart(32766);

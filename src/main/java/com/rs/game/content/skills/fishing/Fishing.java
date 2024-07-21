@@ -40,7 +40,7 @@ import java.util.Map;
 @PluginEventHandler
 public class Fishing extends PlayerAction {
 
-    private static Map<Integer, FishingSpot[]> FISHING_SPOTS = new HashMap<>();
+    private static final Map<Integer, FishingSpot[]> FISHING_SPOTS = new HashMap<>();
 
     static {
         FISHING_SPOTS.put(1174, new FishingSpot[]{FishingSpot.KARAMBWANJI});
@@ -83,13 +83,6 @@ public class Fishing extends PlayerAction {
         FISHING_SPOTS.put(14907, new FishingSpot[]{FishingSpot.CRAYFISH});
         FISHING_SPOTS.put(7862, new FishingSpot[]{FishingSpot.CRAYFISH});
         FISHING_SPOTS.put(15020, new FishingSpot[]{FishingSpot.LAVA_EEL});
-    }
-    
-    @ServerStartupEvent
-    public static void addLoSOverrides() {
-    	for (int id : FISHING_SPOTS.keySet())
-    		Entity.addLOSOverride(id);
-		Entity.addLOSOverride(DungeonConstants.FISH_SPOT_NPC_ID);
     }
 
     private final FishingSpot spot;

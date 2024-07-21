@@ -21,7 +21,6 @@ import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.entity.player.Skills;
 import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
-import com.rs.lib.game.Animation;
 import com.rs.lib.game.Tile;
 
 public class AgilityShortcuts {
@@ -41,7 +40,7 @@ public class AgilityShortcuts {
 	public static void crawlUnder(final Player player, Tile toTile) {
 		player.lock();
 		WorldTasks.schedule(1, () -> player.forceMove(toTile, 2589, 35, 130));
-		WorldTasks.schedule(4, () -> player.setNextAnimation(new Animation(2591)));
+		WorldTasks.schedule(4, () -> player.anim(2591));
 	}
 
 	public static void walkLog(final Player player, Tile toTile, int delay) {
@@ -50,7 +49,7 @@ public class AgilityShortcuts {
 		player.lock(delay);
 		player.addWalkSteps(toTile.getX(), toTile.getY(), -1, false);
 		player.sendMessage("You walk carefully across the slippery log...", true);
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			boolean secondloop;
 
 			@Override

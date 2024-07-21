@@ -18,7 +18,6 @@ package com.rs.game.content.skills.mining;
 
 import com.rs.game.model.entity.player.Player;
 import com.rs.lib.Constants;
-import com.rs.lib.game.Animation;
 
 public enum Pickaxe {
 	BRONZE(1265, 1, 625, 8),
@@ -37,8 +36,10 @@ public enum Pickaxe {
 	DRAGON_G(20786, 61, 250, 3),
 	INFERNO_ADZE(13661, 61, 10222, 3);
 
-	private int itemId, level, ticks;
-	private int animId;
+	private final int itemId;
+    private final int level;
+    private final int ticks;
+	private final int animId;
 
 	private Pickaxe(int itemId, int level, int animId, int ticks) {
 		this.itemId = itemId;

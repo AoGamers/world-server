@@ -30,6 +30,7 @@ import com.rs.lib.game.Animation;
 import com.rs.lib.game.SpotAnim;
 import com.rs.lib.util.Utils;
 import com.rs.utils.Ticks;
+import kotlin.Pair;
 
 public class RevenantCombat extends CombatScript {
 
@@ -39,77 +40,43 @@ public class RevenantCombat extends CombatScript {
 	}
 
 	public int getMagicAnimation(NPC npc) {
-		switch (npc.getId()) {
-		case 13465:
-			return 7500;
-		case 13466:
-		case 13467:
-		case 13468:
-		case 13469:
-			return 7499;
-		case 13470:
-		case 13471:
-			return 7506;
-		case 13472:
-			return 7503;
-		case 13473:
-			return 7507;
-		case 13474:
-			return 7496;
-		case 13475:
-			return 7497;
-		case 13476:
-			return 7515;
-		case 13477:
-			return 7498;
-		case 13478:
-			return 7505;
-		case 13479:
-			return 7515;
-		case 13480:
-			return 7508;
-		case 13481:
-		default:
-			// melee emote, better than 0
-			return npc.getCombatDefinitions().getAttackEmote();
-		}
+        return switch (npc.getId()) {
+            case 13465 -> 7500;
+            case 13466, 13467, 13468, 13469 -> 7499;
+            case 13470, 13471 -> 7506;
+            case 13472 -> 7503;
+            case 13473 -> 7507;
+            case 13474 -> 7496;
+            case 13475 -> 7497;
+            case 13476 -> 7515;
+            case 13477 -> 7498;
+            case 13478 -> 7505;
+            case 13479 -> 7515;
+            case 13480 -> 7508;
+            default ->
+                // melee emote, better than 0
+                    npc.getCombatDefinitions().getAttackEmote();
+        };
 	}
 
 	public int getRangeAnimation(NPC npc) {
-		switch (npc.getId()) {
-		case 13465:
-			return 7501;
-		case 13466:
-		case 13467:
-		case 13468:
-		case 13469:
-			return 7513;
-		case 13470:
-		case 13471:
-			return 7519;
-		case 13472:
-			return 7516;
-		case 13473:
-			return 7520;
-		case 13474:
-			return 7521;
-		case 13475:
-			return 7510;
-		case 13476:
-			return 7501;
-		case 13477:
-			return 7512;
-		case 13478:
-			return 7518;
-		case 13479:
-			return 7514;
-		case 13480:
-			return 7522;
-		case 13481:
-		default:
-			// melee emote, better than 0
-			return npc.getCombatDefinitions().getAttackEmote();
-		}
+        return switch (npc.getId()) {
+            case 13465 -> 7501;
+            case 13466, 13467, 13468, 13469 -> 7513;
+            case 13470, 13471 -> 7519;
+            case 13472 -> 7516;
+            case 13473 -> 7520;
+            case 13474 -> 7521;
+            case 13475 -> 7510;
+            case 13476 -> 7501;
+            case 13477 -> 7512;
+            case 13478 -> 7518;
+            case 13479 -> 7514;
+            case 13480 -> 7522;
+            default ->
+                // melee emote, better than 0
+                    npc.getCombatDefinitions().getAttackEmote();
+        };
 	}
 
 	@Override
@@ -127,8 +94,8 @@ public class RevenantCombat extends CombatScript {
 				attackStyle = Utils.random(2);
 		}
 
-		if (attackStyle != 2 && target instanceof Player player)
-			player.soundEffect(202);
+		if (attackStyle != 2)
+			npc.soundEffect(target, 202, true);
 
 		switch (attackStyle) {
 		case 0: // magic
@@ -136,7 +103,7 @@ public class RevenantCombat extends CombatScript {
 			if (target instanceof Player player && player.hasEffect(Effect.REV_IMMUNE))
 				damage = 0;
 			delayHit(npc, 2, target, getMagicHit(npc, damage));
-			World.sendProjectile(npc, target, 1276, 34, 16, 30, 35, 16, 0);
+			World.sendProjectile(npc, target, 1276, new Pair<>(34, 16), 30, 7, 16);
 			if (damage > 0)
 				WorldTasks.schedule(new Task() {
 
@@ -157,7 +124,7 @@ public class RevenantCombat extends CombatScript {
 			if (target instanceof Player player && player.hasEffect(Effect.REV_IMMUNE))
 				damage = 0;
 			delayHit(npc, 2, target, getRangeHit(npc, damage2));
-			World.sendProjectile(npc, target, 1278, 34, 16, 30, 35, 16, 0);
+			World.sendProjectile(npc, target, 1278, new Pair<>(34, 16), 30, 7, 16);
 			npc.setNextAnimation(new Animation(getRangeAnimation(npc)));
 			break;
 		case 2: // melee

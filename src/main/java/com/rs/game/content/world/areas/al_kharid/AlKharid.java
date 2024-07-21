@@ -19,7 +19,7 @@ package com.rs.game.content.world.areas.al_kharid;
 import com.rs.game.content.skills.agility.Agility;
 import com.rs.game.content.world.AgilityShortcuts;
 import com.rs.game.content.world.doors.Doors;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Tile;
@@ -32,7 +32,7 @@ import com.rs.plugin.handlers.PlayerStepHandler;
 public class AlKharid {
 
 	public static PlayerStepHandler shantayPass = new PlayerStepHandler(new Tile[] { Tile.of(3303, 3116, 0), Tile.of(3303, 3117, 0), Tile.of(3305, 3116, 0), Tile.of(3305, 3117, 0) }, e -> {
-		if (e.getStep().getY() == 3116 && e.getStep().getDir() == Direction.SOUTH) {
+		if (e.getStep().y == 3116 && e.getStep().dir == Direction.SOUTH) {
 			if (!e.getPlayer().getInventory().containsItem(1854, 1)) {
 				e.getPlayer().sendMessage("You should check with Shantay for a pass.");
 				return;
@@ -41,9 +41,7 @@ public class AlKharid {
 		}
 		e.getStep().setCheckClip(false);
 		e.getPlayer().setRunHidden(false);
-		WorldTasks.delay(3, () -> {
-			e.getPlayer().setRunHidden(true);
-		});
+		WorldTasks.delay(3, () -> e.getPlayer().setRunHidden(true));
 	});
 
 	public static ObjectClickHandler clickShantayPass = new ObjectClickHandler(new Object[] { 12774 }, e -> e.getPlayer().sendMessage("Walk on through with a pass!"));
@@ -56,9 +54,7 @@ public class AlKharid {
 			e.getPlayer().sendMessage("You need 10 gold to pass through this gate.");
 	});
 
-	public static ObjectClickHandler handleStrykewyrmStile = new ObjectClickHandler(new Object[] { 48208 }, e -> {
-		AgilityShortcuts.climbOver(e.getPlayer(), e.getPlayer().transform(e.getPlayer().getX() < e.getObject().getX() ? 3 : -3, 0, 0));
-	});
+	public static ObjectClickHandler handleStrykewyrmStile = new ObjectClickHandler(new Object[] { 48208 }, e -> AgilityShortcuts.climbOver(e.getPlayer(), e.getPlayer().transform(e.getPlayer().getX() < e.getObject().getX() ? 3 : -3, 0, 0)));
 
 	public static ObjectClickHandler handleMiningSiteShortcut = new ObjectClickHandler(new Object[] { 9331, 9332 }, e -> {
 		if (!Agility.hasLevel(e.getPlayer(), 38)) {

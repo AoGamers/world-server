@@ -16,6 +16,7 @@
 //
 package com.rs.net.decoders.handlers;
 
+import com.rs.Settings;
 import com.rs.engine.quest.Quest;
 import com.rs.game.content.Effect;
 import com.rs.game.content.PlayerLook;
@@ -23,7 +24,6 @@ import com.rs.game.content.Skillcapes;
 import com.rs.game.content.death.GraveStone;
 import com.rs.game.content.minigames.creations.StealingCreationShop;
 import com.rs.game.content.minigames.ectofuntus.Ectofuntus;
-import com.rs.game.content.minigames.pest.CommendationExchange;
 import com.rs.game.content.pets.Pet;
 import com.rs.game.content.quests.piratestreasure.CustomsOfficerPiratesTreasureD;
 import com.rs.game.content.quests.piratestreasure.PiratesTreasure;
@@ -37,7 +37,7 @@ import com.rs.game.content.skills.thieving.PickPocketableNPC;
 import com.rs.game.content.transportation.BoatingD;
 import com.rs.game.content.transportation.TravelMethods;
 import com.rs.game.content.transportation.TravelMethods.Carrier;
-import com.rs.game.content.world.unorganized_dialogue.FremennikShipmaster;
+import com.rs.game.content.world.areas.rellekka.npcs.FremennikShipmaster;
 import com.rs.game.content.world.unorganized_dialogue.TanningD;
 import com.rs.game.content.world.unorganized_dialogue.skillmasters.GenericSkillcapeOwnerD;
 import com.rs.game.ge.GE;
@@ -65,9 +65,10 @@ public class NPCHandler {
 					" Mage Def: " + npc.getDefinitions().getMagicDef());
 			if (npc.getDefinitions().transformTo != null)
 				player.sendMessage(npc.getDefinitions().getConfigInfoString());
+			player.sendMessage("Spawn tile [" + npc.getRespawnTile().getX() + ", " + npc.getRespawnTile().getY() + ", " + npc.getRespawnTile().getPlane() + "]]. ");
 		}
 		player.getPackets().sendNPCMessage(0, 0xFFFFFF, npc, NPCExamines.getExamine(npc, player) + " ("+npc.getId()+")");
-		if (npc.getDefinitions().hasAttackOption() || npc.getDefinitions().hasOption("Investigate"))
+		if (Settings.getConfig().isDebug() && (npc.getDefinitions().hasAttackOption() || npc.getDefinitions().hasOption("Investigate")))
 			player.sendOptionDialogue("Would you like to check the drops on this monster?", ops -> {
 				ops.add("Show drops (1,000 kills)", () -> NPC.displayDropsFor(player, npc.getId(), 1000));
 				ops.add("Show drops (5,000 kills)", () -> NPC.displayDropsFor(player, npc.getId(), 5000));
@@ -91,9 +92,11 @@ public class NPCHandler {
 			if (!player.getControllerManager().processNPCClick1(npc))
 				return;
 			npc.resetWalkSteps();
-			player.faceEntity(npc);
-			npc.faceEntity(player);
+			player.faceEntityTile(npc);
+			npc.faceEntityTile(player);
 
+			if (player.getTreasureTrailsManager().useNPC(npc))
+				return;
 			Object[] shipAttributes = BoatingD.getBoatForShip(player, npc.getId());
 			if (shipAttributes != null) {
 				player.startConversation(new BoatingD(player, npc.getId()));
@@ -104,8 +107,6 @@ public class NPCHandler {
 				npc.resetDirection();
 				return;
 			}
-			if (player.getTreasureTrailsManager().useNPC(npc))
-				return;
 			if (npc.getId() == 2825)
 				player.sendOptionDialogue("Would you like to travel to Braindeath Island?", ops -> {
 					ops.add("Yes", () -> player.tele(Tile.of(2163, 5112, 1)));
@@ -186,9 +187,7 @@ public class NPCHandler {
 		player.stopAll(true);
 		if (PluginManager.handle(new NPCClickEvent(player, npc, 2, false)))
 			return;
-		player.getInteractionManager().setInteraction(new StandardEntityInteraction(npc, 0, () -> {
-			PluginManager.handle(new NPCClickEvent(player, npc, 2, true));
-		}));
+		player.getInteractionManager().setInteraction(new StandardEntityInteraction(npc, 0, () -> PluginManager.handle(new NPCClickEvent(player, npc, 2, true))));
 	}
 
 	public static void handleOption3(final Player player, final NPC npc) {
@@ -207,8 +206,8 @@ public class NPCHandler {
 		player.getInteractionManager().setInteraction(new StandardEntityInteraction(npc, distance, () -> {
 			if (!player.getControllerManager().processNPCClick2(npc))
 				return;
-			player.faceEntity(npc);
-			npc.faceEntity(player);
+			player.faceEntityTile(npc);
+			npc.faceEntityTile(player);
 
 			if (player.getTreasureTrailsManager().useNPC(npc))
 				return;
@@ -257,8 +256,7 @@ public class NPCHandler {
 				FremennikShipmaster.sail(player, false);
 			else if (npc instanceof GraveStone grave) {
 				grave.repair(player, false);
-				return;
-			} else if (npc.getId() == 11267) {
+            } else if (npc.getId() == 11267) {
 				int[] noteableFish = { 377, 371, 359, 317, 345, 327 };
 				for (Item item : player.getInventory().getItems().array()) {
 					if (item == null)
@@ -309,8 +307,8 @@ public class NPCHandler {
 			if (!player.getControllerManager().processNPCClick3(npc))
 				return;
 			npc.resetWalkSteps();
-			player.faceEntity(npc);
-			npc.faceEntity(player);
+			player.faceEntityTile(npc);
+			npc.faceEntityTile(player);
 
 			if (npc instanceof GraveStone grave) {
 				grave.repair(player, true);
@@ -321,8 +319,8 @@ public class NPCHandler {
 				PlayerLook.openThessaliasMakeOver(player);
 			else if (npc.getId() == 1526)
 				player.getInterfaceManager().sendInterface(60);
-			else if (PluginManager.handle(new NPCClickEvent(player, npc, 4, true)))
-				return;
+			else if (PluginManager.handle(new NPCClickEvent(player, npc, 4, true))) {
+            }
 			else
 				player.sendMessage("Nothing interesting happens." + npc.getId());
 		}));
@@ -343,8 +341,8 @@ public class NPCHandler {
 			if (!player.getControllerManager().processNPCClick3(npc))
 				return;
 			npc.resetWalkSteps();
-			player.faceEntity(npc);
-			npc.faceEntity(player);
+			player.faceEntityTile(npc);
+			npc.faceEntityTile(player);
 
 			if (npc instanceof GraveStone grave) {
 				grave.demolish(player);
@@ -360,28 +358,27 @@ public class NPCHandler {
 	}
 
 	public static int getShopIdForNpc(int npcId) {
-		switch (npcId) {
-		case 1254: // Razmire's General Store", Razmire Keelgan. (3488, 3296, 0)
-			return -1; // TODO get burgh de rott transforming npc spawns
-		case 1866: // Pollniveach General Store", Market Seller. (3359, 2983, 0)
-			return -1; // TODO
-		case 3166: // Dodgy Mike's Second-hand Clothing", Mike. (3689, 2977, 0)
-			return -1; // TODO
-		case 2162: // Vermundi's Clothes Stall", Vermundia. (2887, 10189, 0)
-			return -1; // TODO
-		case 517: // Shilo Village Fishing Shop", Fernahei. (2871, 2968, 0)
-			return -1; // TODO
-		case 1433: // Solihib's food stall", Solihib. (2769, 2789, 0)
-			return -1; // TODO
-		case 1862: // Ali's Discount Wares", Ali. (3301, 3211, 0)
-			return -1; // TODO
-		case 1435: // Tutab's Magical Market", Tutab. (2757, 2770, 0)
-			return -1; // TODO
-		case 1980: // The Spice is Right", Embalmer. (3286, 2805, 0)
-			return -1; // TODO
+        return switch (npcId) {
+            case 1254 -> // Razmire's General Store", Razmire Keelgan. (3488, 3296, 0)
+                    -1; // TODO get burgh de rott transforming npc spawns
+            case 1866 -> // Pollniveach General Store", Market Seller. (3359, 2983, 0)
+                    -1; // TODO
+            case 3166 -> // Dodgy Mike's Second-hand Clothing", Mike. (3689, 2977, 0)
+                    -1; // TODO
+            case 2162 -> // Vermundi's Clothes Stall", Vermundia. (2887, 10189, 0)
+                    -1; // TODO
+            case 517 -> // Shilo Village Fishing Shop", Fernahei. (2871, 2968, 0)
+                    -1; // TODO implemented in Karamja.java
+            case 1433 -> // Solihib's food stall", Solihib. (2769, 2789, 0)
+                    -1; // TODO
+            case 1862 -> // Ali's Discount Wares", Ali. (3301, 3211, 0)
+                    -1; // TODO
+            case 1435 -> // Tutab's Magical Market", Tutab. (2757, 2770, 0)
+                    -1; // TODO
+            case 1980 -> // The Spice is Right", Embalmer. (3286, 2805, 0)
+                    -1; // TODO
 
-		default:
-			return -1;
-		}
+            default -> -1;
+        };
 	}
 }

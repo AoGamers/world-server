@@ -27,7 +27,6 @@ import com.rs.lib.Constants;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
 import com.rs.plugin.annotations.PluginEventHandler;
-import com.rs.plugin.handlers.ItemClickHandler;
 import com.rs.plugin.handlers.ItemOnObjectHandler;
 import com.rs.plugin.handlers.NPCClickHandler;
 import com.rs.plugin.handlers.ObjectClickHandler;
@@ -35,15 +34,16 @@ import com.rs.plugin.handlers.ObjectClickHandler;
 import java.util.ArrayList;
 import java.util.List;
 
-@QuestHandler(Quest.WATERFALL_QUEST)
+@QuestHandler(
+		quest = Quest.WATERFALL_QUEST,
+		startText = "Speak to Almera in her house north-east of the Baxtorian Falls.",
+		itemsText = "Rope, 6 air runes, 6 earth runes, 6 water runes.",
+		combatText = "None, but you must be able to survive some attacks from level 44 giant spiders and level 58 skeletons.",
+		rewardsText = "13,750 Attack XP<br>13,750 Strength XP<br>2 gold bars<br>2 diamonds<br>40 mithril seeds<br>Access to the Waterfall Dungeon",
+		completedStage = 6
+)
 @PluginEventHandler
 public class WaterfallQuest extends QuestOutline {
-
-	@Override
-	public int getCompletedStage() {
-		return 6;
-	}
-
 	@Override
 	public List<String> getJournalLines(Player player, int stage) {
 		ArrayList<String> lines = new ArrayList<>();
@@ -100,37 +100,12 @@ public class WaterfallQuest extends QuestOutline {
 		sendQuestCompleteInterface(player, 1601);
 	}
 
-	@Override
-	public String getStartLocationDescription() {
-		return "Talk to Almera in her house north-east of the Baxtorian Falls.";
-	}
-
-	@Override
-	public String getRequiredItemsString() {
-		return "Rope, 6 air runes, 6 earth runes, 6 water runes.";
-	}
-
-	@Override
-	public String getCombatInformationString() {
-		return "None, but you must be able to survive some attacks from level 44 giant spiders and level 58 skeletons.";
-	}
-
-	@Override
-	public String getRewardsString() {
-		return "13,750 Attack XP<br>" +
-				"13,750 Strength XP<br>" +
-				"2 gold bars<br>" +
-				"2 diamonds<br>" +
-				"40 mithril seeds<br>" +
-				"Access to the Waterfall Dungeon";
-	}
-
 	public static NPCClickHandler handleHudon = new NPCClickHandler(false, new Object[] { "Hudon" }, e -> {
 		if (e.getOpNum() == 1) {				
 			e.getNPC().resetWalkSteps();
 			e.getPlayer().resetWalkSteps();
-			e.getPlayer().faceEntity(e.getNPC());
-			e.getNPC().faceEntity(e.getPlayer());
+			e.getPlayer().faceEntityTile(e.getNPC());
+			e.getNPC().faceEntityTile(e.getPlayer());
 			e.getPlayer().startConversation(new HudonD(e.getPlayer(), e.getNPC().getId()));
 		}
 	});
@@ -147,8 +122,11 @@ public class WaterfallQuest extends QuestOutline {
 			e.getPlayer().sendMessage("You find an old key.");
 		}
 	});
+
+	public static ObjectClickHandler ladderGlarialsTomb = new ObjectClickHandler(new Object[] { 1757 }, e ->
+			e.getPlayer().useLadder(e.getPlayer().transform(0, -6400)));
 	
-	public static ObjectClickHandler onObjectClick = new ObjectClickHandler(new Object[] { 1987, 1990, 5251, 5250, 10283, 2020, 33047, 33066, 2022, 2014, 37247, 31139, 2002, 1991, 1989 }, e -> {
+	public static ObjectClickHandler handleObjects = new ObjectClickHandler(new Object[] { 1987, 1990, 5251, 5250, 10283, 2020, 33047, 33066, 2022, 2014, 37247, 31139, 2002, 1991, 1989 }, e -> {
 		if (e.getObjectId() == 1987) {
 			e.getPlayer().sendMessage("You board the log raft and crash on a small spit of land.");
 			e.getPlayer().tele(Tile.of(2512, 3481, 0));

@@ -1,51 +1,5 @@
 [
   {
-    "comment": "Werewolf Agility trainer, added by jesse",
-    "npcId": 1664,
-    "tile": {
-      "x": 3528,
-      "y": 9865,
-      "plane": 0
-    }
-  },
-  {
-    "dir": "NORTH",
-    "comment": "Werewolf Agility Boss, added by jesse",
-    "npcId": 1661,
-    "tile": {
-      "x": 3540,
-      "y": 9873,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Werewolf Agility trainer, added by jesse",
-    "npcId": 1663,
-    "tile": {
-      "x": 3542,
-      "y": 9888,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Werewolf Agility trainer, added by jesse",
-    "npcId": 1663,
-    "tile": {
-      "x": 3544,
-      "y": 9912,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Werewolf Agility trainer, added by jesse",
-    "npcId": 1663,
-    "tile": {
-      "x": 3527,
-      "y": 9909,
-      "plane": 0
-    }
-  },
-  {
     "comment": "Baba Yaga added by trent",
     "npcId": 4513,
     "tile": {
@@ -2296,15 +2250,6 @@
     }
   },
   {
-    "comment": "Family Crest Quest: Dimitheis",
-    "npcId": 664,
-    "tile": {
-      "x": 3281,
-      "y": 3403,
-      "plane": 0
-    }
-  },
-  {
     "comment": "Witchhaven dungeon: Hellhound 2",
     "npcId": 49,
     "tile": {
@@ -3926,15 +3871,6 @@
     }
   },
   {
-    "comment": "Edmond",
-    "npcId": 714,
-    "tile": {
-      "x": 2571,
-      "y": 3333,
-      "plane": 0
-    }
-  },
-  {
     "comment": "Odd Old Man",
     "npcId": 9173,
     "tile": {
@@ -4158,15 +4094,6 @@
     },
     "comment": "Surok Magis (What Lies Below Varrock Library)",
     "npcId": 5853
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 4671,
-      "y": 5157
-    },
-    "comment": "TzHaar-Mej-Jeh added by trent",
-    "npcId": 15166
   },
   {
     "tile": {
@@ -13837,24 +13764,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2270,
-      "y": 4758
-    },
-    "comment": "Sabbot",
-    "npcId": 15095
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2270,
-      "y": 4758
-    },
-    "comment": "Sabbot",
-    "npcId": 15097
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2352,
       "y": 3172
     },
@@ -22135,15 +22044,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2585,
-      "y": 2844
-    },
-    "comment": "Kringk",
-    "npcId": 7099
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2581,
       "y": 2845
     },
@@ -22155,15 +22055,6 @@
       "plane": 0,
       "x": 2586,
       "y": 2840
-    },
-    "comment": "Thump",
-    "npcId": 7100
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2587,
-      "y": 2841
     },
     "comment": "Thump",
     "npcId": 7100
@@ -22473,60 +22364,6 @@
     },
     "comment": "Larry",
     "npcId": 8693
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2621,
-      "y": 3368
-    },
-    "comment": "Sick-looking sheep (2)",
-    "npcId": 293
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2622,
-      "y": 3366
-    },
-    "comment": "Sick-looking sheep (2)",
-    "npcId": 293
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2620,
-      "y": 3366
-    },
-    "comment": "Sick-looking sheep (2)",
-    "npcId": 293
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2610,
-      "y": 3385
-    },
-    "comment": "Sick-looking sheep (4)",
-    "npcId": 295
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2608,
-      "y": 3386
-    },
-    "comment": "Sick-looking sheep (4)",
-    "npcId": 295
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2607,
-      "y": 3384
-    },
-    "comment": "Sick-looking sheep (4)",
-    "npcId": 295
   },
   {
     "tile": {
@@ -30630,114 +30467,6 @@
   },
   {
     "tile": {
-      "plane": 0,
-      "x": 2839,
-      "y": 3587
-    },
-    "comment": "Soldier",
-    "npcId": 15087
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2839,
-      "y": 3587
-    },
-    "comment": "Soldier",
-    "npcId": 15087
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2839,
-      "y": 3587
-    },
-    "comment": "Soldier",
-    "npcId": 15087
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2853,
-      "y": 3616
-    },
-    "comment": "Archer",
-    "npcId": 15102
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2852,
-      "y": 3613
-    },
-    "comment": "Archer",
-    "npcId": 15102
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2851,
-      "y": 3615
-    },
-    "comment": "Archer",
-    "npcId": 15102
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2853,
-      "y": 3614
-    },
-    "comment": "Archer",
-    "npcId": 15103
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2854,
-      "y": 3614
-    },
-    "comment": "Archer",
-    "npcId": 15103
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2855,
-      "y": 3613
-    },
-    "comment": "Archer",
-    "npcId": 15103
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2854,
-      "y": 3613
-    },
-    "comment": "Ambush Commander",
-    "npcId": 15104
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2853,
-      "y": 3615
-    },
-    "comment": "Ambush Commander",
-    "npcId": 15104
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2851,
-      "y": 3613
-    },
-    "comment": "Ambush Commander",
-    "npcId": 15104
-  },
-  {
-    "tile": {
       "plane": 2,
       "x": 2824,
       "y": 5216
@@ -34438,416 +34167,11 @@
   {
     "tile": {
       "plane": 1,
-      "x": 2827,
-      "y": 10078
-    },
-    "comment": "Mountain troll",
-    "npcId": 1106
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2836,
-      "y": 10088
-    },
-    "comment": "Mountain troll",
-    "npcId": 1107
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2855,
-      "y": 10058
-    },
-    "comment": "Mountain troll",
-    "npcId": 1108
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2825,
-      "y": 10087
-    },
-    "comment": "Mountain troll",
-    "npcId": 1109
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2836,
-      "y": 10080
-    },
-    "comment": "Mountain troll",
-    "npcId": 1109
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2829,
-      "y": 10080
-    },
-    "comment": "Mountain troll",
-    "npcId": 1110
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2836,
-      "y": 10097
-    },
-    "comment": "Mountain troll",
-    "npcId": 1110
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2852,
-      "y": 10110
-    },
-    "comment": "Mountain troll",
-    "npcId": 1110
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2840,
-      "y": 10101
-    },
-    "comment": "Mountain troll",
-    "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2857,
-      "y": 10055
-    },
-    "comment": "Mountain troll",
-    "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2836,
-      "y": 10090
-    },
-    "comment": "Mountain troll",
-    "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2832,
-      "y": 10089
-    },
-    "comment": "Mountain troll",
-    "npcId": 1112
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2836,
-      "y": 10077
-    },
-    "comment": "Mountain troll",
-    "npcId": 1112
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2831,
-      "y": 10083
-    },
-    "comment": "Eadgar",
-    "npcId": 1113
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2826,
-      "y": 10078
-    },
-    "comment": "Godric",
-    "npcId": 1114
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2832,
-      "y": 10088
-    },
-    "comment": "Troll general",
-    "npcId": 1115
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2824,
-      "y": 10073
-    },
-    "comment": "Troll general",
-    "npcId": 1116
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2829,
-      "y": 10101
-    },
-    "comment": "Troll general",
-    "npcId": 1117
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2833,
-      "y": 10080
-    },
-    "comment": "Twig",
-    "npcId": 1128
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2833,
-      "y": 10084
-    },
-    "comment": "Berry",
-    "npcId": 1129
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2843,
-      "y": 10057
-    },
-    "comment": "Cook",
-    "npcId": 1135
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2840,
-      "y": 10056
-    },
-    "comment": "Cook",
-    "npcId": 1136
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2847,
-      "y": 10056
-    },
-    "comment": "Cook",
-    "npcId": 1137
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2826,
-      "y": 10083
-    },
-    "comment": "Mountain troll",
-    "npcId": 1138
-  },
-  {
-    "tile": {
-      "plane": 2,
-      "x": 2837,
-      "y": 10083
-    },
-    "comment": "Mountain troll",
-    "npcId": 1138
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2856,
-      "y": 10054
-    },
-    "comment": "Mountain goat",
-    "npcId": 1140
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2860,
-      "y": 10057
-    },
-    "comment": "Mountain goat",
-    "npcId": 1140
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2857,
-      "y": 10059
-    },
-    "comment": "Mountain goat",
-    "npcId": 1141
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2857,
-      "y": 10057
-    },
-    "comment": "Mountain goat",
-    "npcId": 1141
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2851,
-      "y": 10089
-    },
-    "comment": "Guard",
-    "npcId": 1142
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2854,
-      "y": 10092
-    },
-    "comment": "Guard",
-    "npcId": 1142
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2850,
-      "y": 10088
-    },
-    "comment": "Guard",
-    "npcId": 1143
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2854,
-      "y": 10086
-    },
-    "comment": "Guard",
-    "npcId": 1143
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2856,
-      "y": 10089
-    },
-    "comment": "Guard",
-    "npcId": 1144
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2858,
-      "y": 10089
-    },
-    "comment": "Guard",
-    "npcId": 1144
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2864,
-      "y": 10081
-    },
-    "comment": "Guard",
-    "npcId": 1146
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2853,
-      "y": 10076
-    },
-    "comment": "Guard",
-    "npcId": 1147
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2858,
-      "y": 10082
-    },
-    "comment": "Guard",
-    "npcId": 1148
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2861,
-      "y": 10085
-    },
-    "comment": "Guard",
-    "npcId": 1149
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2857,
-      "y": 10075
-    },
-    "comment": "Guard",
-    "npcId": 1150
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2845,
-      "y": 10058
-    },
-    "comment": "Burntmeat",
-    "npcId": 1151
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2828,
-      "y": 10065
-    },
-    "comment": "Ug",
-    "npcId": 1553
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2829,
-      "y": 10104
-    },
-    "comment": "Aga",
-    "npcId": 1554
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2829,
-      "y": 10096
-    },
-    "comment": "Arrg",
-    "npcId": 1555
-  },
-  {
-    "tile": {
-      "plane": 1,
       "x": 2855,
       "y": 10051
     },
     "comment": "My Arm",
     "npcId": 4950
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2860,
-      "y": 10054
-    },
-    "comment": "Mountain goat",
-    "npcId": 5171
   },
   {
     "tile": {
@@ -34987,26 +34311,26 @@
   {
     "tile": {
       "plane": 1,
-      "x": 2816,
-      "y": 10112
+      "x": 2869,
+      "y": 10190
     },
-    "comment": "Orange Flame secretary",
+    "comment": "Red Axe Secretary",
     "npcId": 2403
   },
   {
     "tile": {
       "plane": 1,
-      "x": 2816,
-      "y": 10112
+      "x": 2868,
+      "y": 10187
     },
-    "comment": "Orange Flame director",
+    "comment": "Red Axe Director",
     "npcId": 2404
   },
   {
     "tile": {
       "plane": 1,
-      "x": 2816,
-      "y": 10112
+      "x": 2865,
+      "y": 10190
     },
     "comment": "Red Axe Cat",
     "npcId": 2405
@@ -35732,69 +35056,6 @@
     },
     "comment": "Akrisae",
     "npcId": 14348
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2920,
-      "y": 3434
-    },
-    "comment": "Farmer",
-    "npcId": 7
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2925,
-      "y": 3412
-    },
-    "comment": "The Lady of the Lake",
-    "npcId": 250
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2915,
-      "y": 3440
-    },
-    "comment": "Sanfew",
-    "npcId": 454
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2888,
-      "y": 3415
-    },
-    "comment": "Jatix",
-    "npcId": 587
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2921,
-      "y": 3419
-    },
-    "comment": "Tegid",
-    "npcId": 1213
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2895,
-      "y": 3403
-    },
-    "comment": "Farmer",
-    "npcId": 1758
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2925,
-      "y": 3427
-    },
-    "comment": "Alain",
-    "npcId": 2339
   },
   {
     "tile": {
@@ -39836,42 +39097,6 @@
     },
     "comment": "Blue dragon",
     "npcId": 55
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2923,
-      "y": 10029
-    },
-    "comment": "Mountain troll",
-    "npcId": 1109
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2925,
-      "y": 10033
-    },
-    "comment": "Mountain troll",
-    "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2925,
-      "y": 10030
-    },
-    "comment": "Mountain troll",
-    "npcId": 1112
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2923,
-      "y": 10031
-    },
-    "comment": "Mountain troll",
-    "npcId": 1138
   },
   {
     "tile": {
@@ -52017,8 +51242,8 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3244,
-      "y": 3237
+      "x": 3232,
+      "y": 3256
     },
     "comment": "Barfy Bill",
     "npcId": 3331
@@ -73086,15 +72311,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2573,
-      "y": 3333
-    },
-    "comment": "Alrena",
-    "npcId": 710
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2514,
       "y": 3855
     },
@@ -75704,156 +74920,6 @@
     "npcId": 2759
   },
   {
-    "comment": "Grand Exchange clerk",
-    "npcId": 1419,
-    "tile": {
-      "x": 3147,
-      "y": 3479,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "tile": {
-      "x": 3147,
-      "y": 3505,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "tile": {
-      "x": 3179,
-      "y": 3505,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "dir": "EAST",
-    "tile": {
-      "x": 3182,
-      "y": 3504,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "dir": "EAST",
-    "tile": {
-      "x": 3150,
-      "y": 3505,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "tile": {
-      "x": 3179,
-      "y": 3478,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2241,
-    "dir": "EAST",
-    "tile": {
-      "x": 3182,
-      "y": 3479,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Grand Exchange clerk",
-    "npcId": 2593,
-    "tile": {
-      "x": 3150,
-      "y": 3478,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 2718,
-    "tile": {
-      "x": 3149,
-      "y": 3506,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3293,
-    "tile": {
-      "x": 3148,
-      "y": 3477,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3416,
-    "tile": {
-      "x": 3149,
-      "y": 3480,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3418,
-    "tile": {
-      "x": 3148,
-      "y": 3503,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3418,
-    "dir": "SOUTH",
-    "tile": {
-      "x": 3180,
-      "y": 3477,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3418,
-    "dir": "NORTH",
-    "tile": {
-      "x": 3180,
-      "y": 3480,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3418,
-    "tile": {
-      "x": 3180,
-      "y": 3503,
-      "plane": 0
-    }
-  },
-  {
-    "comment": "Banker",
-    "npcId": 3418,
-    "dir": "NORTH",
-    "tile": {
-      "x": 3181,
-      "y": 3506,
-      "plane": 0
-    }
-  },
-  {
     "dir": "NORTH",
     "tile": {
       "plane": 0,
@@ -76551,15 +75617,6 @@
     },
     "comment": "Bartender",
     "npcId": 733
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3268,
-      "y": 3393
-    },
-    "comment": "Bartender",
-    "npcId": 732
   },
   {
     "tile": {
@@ -77280,15 +76337,6 @@
     },
     "comment": "Billy Goat",
     "npcId": 4932
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2530,
-      "y": 3331
-    },
-    "comment": "Billy Rehnison",
-    "npcId": 723
   },
   {
     "tile": {
@@ -78774,15 +77822,6 @@
     },
     "comment": "Blurberry",
     "npcId": 848
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3148,
-      "y": 3498
-    },
-    "comment": "Bob Barter (herbs)",
-    "npcId": 6524
   },
   {
     "tile": {
@@ -81514,24 +80553,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2929,
-      "y": 3222
-    },
-    "comment": "Chancy",
-    "npcId": 338
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3271,
-      "y": 3388
-    },
-    "comment": "Chancy",
-    "npcId": 339
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2561,
       "y": 3355
     },
@@ -81726,15 +80747,6 @@
     },
     "comment": "Cheerleader",
     "npcId": 636
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2934,
-      "y": 3210
-    },
-    "comment": "Chemist",
-    "npcId": 367
   },
   {
     "tile": {
@@ -82639,15 +81651,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2523,
-      "y": 3307
-    },
-    "comment": "Child",
-    "npcId": 356
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2547,
       "y": 3277
     },
@@ -83391,15 +82394,6 @@
     },
     "comment": "Council workman",
     "npcId": 1287
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2617,
-      "y": 3299
-    },
-    "comment": "Councillor Halgrive",
-    "npcId": 289
   },
   {
     "tile": {
@@ -85537,33 +84531,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2927,
-      "y": 3218
-    },
-    "comment": "Da Vinci",
-    "npcId": 336
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3272,
-      "y": 3389
-    },
-    "comment": "Da Vinci",
-    "npcId": 337
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2920,
-      "y": 3606
-    },
-    "comment": "Dad",
-    "npcId": 1125
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2759,
       "y": 2775
     },
@@ -87486,15 +86453,6 @@
     },
     "comment": "Diseased kebbit",
     "npcId": 7039
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2614,
-      "y": 3306
-    },
-    "comment": "Doctor Orbon",
-    "npcId": 290
   },
   {
     "tile": {
@@ -90019,24 +88977,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3281,
-      "y": 3398
-    },
-    "comment": "Fancy-dress shop owner",
-    "npcId": 554
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3181,
-      "y": 3501
-    },
-    "comment": "Farid Morrisane (ores)",
-    "npcId": 6523
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2538,
       "y": 3852
     },
@@ -90046,8 +88986,8 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2617,
-      "y": 3355
+      "x": 2628,
+      "y": 3362
     },
     "comment": "Farmer",
     "npcId": 7
@@ -90055,8 +88995,8 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2621,
-      "y": 3355
+      "x": 2630,
+      "y": 3354
     },
     "comment": "Farmer",
     "npcId": 7
@@ -90114,15 +89054,6 @@
     },
     "comment": "Farmer",
     "npcId": 1758
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2593,
-      "y": 3358
-    },
-    "comment": "Farmer Brumty",
-    "npcId": 291
   },
   {
     "tile": {
@@ -92625,15 +91556,6 @@
     },
     "comment": "Fred the Farmer",
     "npcId": 758
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2820,
-      "y": 3556
-    },
-    "comment": "Freda",
-    "npcId": 15099
   },
   {
     "tile": {
@@ -96220,15 +95142,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3264,
-      "y": 3383
-    },
-    "comment": "Giant rat",
-    "npcId": 2091
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 3265,
       "y": 3348
     },
@@ -96252,15 +95165,6 @@
     },
     "comment": "Giant rat",
     "npcId": 12348
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3266,
-      "y": 3381
-    },
-    "comment": "Giant rat",
-    "npcId": 8829
   },
   {
     "tile": {
@@ -103204,15 +102108,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3263,
-      "y": 3407
-    },
-    "comment": "Guard",
-    "npcId": 368
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 3204,
       "y": 3496
     },
@@ -103731,24 +102626,6 @@
     },
     "comment": "Guardian",
     "npcId": 8906
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3284,
-      "y": 3382
-    },
-    "comment": "Guidor",
-    "npcId": 343
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3281,
-      "y": 3383
-    },
-    "comment": "Guidor\u0027s wife",
-    "npcId": 342
   },
   {
     "tile": {
@@ -105688,15 +104565,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3148,
-      "y": 3483
-    },
-    "comment": "Hofuthand (armour and weapons)",
-    "npcId": 6527
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2720,
       "y": 3306
     },
@@ -105837,33 +104705,6 @@
     },
     "comment": "Honour guard",
     "npcId": 5516
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3268,
-      "y": 3400
-    },
-    "comment": "Hooknosed Jack",
-    "npcId": 2948
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2930,
-      "y": 3218
-    },
-    "comment": "Hops",
-    "npcId": 340
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3268,
-      "y": 3389
-    },
-    "comment": "Hops",
-    "npcId": 341
   },
   {
     "tile": {
@@ -113653,33 +112494,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2507,
-      "y": 3325
-    },
-    "comment": "Man",
-    "npcId": 351
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2536,
-      "y": 3308
-    },
-    "comment": "Man",
-    "npcId": 729
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2540,
-      "y": 3308
-    },
-    "comment": "Man",
-    "npcId": 728
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2596,
       "y": 3104
     },
@@ -114217,15 +113031,6 @@
     },
     "comment": "Master Crafter",
     "npcId": 2733
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2619,
-      "y": 3354
-    },
-    "comment": "Master Farmer",
-    "npcId": 2234
   },
   {
     "tile": {
@@ -115369,15 +114174,6 @@
     },
     "comment": "Milla",
     "npcId": 6037
-  },
-  {
-    "tile": {
-      "plane": 1,
-      "x": 2531,
-      "y": 3330
-    },
-    "comment": "Milli Rehnison",
-    "npcId": 724
   },
   {
     "tile": {
@@ -117893,51 +116689,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2888,
-      "y": 3668
-    },
-    "comment": "Mountain goat",
-    "npcId": 5171
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2891,
-      "y": 3674
-    },
-    "comment": "Mountain goat",
-    "npcId": 1140
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2897,
-      "y": 3689
-    },
-    "comment": "Mountain goat",
-    "npcId": 1140
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2900,
-      "y": 3671
-    },
-    "comment": "Mountain goat",
-    "npcId": 1140
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2900,
-      "y": 3680
-    },
-    "comment": "Mountain goat",
-    "npcId": 5171
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2846,
       "y": 3591
     },
@@ -118069,78 +116820,6 @@
     },
     "comment": "Mountain troll",
     "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2827,
-      "y": 3675
-    },
-    "comment": "Mountain troll",
-    "npcId": 1107
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2829,
-      "y": 3678
-    },
-    "comment": "Mountain troll",
-    "npcId": 1107
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2831,
-      "y": 3673
-    },
-    "comment": "Mountain troll",
-    "npcId": 1109
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2833,
-      "y": 3670
-    },
-    "comment": "Mountain troll",
-    "npcId": 1110
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2833,
-      "y": 3685
-    },
-    "comment": "Mountain troll",
-    "npcId": 1112
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2834,
-      "y": 3683
-    },
-    "comment": "Mountain troll",
-    "npcId": 1111
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2835,
-      "y": 3667
-    },
-    "comment": "Mountain troll",
-    "npcId": 1106
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2837,
-      "y": 3676
-    },
-    "comment": "Mountain troll",
-    "npcId": 1108
   },
   {
     "tile": {
@@ -118523,15 +117202,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2839,
-      "y": 3683
-    },
-    "comment": "Mushroom",
-    "npcId": 1139
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2363,
       "y": 3492
     },
@@ -118708,15 +117378,6 @@
     },
     "comment": "Musician",
     "npcId": 8713
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2815,
-      "y": 3683
-    },
-    "comment": "My Arm",
-    "npcId": 4947
   },
   {
     "tile": {
@@ -119507,6 +118168,7 @@
       "x": 3100,
       "y": 3257
     },
+	"clip": "INDOOR",
     "comment": "Ned",
     "npcId": 918
   },
@@ -124562,15 +123224,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 3268,
-      "y": 3399
-    },
-    "comment": "Pox",
-    "npcId": 2943
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2799,
       "y": 3202
     },
@@ -127055,15 +125708,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2542,
-      "y": 3306
-    },
-    "comment": "Recruiter",
-    "npcId": 720
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 3190,
       "y": 3834
     },
@@ -127213,15 +125857,6 @@
     },
     "comment": "Registrar",
     "npcId": 11272
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 3175,
-      "y": 3477
-    },
-    "comment": "Relobo Blinyo (logs)",
-    "npcId": 6526
   },
   {
     "tile": {
@@ -130633,24 +129268,6 @@
     },
     "comment": "Skeleton",
     "npcId": 5340
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2989,
-      "y": 3944
-    },
-    "comment": "Skeleton",
-    "npcId": 5338
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2992,
-      "y": 3942
-    },
-    "comment": "Skeleton",
-    "npcId": 92
   },
   {
     "tile": {
@@ -135938,51 +134555,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2890,
-      "y": 3697
-    },
-    "comment": "Thrower troll",
-    "npcId": 1134
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2895,
-      "y": 3698
-    },
-    "comment": "Thrower troll",
-    "npcId": 1133
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2900,
-      "y": 3697
-    },
-    "comment": "Thrower troll",
-    "npcId": 1132
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2907,
-      "y": 3697
-    },
-    "comment": "Thrower troll",
-    "npcId": 1131
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2911,
-      "y": 3697
-    },
-    "comment": "Thrower troll",
-    "npcId": 1130
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 3160,
       "y": 3568
     },
@@ -136276,15 +134848,6 @@
     },
     "comment": "Tool leprechaun",
     "npcId": 7562
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2810,
-      "y": 3676
-    },
-    "comment": "Tool Leprechaun",
-    "npcId": 4965
   },
   {
     "tile": {
@@ -137347,69 +135910,6 @@
     },
     "comment": "Trogs",
     "npcId": 8202
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2913,
-      "y": 3602
-    },
-    "comment": "Troll spectator",
-    "npcId": 1123
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2917,
-      "y": 3603
-    },
-    "comment": "Troll spectator",
-    "npcId": 1122
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2919,
-      "y": 3612
-    },
-    "comment": "Troll spectator",
-    "npcId": 1118
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2924,
-      "y": 3599
-    },
-    "comment": "Troll spectator",
-    "npcId": 1124
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2926,
-      "y": 3607
-    },
-    "comment": "Troll spectator",
-    "npcId": 1120
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2929,
-      "y": 3599
-    },
-    "comment": "Troll spectator",
-    "npcId": 1121
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2929,
-      "y": 3613
-    },
-    "comment": "Troll spectator",
-    "npcId": 1119
   },
   {
     "tile": {
@@ -143381,15 +141881,6 @@
   {
     "tile": {
       "plane": 0,
-      "x": 2504,
-      "y": 3326
-    },
-    "comment": "Woman",
-    "npcId": 353
-  },
-  {
-    "tile": {
-      "plane": 0,
       "x": 2509,
       "y": 3314
     },
@@ -143404,24 +141895,6 @@
     },
     "comment": "Woman",
     "npcId": 354
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2511,
-      "y": 3322
-    },
-    "comment": "Woman",
-    "npcId": 352
-  },
-  {
-    "tile": {
-      "plane": 0,
-      "x": 2513,
-      "y": 3315
-    },
-    "comment": "Woman",
-    "npcId": 363
   },
   {
     "tile": {
@@ -143799,6 +142272,7 @@
       "y": 3433
     },
     "comment": "Zaff",
+    "clip": "INDOOR",
     "npcId": 546
   },
   {

@@ -17,7 +17,7 @@
 package com.rs.game.content.minigames.creations;
 
 import com.rs.game.World;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
@@ -517,7 +517,7 @@ public class Helper {
 			return;
 		}
 		player.getInterfaceManager().sendInterface(813);
-		player.getPackets().sendRunScriptReverse(KILN_SCRIPT_BASE + 0); // + tabID
+		player.getPackets().sendRunScriptReverse(KILN_SCRIPT_BASE); // + tabID
 		int quality = 0;
 		qualityLoop: for (int i = 4; i >= 0; i--)
 			if (player.getInventory().containsOneItem(SACRED_CLAY[i])) {

@@ -148,7 +148,11 @@ public class Tirannwn {
 	});
 
 	public static ObjectClickHandler handleEnterUndergroundPass = new ObjectClickHandler(new Object[] { 4006 }, e -> {
-		e.getPlayer().tele(Tile.of(2438, 3315, 0));
+		if (e.getPlayer().isQuestComplete(Quest.BIOHAZARD)) {
+			e.getPlayer().tele(Tile.of(2438, 3315, 0));
+		} else {
+			e.getPlayer().playerDialogue(HeadE.WORRIED, "I don't think I should go through here. I don't know where I'll end up.");
+		}
 	});
 
 	public static ObjectClickHandler handleLletyaTreePass = new ObjectClickHandler(new Object[] { 8742 }, e -> {
@@ -320,11 +324,9 @@ public class Tirannwn {
 		}
 	});
 
-	public static ItemClickHandler handleTeleportCrystal = new ItemClickHandler(new Object[] { 6099, 6100, 6101, 6102 }, new String[] { "Activate" }, e -> {
-		Magic.sendNormalTeleportSpell(e.getPlayer(), Tile.of(2340, 3172, 0), () -> {
-			e.getItem().setId(e.getItem().getId() + 1);
-			e.getPlayer().getInventory().refresh(e.getItem().getSlot());
-		});
-	});
+	public static ItemClickHandler handleTeleportCrystal = new ItemClickHandler(new Object[] { 6099, 6100, 6101, 6102 }, new String[] { "Activate" }, e -> Magic.sendNormalTeleportSpell(e.getPlayer(), Tile.of(2340, 3172, 0), () -> {
+        e.getItem().setId(e.getItem().getId() + 1);
+        e.getPlayer().getInventory().refresh(e.getItem().getSlot());
+    }));
 
 }

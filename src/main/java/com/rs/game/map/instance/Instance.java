@@ -1,7 +1,9 @@
 package com.rs.game.map.instance;
 
+import com.rs.Settings;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
+import com.rs.game.tasks.WorldTasks;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.MapUtils;
 import com.rs.lib.util.MapUtils.Structure;
@@ -13,35 +15,63 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Instance {
     private static final Map<UUID, Instance> INSTANCES = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
 
     private final UUID id = UUID.randomUUID();
-    private Tile returnTo;
+    private final Tile returnTo;
     private int[] entranceOffset;
     private boolean persistent;
     private transient int[] chunkBase;
-    private transient IntSet chunkIds = new IntOpenHashSet();
-    private int width;
-    private int height;
+    private final transient IntSet chunkIds = new IntOpenHashSet();
+    private final int width;
+    private final int height;
 
-    private boolean copyNpcs;
+    final boolean copyNpcs;
+    final boolean copyMulti;
 
-    private transient volatile boolean destroyed;
+    private final transient AtomicBoolean destroyed;
 
-    private Instance(Tile returnTo, int width, int height, boolean copyNpcs) {
+    //No-args constructor that should never be used other than by GSON's hacky BS.
+    private Instance() {
+        this.copyMulti = false;
+        this.returnTo = Settings.getConfig().getPlayerStartTile();
+        this.width = 1;
+        this.height = 1;
+        this.copyNpcs = false;
+        this.destroyed = new AtomicBoolean(false);
+    }
+
+    private Instance(boolean multizone) {
+        this.destroyed = new AtomicBoolean(false);
+        this.copyMulti = multizone;
+        this.returnTo = Settings.getConfig().getPlayerStartTile();
+        this.width = 1;
+        this.height = 1;
+        this.copyNpcs = false;
+    }
+
+    private Instance(Tile returnTo, int width, int height, boolean copyNpcs, boolean copyMulti) {
+        this.destroyed = new AtomicBoolean(false);
         this.returnTo = returnTo;
         this.width = width;
         this.height = height;
-        destroyed = false;
+        this.copyMulti = copyMulti;
         this.copyNpcs = copyNpcs;
     }
 
-    public static Instance of(Tile returnTo, int width, int height, boolean copyNpcs) {
-        Instance instance = new Instance(returnTo, width, height, copyNpcs);
+    public static Instance of(Tile returnTo, int width, int height, boolean copyNpcs, boolean copyMulti) {
+        Instance instance = new Instance(returnTo, width, height, copyNpcs, copyMulti);
         INSTANCES.put(instance.id, instance);
-        return new Instance(returnTo, width, height, copyNpcs);
+        return instance;
+    }
+
+    public static Instance of(Tile returnTo, int width, int height, boolean copyNpcs) {
+        Instance instance = new Instance(returnTo, width, height, copyNpcs, true);
+        INSTANCES.put(instance.id, instance);
+        return instance;
     }
 
     public static Instance of(Tile returnTo, int width, int height) {
@@ -68,7 +98,7 @@ public class Instance {
 
     public CompletableFuture<Boolean> requestChunkBound() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        destroyed = false;
+        destroyed.set(false);
         InstanceBuilder.findEmptyChunkBound(this, future);
         return future;
     }
@@ -116,9 +146,9 @@ public class Instance {
     public CompletableFuture<Boolean> copyMap(int localChunkX, int localChunkY, int[] planes, int fromChunkX, int fromChunkY, int[] fromPlanes, int width, int height) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         if (chunkBase == null)
-            requestChunkBound().thenAccept(bool -> InstanceBuilder.copyMap(this, localChunkX, localChunkY, planes, fromChunkX, fromChunkY, fromPlanes, width, height, copyNpcs, future)).exceptionally(e -> { future.completeExceptionally(e); return null; });
+            requestChunkBound().thenAccept(bool -> InstanceBuilder.copyMap(this, localChunkX, localChunkY, planes, fromChunkX, fromChunkY, fromPlanes, width, height, copyNpcs, copyMulti, future)).exceptionally(e -> { future.completeExceptionally(e); return null; });
         else
-            InstanceBuilder.copyMap(this, localChunkX, localChunkY, planes, fromChunkX, fromChunkY, fromPlanes, width, height, copyNpcs, future);
+            InstanceBuilder.copyMap(this, localChunkX, localChunkY, planes, fromChunkX, fromChunkY, fromPlanes, width, height, copyNpcs, copyMulti, future);
         return future;
     }
 
@@ -154,12 +184,14 @@ public class Instance {
     public CompletableFuture<Boolean> destroy() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         INSTANCES.remove(id);
-        if (destroyed) {
+        if (destroyed.get()) {
             future.complete(null);
             return future;
         }
-        destroyed = true;
-        InstanceBuilder.destroyMap(this, future);
+        WorldTasks.schedule(5, () -> {
+            destroyed.set(true);
+            InstanceBuilder.destroyMap(this, future);
+        });
         return future;
     }
 
@@ -228,7 +260,7 @@ public class Instance {
     }
 
     public boolean isDestroyed() {
-        return destroyed;
+        return destroyed.get();
     }
 
     public boolean isCreated() {

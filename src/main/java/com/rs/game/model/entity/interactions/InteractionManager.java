@@ -20,7 +20,7 @@ import com.rs.game.model.entity.Entity;
 
 public final class InteractionManager {
 
-	private Entity player;
+	private final Entity player;
 	private Interaction interaction;
 
 	public InteractionManager(Entity player) {
@@ -34,8 +34,10 @@ public final class InteractionManager {
 
 	public boolean setInteraction(Interaction skill) {
 		forceStop();
-		if (!skill.start(player))
+		if (!skill.start(player)) {
+			skill.stop(player);
 			return false;
+		}
 		interaction = skill;
 		return true;
 	}
@@ -43,7 +45,7 @@ public final class InteractionManager {
 	public void forceStop() {
 		if (interaction == null)
 			return;
-		player.setNextFaceEntity(null);
+		player.stopFaceEntity();
 		interaction.stop(player);
 		interaction = null;
 	}

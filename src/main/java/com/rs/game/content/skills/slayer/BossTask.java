@@ -22,6 +22,7 @@ import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
 import com.rs.lib.Constants;
 import com.rs.lib.util.Utils;
+import kotlin.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class BossTask {
 		TORMENTED_DEMON		(8349, 8, 12, 10000);
 
 
-		private static Map<Integer, BossTasks> monsters = new HashMap<>();
+		private static final Map<Integer, BossTasks> monsters = new HashMap<>();
 
 		public static BossTasks forId(int id) {
 			return monsters.get(id);
@@ -63,10 +64,10 @@ public class BossTask {
 				monsters.put(monster.id, monster);
 		}
 
-		private int id;
-		private int minAmount;
-		private int maxAmount;
-		private int xp;
+		private final int id;
+		private final int minAmount;
+		private final int maxAmount;
+		private final int xp;
 
 		private BossTasks(int id, int minAmount, int maxAmount, int xp) {
 			this.id = id;
@@ -110,7 +111,7 @@ public class BossTask {
 	}
 
 	public void sendKill(Player player, NPC npc) {
-		World.sendProjectile(npc, player, 3060, 18, 18, 15, 0, 20, 0);
+		World.sendProjectile(npc, player, 3060, new Pair<>(18, 18), 15, 15, 20);
 		if (amount >= 1)
 			amount--;
 		if (amount <= 0)

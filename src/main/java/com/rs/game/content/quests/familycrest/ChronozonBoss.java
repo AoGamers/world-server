@@ -44,22 +44,21 @@ public class ChronozonBoss extends NPC {
 
 	@Override
 	public void handlePreHit(final Hit hit) {
-		if(hit.getSource() instanceof Player) {
-			Player p = (Player)hit.getSource();
-			if(!hit.missed() && hit.getData("combatSpell") != null)
-				if(!hitFire && hit.getData("combatSpell", CombatSpell.class).isFireBlast()) {
+		if(hit.getSource() instanceof Player p) {
+            if(!hit.missed() && hit.getData("combatSpell") != null)
+				if(!hitFire && hit.getData("combatSpell", CombatSpell.class) == CombatSpell.FIRE_BLAST) {
 					p.sendMessage("Chronozon weakens...");
 					hitFire = true;
 				}
-				else if(!hitWater && hit.getData("combatSpell", CombatSpell.class).isWaterBlast()) {
+				else if(!hitWater && hit.getData("combatSpell", CombatSpell.class) == CombatSpell.WATER_BLAST) {
 					p.sendMessage("Chronozon weakens...");
 					hitWater = true;
 				}
-				else if(!hitAir && hit.getData("combatSpell", CombatSpell.class).isAirBlast()) {
+				else if(!hitAir && hit.getData("combatSpell", CombatSpell.class) == CombatSpell.WIND_BLAST) {
 					p.sendMessage("Chronozon weakens...");
 					hitAir = true;
 				}
-				else if(!hitEarth && hit.getData("combatSpell", CombatSpell.class).isEarthBlast()) {
+				else if(!hitEarth && hit.getData("combatSpell", CombatSpell.class) == CombatSpell.EARTH_BLAST) {
 					p.sendMessage("Chronozon weakens...");
 					hitEarth = true;
 				}
@@ -71,12 +70,11 @@ public class ChronozonBoss extends NPC {
 		return (hitAir && hitEarth && hitFire && hitWater);
 	}
 
-	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(667, (npcId, tile) -> new ChronozonBoss(npcId, tile));
+	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(667, ChronozonBoss::new);
 
 	public static NPCDeathHandler handleChronozonDeath = new NPCDeathHandler(667, e -> {
-		if(e.getKiller() instanceof Player) {
-			Player p = (Player)e.getKiller();
-			if(p.getQuestManager().getStage(Quest.FAMILY_CREST) == KILL_CHRONOZON && !p.getInventory().containsItem(JOHNATHAN_CREST))
+		if(e.getKiller() instanceof Player p) {
+            if(p.getQuestManager().getStage(Quest.FAMILY_CREST) == KILL_CHRONOZON && !p.getInventory().containsItem(JOHNATHAN_CREST))
 				World.addGroundItem(new Item(JOHNATHAN_CREST, 1), Tile.of(e.getNPC().getTile()), p);
 		}
 	});

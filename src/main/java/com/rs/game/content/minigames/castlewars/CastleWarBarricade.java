@@ -23,7 +23,7 @@ import com.rs.lib.util.Utils;
 
 public class CastleWarBarricade extends NPC {
 
-	private int team;
+	private final int team;
 
 	public CastleWarBarricade(int team, Tile tile) {
 		super(1532, tile, true);
@@ -35,7 +35,7 @@ public class CastleWarBarricade extends NPC {
 	public void processNPC() {
 		if (isDead())
 			return;
-		cancelFaceEntityNoCheck();
+		stopFaceEntity();
 		if (getId() == 1533 && Utils.getRandomInclusive(20) == 0)
 			sendDeath(this);
 	}

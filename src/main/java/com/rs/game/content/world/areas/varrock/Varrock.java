@@ -22,13 +22,13 @@ import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
 import com.rs.engine.quest.Quest;
 import com.rs.game.World;
-import com.rs.game.content.combat.PlayerCombat;
+import com.rs.game.content.combat.PlayerCombatKt;
 import com.rs.game.content.combat.XPType;
 import com.rs.game.content.quests.scorpioncatcher.ScorpionCatcher;
 import com.rs.game.content.skills.agility.Agility;
 import com.rs.game.content.world.AgilityShortcuts;
 import com.rs.game.content.world.doors.Doors;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.game.tasks.Task;
@@ -45,33 +45,33 @@ import com.rs.utils.shop.ShopsHandler;
 @PluginEventHandler
 public class Varrock {
 	public static PlayerStepHandler musicBlueMoonInn = new PlayerStepHandler(new Tile[] { Tile.of(3215, 3395, 0), Tile.of(3216, 3395, 0), Tile.of(3233, 3396, 0) }, e -> {
-		if(e.getTile().getX() <= 3216 && e.getStep().getDir() == Direction.WEST)
+		if(e.getTile().getX() <= 3216 && e.getStep().dir == Direction.WEST)
 			if(e.getPlayer().getMusicsManager().isPlaying(716))
 				e.getPlayer().getMusicsManager().nextAmbientSong();
-		if(e.getTile().getX() == 3216 && e.getStep().getDir() == Direction.EAST)
+		if(e.getTile().getX() == 3216 && e.getStep().dir == Direction.EAST)
 			e.getPlayer().getMusicsManager().playSpecificAmbientSong(716, true);
 
-		if(e.getTile().getX() == 3233 && e.getStep().getDir() == Direction.WEST)
+		if(e.getTile().getX() == 3233 && e.getStep().dir == Direction.WEST)
 			e.getPlayer().getMusicsManager().playSpecificAmbientSong(716, true);
-		if(e.getTile().getX() == 3233 && e.getStep().getDir() == Direction.EAST) {
+		if(e.getTile().getX() == 3233 && e.getStep().dir == Direction.EAST) {
 			if(e.getPlayer().getMusicsManager().isPlaying(716))
 				e.getPlayer().getMusicsManager().nextAmbientSong();
 		}
 	});
 
 	public static PlayerStepHandler musicDancingDonkeyInn = new PlayerStepHandler(new Tile[] { Tile.of(3274, 3389, 0), Tile.of(3275, 3389, 0) }, e -> {
-		if (e.getTile().getX() <= 3275 && e.getStep().getDir() == Direction.EAST)
+		if (e.getTile().getX() <= 3275 && e.getStep().dir == Direction.EAST)
 			if (e.getPlayer().getMusicsManager().isPlaying(721))
 				e.getPlayer().getMusicsManager().nextAmbientSong();
-		if (e.getTile().getX() == 3274 && e.getStep().getDir() == Direction.WEST)
+		if (e.getTile().getX() == 3274 && e.getStep().dir == Direction.WEST)
 			e.getPlayer().getMusicsManager().playSpecificAmbientSong(721, true);
 	});
 
 	public static PlayerStepHandler musicBoarsHeadInn = new PlayerStepHandler(new Tile[] { Tile.of(3281, 3506, 0), Tile.of(3280, 3506, 0) }, e -> {
-		if (e.getStep().getDir() == Direction.NORTH)
+		if (e.getStep().dir == Direction.NORTH)
 			if (e.getPlayer().getMusicsManager().isPlaying(720))
 				e.getPlayer().getMusicsManager().nextAmbientSong();
-		if (e.getStep().getDir() == Direction.SOUTH)
+		if (e.getStep().dir == Direction.SOUTH)
 			e.getPlayer().getMusicsManager().playSpecificAmbientSong(720, true);
 	});
 
@@ -86,7 +86,7 @@ public class Varrock {
 							option("I could be, yes.", new Dialogue()
 									.addPlayer(HeadE.HAPPY_TALKING, "I could be, yes.")
 									.addNPC(NPC, HeadE.CALM_TALK, "Let me show you my inventory then...")
-									.addNext(()->{ShopsHandler.openShop(e.getPlayer(), "helmet_shop");})
+									.addNext(()-> ShopsHandler.openShop(e.getPlayer(), "helmet_shop"))
 							);
 							option("No, I'll pass on that.", new Dialogue()
 									.addPlayer(HeadE.HAPPY_TALKING, "No, I'll pass on that.")
@@ -112,13 +112,9 @@ public class Varrock {
 			ShopsHandler.openShop(e.getPlayer(), "helmet_shop");
 	});
 
-	public static ObjectClickHandler varrockCenterStairs = new ObjectClickHandler(new Object[] { 24367 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(e.getObject().getX(), 3476, 1), 1, 2);
-	});
+	public static ObjectClickHandler varrockCenterStairs = new ObjectClickHandler(new Object[] { 24367 }, e -> e.getPlayer().useStairs(-1, Tile.of(e.getObject().getX(), 3476, 1), 1, 2));
 
-	public static ObjectClickHandler blueMoonStairs = new ObjectClickHandler(new Object[] { 37117 }, e -> {
-		e.getPlayer().useStairs(-1, Tile.of(e.getObject().getX()-2, e.getPlayer().getY(), 0), 1, 2);
-	});
+	public static ObjectClickHandler blueMoonStairs = new ObjectClickHandler(new Object[] { 37117 }, e -> e.getPlayer().useStairs(-1, Tile.of(e.getObject().getX()-2, e.getPlayer().getY(), 0), 1, 2));
 
 	public static ObjectClickHandler handleVariousStaircases = new ObjectClickHandler(new Object[] { 24356 }, e -> {
 		Player p = e.getPlayer();
@@ -132,22 +128,9 @@ public class Varrock {
 
 	public static ObjectClickHandler handleChaosAltar = new ObjectClickHandler(new Object[] { 61 }, e -> {
 		Player p = e.getPlayer();
-		if(e.getOption().equalsIgnoreCase("Pray-at")) {
-			final int maxPrayer = p.getSkills().getLevelForXp(Constants.PRAYER) * 10;
-			if (p.getPrayer().getPoints() < maxPrayer) {
-				p.lock(5);
-				p.sendMessage("You pray to the gods...", true);
-				p.setNextAnimation(new Animation(645));
-				WorldTasks.schedule(new Task() {
-					@Override
-					public void run() {
-						p.getPrayer().restorePrayer(maxPrayer);
-						p.sendMessage("...and recharged your prayer.", true);
-					}
-				}, 2);
-			} else
-				p.sendMessage("You already have full prayer.");
-		} else if(e.getOption().equalsIgnoreCase("Check"))
+		if(e.getOption().equalsIgnoreCase("Pray-at"))
+			p.getPrayer().worshipAltar();
+		else if(e.getOption().equalsIgnoreCase("Check"))
 			p.startConversation(new Conversation(p) {
 				{
 					addSimple("You find a small inscription at the bottom of the altar. It reads: 'Snarthon Candtrick Termanto'.");
@@ -161,18 +144,18 @@ public class Varrock {
 			e.getPlayer().sendMessage("There is nothing more you can learn from hitting a dummy.");
 			return;
 		}
-		XPType type = e.getPlayer().getCombatDefinitions().getAttackStyle().getXpType();
+		XPType type = e.getPlayer().getCombatDefinitions().getAttackStyle().xpType;
 		if (type != XPType.ACCURATE && type != XPType.AGGRESSIVE && type != XPType.CONTROLLED && type != XPType.DEFENSIVE) {
 			e.getPlayer().sendMessage("You can't hit a dummy with that attack style.");
 			return;
 		}
-		e.getPlayer().setNextAnimation(new Animation(PlayerCombat.getWeaponAttackEmote(e.getPlayer().getEquipment().getWeaponId(), e.getPlayer().getCombatDefinitions().getAttackStyle())));
+		e.getPlayer().setNextAnimation(new Animation(PlayerCombatKt.getWeaponAttackEmote(e.getPlayer().getEquipment().getWeaponId(), e.getPlayer().getCombatDefinitions().getAttackStyle())));
 		e.getPlayer().lock(3);
 		World.sendObjectAnimation(e.getObject(), new Animation(6482));
 		e.getPlayer().getSkills().addXp(Constants.ATTACK, 5);
 	});
 
-	public static ObjectClickHandler handleVarrockSewerEntrance = new ObjectClickHandler(new Object[] { "Manhole" }, e -> {
+	public static ObjectClickHandler handleVarrockSewerEntrance = new ObjectClickHandler(new Object[] { 882 }, e -> {
 		Player p = e.getPlayer();
 		GameObject obj = e.getObject();
 		if(e.getOption().equalsIgnoreCase("Climb-Down"))
@@ -180,9 +163,7 @@ public class Varrock {
 				p.useStairs(833, Tile.of(3237, 9858, 0), 1, 2);
 	});
 
-	public static ObjectClickHandler handleKeldagrimTrapdoor = new ObjectClickHandler(new Object[] { 28094 }, e -> {
-		e.getPlayer().tele(Tile.of(2911, 10176, 0));
-	});
+	public static ObjectClickHandler handleKeldagrimTrapdoor = new ObjectClickHandler(new Object[] { 28094 }, e -> e.getPlayer().tele(Tile.of(2911, 10176, 0)));
 
 	public static ObjectClickHandler handleRiverLumSteppingStones = new ObjectClickHandler(new Object[] { 9315 }, e -> {
 		if (!Agility.hasLevel(e.getPlayer(), 31))
@@ -193,7 +174,7 @@ public class Varrock {
 	public static ObjectClickHandler handleGrandExchangeShortcut = new ObjectClickHandler(new Object[] { 9311, 9312 }, e -> {
 		if (!Agility.hasLevel(e.getPlayer(), 21))
 			return;
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int ticks = 0;
 
 			@Override

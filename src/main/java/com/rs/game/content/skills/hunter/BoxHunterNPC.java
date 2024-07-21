@@ -21,7 +21,7 @@ import com.rs.game.content.minigames.herblorehabitat.JadinkoType;
 import com.rs.game.content.skills.hunter.traps.BoxStyleTrap;
 import com.rs.game.content.skills.hunter.traps.BoxStyleTrap.Status;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.RouteEvent;
+import com.rs.engine.pathfinder.RouteEvent;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.lib.Constants;
@@ -94,7 +94,7 @@ public class BoxHunterNPC extends NPC {
 
 	public static NPCInstanceHandler toFunc = new NPCInstanceHandler(
 			Stream.concat(
-					Arrays.stream(JadinkoType.values()).map(i -> i.getNpcId()).filter(i -> i != -1).distinct(), 
+					Arrays.stream(JadinkoType.values()).map(JadinkoType::getNpcId).filter(i -> i != -1).distinct(),
 					BoxHunterType.ID_MAP.keySet().stream())
 			.toArray(), (npcId, tile) -> new BoxHunterNPC(npcId, tile, false));
 

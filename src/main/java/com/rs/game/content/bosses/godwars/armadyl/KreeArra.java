@@ -18,6 +18,7 @@ package com.rs.game.content.bosses.godwars.armadyl;
 
 import com.rs.game.content.bosses.godwars.GodWarMinion;
 import com.rs.game.content.combat.PlayerCombat;
+import com.rs.game.content.combat.PlayerCombatKt;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.tasks.WorldTasks;
@@ -28,7 +29,7 @@ import com.rs.plugin.handlers.NPCInstanceHandler;
 @PluginEventHandler
 public class KreeArra extends NPC {
 
-	private GodWarMinion[] minions = new GodWarMinion[3];
+	private final GodWarMinion[] minions = new GodWarMinion[3];
 
 	public KreeArra(int id, Tile tile, boolean spawned) {
 		super(id, tile, spawned);
@@ -55,7 +56,7 @@ public class KreeArra extends NPC {
 
 	@Override
 	public boolean canBeAttackedBy(Player player) {
-		if (!PlayerCombat.isRanging(player)) {
+		if (!PlayerCombatKt.isRanging(player)) {
 			player.sendMessage("Kree'arra is flying too high for you to attack using melee.");
 			return false;
 		}

@@ -19,7 +19,7 @@ package com.rs.game.content.minigames.fightkiln.npcs;
 import com.rs.game.content.minigames.fightkiln.FightKilnController;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.lib.game.SpotAnim;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
@@ -34,9 +34,9 @@ public class HarAken extends NPC {
 	private long time;
 	private long spawnTentacleTime;
 	private boolean underLava;
-	private List<HarAkenTentacle> tentacles;
+	private final List<HarAkenTentacle> tentacles;
 
-	private FightKilnController controller;
+	private final FightKilnController controller;
 
 	public void resetTimer() {
 		underLava = !underLava;
@@ -80,7 +80,7 @@ public class HarAken extends NPC {
 	public void processNPC() {
 		if (isDead())
 			return;
-		cancelFaceEntityNoCheck();
+		stopFaceEntity();
 	}
 
 	public void process() {

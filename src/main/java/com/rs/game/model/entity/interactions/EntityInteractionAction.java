@@ -6,7 +6,7 @@ import com.rs.game.model.entity.player.Player;
 
 public abstract class EntityInteractionAction<T extends Action> extends EntityInteraction {
 
-	private T action;
+	private final T action;
 	private boolean started = false;
 
 	public EntityInteractionAction(Entity target, T action, int distance) {
@@ -40,9 +40,13 @@ public abstract class EntityInteractionAction<T extends Action> extends EntityIn
 	}
 
 	@Override
+	public final void stop(Entity entity) {
+		super.stop(entity);
+		onStop(entity);
+	}
+
+	@Override
 	public void onStop(Entity entity) {
-		if (!(entity instanceof Player player))
-			return;
-		action.stop(player);
+		action.stop(entity);
 	}
 }

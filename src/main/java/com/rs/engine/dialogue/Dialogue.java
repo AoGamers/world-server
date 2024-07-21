@@ -24,10 +24,7 @@ import com.rs.game.model.entity.player.Player;
 import com.rs.lib.game.Item;
 import com.rs.lib.util.Utils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -82,8 +79,16 @@ public class Dialogue {
 		return event;
 	}
 
+	public Dialogue addGotoStage(String stageName, Map<String, Dialogue> stages) {
+		return addNext(new StageSelectDialogue(stageName, stages));
+	}
+
 	public Dialogue addGotoStage(String stageName, Conversation conversation) {
-		return addNext(new StageSelectDialogue(stageName, conversation));
+		return addNext(new StageSelectDialogue(stageName, conversation.getStages()));
+	}
+
+	public Dialogue addGotoStage(Dialogue directNextReference) {
+		return addNext(new StageSelectDialogue(directNextReference));
 	}
 
 	public Dialogue addStatementWithOptions(Statement statement, Dialogue... options) {
@@ -145,17 +150,23 @@ public class Dialogue {
 	}
 
 	public Dialogue addItemToInv(Player player, Item item, String text) {
-		return addNext(new ItemStatement(item.getId(), text)).setFunc(() -> {
-			player.getInventory().addItem(item);
-		});
+		return addNext(new ItemStatement(item.getId(), text)).setFunc(() -> player.getInventory().addItem(item));
 	}
 
 	public Dialogue addQuestStart(Quest quest) {
 		return addNext(new QuestStartStatement(quest));
 	}
-	
+
 	public Dialogue addMakeX(int[] itemIds, int maxAmt) {
 		return addNext(new MakeXStatement(itemIds, maxAmt));
+	}
+
+	public Dialogue addMakeX(MakeXStatement.MakeXType makeXType, int[] itemIds, int maxAmt) {
+		return addNext(new MakeXStatement(makeXType, itemIds, maxAmt));
+	}
+
+	public Dialogue addMakeX(MakeXStatement.MakeXType makeXType, String question, int[] itemIds, int maxAmt) {
+		return addNext(new MakeXStatement(makeXType, question, itemIds, maxAmt));
 	}
 	
 	public Dialogue addMakeX(int itemId, int maxAmt) {
@@ -219,7 +230,7 @@ public class Dialogue {
 			for (String opName : options.getOptions().keySet()) {
 				Option op = options.getOptions().get(opName);
 				if (op.show() && op.getDialogue() != null)
-					addNext(op.getDialogue());
+					return addNext(op.getDialogue());
 			}
 			if (options.getConv() != null)
 				options.getConv().addStage(options.getStageName(), getNext(0));
@@ -236,15 +247,14 @@ public class Dialogue {
 				if (o.show() && o.getDialogue() != null)
 					op.addNext(o.getDialogue());
 			}
-			addNext(op);
 			if (options.getConv() != null)
 				options.getConv().addStage(options.getStageName(), op);
+			return addNext(op);
 		} else {
 			String[] ops = new String[options.getOptions().keySet().size()];
 			options.getOptions().keySet().toArray(ops);
 			String[] baseOptions = new String[5];
-			for (int i = 0;i < 4;i++)
-				baseOptions[i] = ops[i];
+            System.arraycopy(ops, 0, baseOptions, 0, 4);
 			baseOptions[4] = "More options...";
 			Dialogue baseOption = new Dialogue(new OptionStatement(title, baseOptions));
 			Dialogue currPage = baseOption;
@@ -267,9 +277,9 @@ public class Dialogue {
 				}
 			}
 			currPage.addNext(baseOption);
-			addNext(baseOption);
 			if (options.getConv() != null)
 				options.getConv().addStage(options.getStageName(), baseOption);
+			return addNext(baseOption);
 		}
 		return this;
 	}
@@ -370,7 +380,7 @@ public class Dialogue {
 		if (statement != null)
 			statement.send(player);
 		if (voiceEffectId != -1)
-			player.voiceEffect(voiceEffectId);
+			player.voiceEffect(voiceEffectId, false);
 	}
 
 	public Dialogue getPrev() {
@@ -387,14 +397,14 @@ public class Dialogue {
 
 	@Override
 	public String toString() {
-		String str = "[Dialogue] { stmt: " + statement + " next: [ ";
+		StringBuilder str = new StringBuilder("[Dialogue] { stmt: " + statement + " next: [ ");
 		for (Dialogue d : next) {
 			if (d == null)
 				continue;
-			str += d.getClass().getSimpleName() + "("+d.getStatement()+")\n\t";
+			str.append(d.getClass().getSimpleName()).append("(").append(d.getStatement()).append(")\n\t");
 		}
-		str += " ] }";
-		return str;
+		str.append(" ] }");
+		return str.toString();
 	}
 
 	public Dialogue cutPrev() {

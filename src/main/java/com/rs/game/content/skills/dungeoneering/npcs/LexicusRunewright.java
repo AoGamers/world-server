@@ -68,7 +68,7 @@ public class LexicusRunewright extends DungeonBoss {
 		setCantInteract(true);
 		setNextAnimation(new Animation(13499));
 		setNextSpotAnim(new SpotAnim(1576));
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 
 			int cycles = 0;
 
@@ -99,7 +99,7 @@ public class LexicusRunewright extends DungeonBoss {
 					break;
 				Tile tile = getManager().getTile(getReference(), 6 + Utils.random(4), 6 + Utils.random(4));
 				TombOfLexicus book = new TombOfLexicus(boss, 9856 + Utils.random(3), tile, getManager()); //TODO scale to combat level
-				book.setTarget(target);
+				book.setCombatTarget(target);
 				books.add(book);
 			}
 			return false;

@@ -119,38 +119,38 @@ public enum ProduceType {
 	Spirit_tree(5375, 83, null, 8, 199.5, 19301.8, 12, PatchType.SPIRIT);
 
 
-	private static Map<Integer, ProduceType> MAP = new HashMap<>();
+	private static final Map<Integer, ProduceType> SEED_MAP = new HashMap<>();
+	private static final Map<Integer, ProduceType> PRODUCE_MAP = new HashMap<>();
 
 	static {
 		for (ProduceType product : ProduceType.values())
-			MAP.put(product.seedId, product);
+			SEED_MAP.put(product.seedId, product);
+		for (ProduceType product : ProduceType.values()) {
+			if (product.productId == null)
+				continue;
+			PRODUCE_MAP.put(product.productId.getId(), product);
+		}
 	}
 
 	public static ProduceType forSeed(int itemId) {
-		return MAP.get(itemId);
+		return SEED_MAP.get(itemId);
+	}
+	public static ProduceType forProduce(int itemId) {
+		return PRODUCE_MAP.get(itemId);
 	}
 
-	public static boolean isProduce(int itemId) {
-		for (ProduceType prod : ProduceType.values()) {
-			if (prod.productId == null)
-				continue;
-			if (prod.productId.getId() == itemId)
-				return true;
-		}
-		return false;
-	}
-
-	public int seedId;
-	public int level;
-	public Item productId;
-	public int varBitPlanted;
-	public PatchType type;
-	public int stages;
-	public double experience, plantingExperience;
+	public final int seedId;
+	public final int level;
+	public final Item productId;
+	public final int varBitPlanted;
+	public final PatchType type;
+	public final int stages;
+	public final double experience;
+    public final double plantingExperience;
 	public int rate1 = -1, rate99 = -1;
-	public Item protection;
+	public final Item protection;
 
-	private ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, int rate1, int rate99, Item protection) {
+	ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, int rate1, int rate99, Item protection) {
 		this.seedId = seedId;
 		this.level = level;
 		this.productId = productId;
@@ -164,45 +164,31 @@ public enum ProduceType {
 		this.protection = protection;
 	}
 
-	private ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, int rate1, int rate99) {
+	ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, int rate1, int rate99) {
 		this(seedId, level, productId, varBitPlanted, plantingExperience, experience, stages, type, rate1, rate99, null);
 	}
 
-	private ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, Item protection) {
+	ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type, Item protection) {
 		this(seedId, level, productId, varBitPlanted, plantingExperience, experience, stages, type, -1, -1, protection);
 	}
 
-	private ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type) {
+	ProduceType(int seedId, int level, Item productId, int varBitPlanted, double plantingExperience, double experience, int stages, PatchType type) {
 		this(seedId, level, productId, varBitPlanted, plantingExperience, experience, stages, type, -1, -1, null);
 	}
 
-	public static boolean isProduct(Item item) {
-		for (ProduceType info : ProduceType.values())
-			if (info.productId.getId() == item.getId())
-				return true;
-		return false;
-	}
-
-	public boolean decLife(Player player) {
+	public boolean decreaseLife(Player player) {
 		if (rate1 == -1)
 			return true;
-		return !Utils.skillSuccess(player.getSkills().getLevel(Constants.FARMING), player.getInventory().containsItem(7409) ? 1.1 : 1.0, rate1, rate99);
+		return !Utils.skillSuccess(player.getSkills().getLevel(Constants.FARMING), player.getEquipment().getWeaponId() == 7409 ? 1.1 : 1.0, rate1, rate99);
 	}
 
 	public ProduceType getFlowerProtection() {
-		switch(this) {
-		case Potato:
-		case Onion:
-		case Tomato:
-			return ProduceType.Marigold;
-		case Cabbage:
-			return ProduceType.Rosemary;
-		case Sweetcorn:
-			return ProduceType.Scarecrow;
-		case Watermelon:
-			return ProduceType.Nasturtium;
-		default:
-			return null;
-		}
+        return switch (this) {
+            case Potato, Onion, Tomato -> ProduceType.Marigold;
+            case Cabbage -> ProduceType.Rosemary;
+            case Sweetcorn -> ProduceType.Scarecrow;
+            case Watermelon -> ProduceType.Nasturtium;
+            default -> null;
+        };
 	}
 }

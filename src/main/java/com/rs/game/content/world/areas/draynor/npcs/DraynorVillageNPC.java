@@ -27,12 +27,7 @@ public class DraynorVillageNPC {
     private static final int OLIVIA = 2233;
     private static final int SHADY_STRANGER = 8339;
     private static final int SUSPICIOUS_OUTSIDER = 8436;
-
-    @ServerStartupEvent
-    public static void addLoSOverrides() {
-        Entity.addLOSOverride( MISS_SCHISM );
-    }
-
+    
     public static NPCClickHandler HandleBankGuard= new NPCClickHandler(new Object[]{ BANK_GUARD }, e -> {
         switch (e.getOption()) {
             case "Talk-to" -> {
@@ -234,13 +229,13 @@ public class DraynorVillageNPC {
         switch (e.getOption()) {
             case "Trade" -> ShopsHandler.openShop(e.getPlayer(), "draynor_seed_market");
             case "Talk-to" -> e.getPlayer().startConversation(new Dialogue()
-                    .addNPC(DIANGO, HeadE.HAPPY_TALKING, "Would you like to trade in seeds?")
+                    .addNPC(OLIVIA, HeadE.HAPPY_TALKING, "Would you like to trade in seeds?")
                     .addOptions(ops -> {
-                        ops.add("Yes.")
+                        ops.add("Yes, please.")
                                 .addNext(() ->
                                         ShopsHandler.openShop(e.getPlayer(), "draynor_seed_market"));
 
-                        ops.add("No.!")
+                        ops.add("No, thanks.")
                                 .addPlayer(HeadE.CALM, "No, thanks.");
 
                         ops.add("Where do I get rarer seeds from?")

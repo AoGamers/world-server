@@ -18,7 +18,7 @@ package com.rs.game.model.entity.npc.combat;
 
 import com.rs.game.content.Effect;
 import com.rs.game.content.bosses.godwars.zaros.Nex;
-import com.rs.game.content.combat.PlayerCombat;
+import com.rs.game.content.combat.PlayerCombatKt;
 import com.rs.game.content.skills.summoning.Familiar;
 import com.rs.game.content.skills.summoning.Summoning.ScrollTarget;
 import com.rs.game.model.entity.Entity;
@@ -31,7 +31,7 @@ import com.rs.utils.WorldUtil;
 
 public final class NPCCombat {
 
-	private NPC npc;
+	private final NPC npc;
 	private int combatDelay;
 	private Entity target;
 
@@ -72,13 +72,13 @@ public final class NPCCombat {
 			Player player = familiar.getOwner();
 			if (player != null) {
 				target = player;
-				npc.setTarget(target);
+				npc.setCombatTarget(target);
 				addAttackedByDelay(target);
 			}
 		}
-		int maxDistance = npc.getCombatDefinitions().getAttackRange();
+		int maxDistance = npc.getAttackRange();
 		if (!(npc instanceof Nex) && !npc.lineOfSightTo(target, maxDistance == 0))
-			return npc.getAttackSpeed();
+			return Math.min(combatDelay, npc.getAttackSpeed()); //probably could return 0 but too scared of side effects
 		boolean los = npc.lineOfSightTo(target, maxDistance == 0);
 		boolean inRange = WorldUtil.isInRange(npc, target, maxDistance + (npc.hasWalkSteps() && target.hasWalkSteps() ? (npc.getRun() && target.getRun() ? 2 : 1) : 0));
 		//boolean collidesCheck = !npc.isCantFollowUnderCombat() && WorldUtil.collides(npc, target);
@@ -89,8 +89,8 @@ public final class NPCCombat {
 		return CombatScriptsHandler.attack(npc, target);
 	}
 
-	protected void doDefenceEmote(Entity target) {
-		target.setNextAnimationNoPriority(new Animation(PlayerCombat.getDefenceEmote(target)));
+	void doDefenceEmote(Entity target) {
+		target.setNextAnimationNoPriority(new Animation(PlayerCombatKt.getDefenceEmote(target)));
 	}
 
 	public Entity getTarget() {
@@ -99,7 +99,7 @@ public final class NPCCombat {
 
 	public void addAttackedByDelay(Entity target) {
 		target.setAttackedBy(npc);
-		target.setAttackedByDelay(System.currentTimeMillis() + npc.getAttackSpeed() * 600 + 600); // 8seconds
+		target.setAttackedByDelay(System.currentTimeMillis() + npc.getAttackSpeed() * 600L + 600); // 8seconds
 	}
 
 	public void setTarget(Entity target) {
@@ -107,8 +107,7 @@ public final class NPCCombat {
 		npc.setNextFaceEntity(target);
 		if (!checkAll()) {
 			removeTarget();
-			return;
-		}
+        }
 	}
 
 	public boolean checkAll() {
@@ -164,7 +163,7 @@ public final class NPCCombat {
 				return true;
 			}
 
-			maxDistance = npc.isForceFollowClose() ? 0 : npc.getCombatDefinitions().getAttackRange();
+			maxDistance = npc.isForceFollowClose() ? 0 : npc.getAttackRange();
 			npc.resetWalkSteps();
 			boolean los = npc.lineOfSightTo(target, maxDistance == 0);
 			boolean inRange = WorldUtil.isInRange(npc.getX(), npc.getY(), size, target.getX(), target.getY(), targetSize, maxDistance);

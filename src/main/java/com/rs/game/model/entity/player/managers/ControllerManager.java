@@ -16,22 +16,20 @@
 //
 package com.rs.game.model.entity.player.managers;
 
-import com.rs.game.content.Potions.Potion;
+import com.rs.game.content.Potion;
 import com.rs.game.content.skills.cooking.Foods.Food;
 import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Teleport;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
 import com.rs.lib.game.GroundItem;
 import com.rs.lib.game.Item;
-import com.rs.lib.game.Tile;
 import com.rs.lib.net.ClientPacket;
-import com.rs.utils.TriFunction;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import java.util.Set;
@@ -43,11 +41,11 @@ public final class ControllerManager {
 	private transient Player player;
 	private transient boolean inited;
 
-	private transient Set<BiFunction<Player, Teleport, Boolean>> teleportHooks = new ObjectOpenHashSet<>();
-	private transient Set<BiFunction<Player, Entity, Boolean>> keepCombatingHooks = new ObjectOpenHashSet<>();
-	private transient Set<BiFunction<Player, Entity, Boolean>> canAttackHooks = new ObjectOpenHashSet<>();
-	private transient Set<BiFunction<Player, Entity, Boolean>> canHitHooks = new ObjectOpenHashSet<>();
-	private transient Set<Function<Player, Boolean>> deathHooks = new ObjectOpenHashSet<>();
+	private final transient Set<BiFunction<Player, Teleport, Boolean>> teleportHooks = new ObjectOpenHashSet<>();
+	private final transient Set<BiFunction<Player, Entity, Boolean>> keepCombatingHooks = new ObjectOpenHashSet<>();
+	private final transient Set<BiFunction<Player, Entity, Boolean>> canAttackHooks = new ObjectOpenHashSet<>();
+	private final transient Set<BiFunction<Player, Entity, Boolean>> canHitHooks = new ObjectOpenHashSet<>();
+	private final transient Set<Function<Player, Boolean>> deathHooks = new ObjectOpenHashSet<>();
 
 	private Controller controller;
 

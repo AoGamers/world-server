@@ -49,7 +49,7 @@ public final class FightPits {
 	private static boolean startedGame;
 	public static String currentChampion;
 
-	private static Tile[] GAME_TELEPORTS = { Tile.of(4577, 5086, 0), Tile.of(4571, 5083, 0), Tile.of(4564, 5086, 0), Tile.of(4564, 5097, 0), Tile.of(4571, 5101, 0), Tile.of(4578, 5097, 0) };
+	private static final Tile[] GAME_TELEPORTS = { Tile.of(4577, 5086, 0), Tile.of(4571, 5083, 0), Tile.of(4564, 5086, 0), Tile.of(4564, 5097, 0), Tile.of(4571, 5101, 0), Tile.of(4578, 5097, 0) };
 
 	public static ButtonClickHandler handleFightPitsViewingOrbButtons = new ButtonClickHandler(374, e -> {
 		if (e.getComponentId() >= 5 && e.getComponentId() <= 9)
@@ -87,7 +87,7 @@ public final class FightPits {
 								spawns.add(new FightPitsNPC(2739, Tile.of(GAME_TELEPORTS[Utils.random(GAME_TELEPORTS.length)], 3)));
 						else if (minutes == 10)
 							// alot hits appears on players
-							WorldTasks.schedule(new Task() {
+							WorldTasks.scheduleLooping(new Task() {
 
 								@Override
 								public void run() {
@@ -249,7 +249,7 @@ public final class FightPits {
 			startedGame = false;
 		}
 		gameTask = new GameTask();
-		WorldTasks.schedule(gameTask, end ? Ticks.fromSeconds(60) : Ticks.fromSeconds(10), Ticks.fromSeconds(60));
+		WorldTasks.scheduleLooping(gameTask, end ? Ticks.fromSeconds(60) : Ticks.fromSeconds(10), Ticks.fromSeconds(60));
 
 	}
 
@@ -265,7 +265,7 @@ public final class FightPits {
 	public static void setChampion() {
 		if (arena.isEmpty())
 			return;
-		Player champion = arena.get(0);
+		Player champion = arena.getFirst();
 		currentChampion = champion.getDisplayName();
 		champion.getPackets().setIFText(373, 10, "Current Champion: JaLYt-Ket-" + currentChampion);
 		champion.setFightPitsSkull();

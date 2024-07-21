@@ -39,12 +39,12 @@ public class Smithing extends PlayerAction {
 
 	public static ItemOnObjectHandler barsOnAnvil = new ItemOnObjectHandler(new Object[] { "Anvil" }, Arrays.stream(Smelting.SmeltingBar.values()).map(bar -> bar.getProducedBar().getId()).toArray(), e -> {
 		if (e.getObject().getDefinitions(e.getPlayer()).containsOption("Smith"))
-			ForgingInterface.sendSmithingInterface(e.getPlayer(), e.getObject(), e.getItem().getId());
+			ForgingInterfaceKt.sendSmithingInterface(e.getPlayer(), e.getObject(), e.getItem().getId());
 	});
 
 	public static ObjectClickHandler smithAnvil = new ObjectClickHandler(new Object[] { "Anvil", "Kethsian anvil" }, e -> {
 		if (e.getOption().equals("Smith"))
-			ForgingInterface.openSmithingInterfaceForHighestBar(e.getPlayer(), e.getObject());
+			ForgingInterfaceKt.openSmithingInterfaceForHighestBar(e.getPlayer(), e.getObject());
 	});
 	
 	public enum Smithable {
@@ -217,7 +217,7 @@ public class Smithing extends PlayerAction {
 		ABYSSALBANE_BOLTS(Slot.CROSSBOW_BOLTS, new Item(21858, 50), 80, 62.5, new Item(21786, 1)),
 		;
 		
-		private static Map<Integer, Map<Slot, Smithable>> BAR_MAP = new HashMap<>();
+		private static final Map<Integer, Map<Slot, Smithable>> BAR_MAP = new HashMap<>();
 		
 		static {
 			for (Smithable s : Smithable.values()) {
@@ -230,10 +230,11 @@ public class Smithing extends PlayerAction {
 			}
 		}
 
-		public Slot slot;
-		public Item product, bar;
-		public int level;
-		public double xp;
+		public final Slot slot;
+		public final Item product;
+		public final Item bar;
+		public final int level;
+		public final double xp;
 		
 		public static int getHighestBar(Player player) {
 			int highest = -1;
@@ -272,8 +273,8 @@ public class Smithing extends PlayerAction {
 	}
 
 	public static final int HAMMER = 2347, DUNG_HAMMER = 17883;
-	private GameObject anvil;
-	private Smithable item;
+	private final GameObject anvil;
+	private final Smithable item;
 	private int ticks;
 
 	public Smithing(int ticks, Smithable item, GameObject anvil) {
@@ -314,7 +315,7 @@ public class Smithing extends PlayerAction {
 				amount--;
 
 		player.getInventory().deleteItem(item.bar.getId(), amount);
-		player.getInventory().addItemDrop(item.product);
+		player.getInventory().addItemDrop(new Item(item.product));
 		player.incrementCount(item.product.getName() + " smithed", item.product.getAmount());
 		player.getSkills().addXp(Constants.SMITHING, item.xp);
 		if (ticks > 0)
@@ -350,5 +351,20 @@ public class Smithing extends PlayerAction {
 	@Override
 	public void stop(Player player) {
 		setActionDelay(player, 3);
+	}
+
+	// check both player inventory and coal bag for required items to make bar
+	public static boolean hasRequiredItems(Player player, Item[] requiredItems) {
+		for (Item required : requiredItems) {
+			// if item is not in player's inventory, check the coal bag
+			if (!player.getInventory().containsItem(required.getId(), required.getAmount())) {
+				if (required.getId() == 453 && player.getInventory().containsItem(18339) && player.getI("coalBag") >= required.getAmount())
+					continue;
+				else
+					return false;
+			}
+		}
+
+		return true;
 	}
 }

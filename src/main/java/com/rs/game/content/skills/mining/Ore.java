@@ -17,7 +17,9 @@
 package com.rs.game.content.skills.mining;
 
 import com.rs.game.content.Effect;
+import com.rs.game.model.entity.player.Equipment;
 import com.rs.game.model.entity.player.Player;
+import com.rs.game.model.entity.player.managers.AuraManager;
 import com.rs.lib.Constants;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.SpotAnim;
@@ -102,6 +104,10 @@ public enum Ore {
 
 		@Override
 		public void onGiveOre(Player player) {
+			if (player.getAuraManager().isActivated(AuraManager.Aura.RESOURCEFUL) && Utils.random(10) == 0) {
+				player.sendMessage("Your resourceful aura prevents the sandstone from being depleted.");
+				return;
+			}
 			player.incDailyI("redSandstoneMined");
 			player.getVars().setVarBit(10133, player.getDailyI("redSandstoneMined"));
 		}
@@ -117,10 +123,12 @@ public enum Ore {
 	STARDUST_9(13727, 90, 210, 15, 20, 1),
 	;
 
-	private int id, level;
-	private int rate1, rate99;
-	private double xp;
-	private int rollGem;
+	private final int id;
+    private final int level;
+	private final int rate1;
+    private final int rate99;
+	private final double xp;
+	private final int rollGem;
 
 	private Ore(int id, int level, double xp, int rate1, int rate99, int rollGem) {
 		this.id = id;
@@ -148,7 +156,7 @@ public enum Ore {
 	}
 
 	public boolean checkRequirements(Player player) {
-		return player == null ? true : player.getSkills().getLevel(Constants.MINING) >= level;
+		return player == null || player.getSkills().getLevel(Constants.MINING) >= level;
 	}
 
 	public boolean rollSuccess(Player player, int level) {
@@ -165,13 +173,24 @@ public enum Ore {
 			if (random < 11)
 				player.addEffect(Effect.JUJU_MINE_BANK, 75);
 		}
+		if (this == CLAY && player.getEquipment().getGlovesId() == 11074) {
+			int charges = player.getI("braceletOfClayCharges", 28)-1;
+			if (charges <= 0) {
+				player.getEquipment().setSlot(Equipment.HANDS, null);
+				player.getEquipment().refresh(Equipment.HANDS);
+				player.sendMessage("Your bracelet of clay degrades into dust.");
+				player.delete("braceletOfClayCharges");
+			} else
+				player.save("braceletOfClayCharges", charges);
+			ore.setId(1761);
+		}
 		if (!name().startsWith("STARDUST"))
 			player.sendMessage("You successfully mine " + Utils.addArticle(ore.getDefinitions().getName().toLowerCase()) + ".", true);
 		if (player.hasEffect(Effect.JUJU_MINE_BANK) && !name().startsWith("STARDUST")) {
 			player.getBank().addItem(ore, true);
-			player.setNextSpotAnim(new SpotAnim(2896));
+			player.spotAnim(2896);
 		} else
-			player.getInventory().addItem(id, 1);
+			player.getInventory().addItem(ore);
 		player.getSkills().addXp(Constants.MINING, totalXp);
 		player.incrementCount(ore.getDefinitions().getName()+" mined");
 		onGiveOre(player);

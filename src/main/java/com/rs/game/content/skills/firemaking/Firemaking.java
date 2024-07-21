@@ -63,12 +63,12 @@ public class Firemaking extends Action {
 		ENTGALLOW_BRANCHES(17698, 80, 925, 49948, 225.8, 1),
 		GRAVE_CREEPER_BRANCHES(17700, 90, 1000, 49949, 258.1, 1);
 
-		private int logId;
-		private int level;
-		private int life;
-		private int fireId;
-		private int time;
-		private double xp;
+		private final int logId;
+		private final int level;
+		private final int life;
+		private final int fireId;
+		private final int time;
+		private final double xp;
 
 		Fire(int logId, int level, int life, int fireId, double xp, int time) {
 			this.logId = logId;
@@ -111,8 +111,8 @@ public class Firemaking extends Action {
 		}
 	}
 
-	private Fire fire;
-	private GroundItem groundItem;
+	private final Fire fire;
+	private final GroundItem groundItem;
 
 	public Firemaking(Fire fire) {
 		this(fire, null);
@@ -183,7 +183,11 @@ public class Firemaking extends Action {
 		return checkAll(entity);
 	}
 
-	public static double increasedExperience(Player player, double totalXp) {
+	public static double increasedExperience(Player player, double totalXp, boolean usingBonfire) {
+		// Lighting a new fire with Pyrelord summoned
+		// Does not apply to bonfires.
+		if (!usingBonfire && player.hasFamiliar() && player.getFamiliar().getId() == 7377)
+			totalXp += 10.0;
 		if (player.getEquipment().getGlovesId() == 13660)
 			totalXp *= 1.025;
 		if (player.getEquipment().getRingId() == 13659)
@@ -212,7 +216,7 @@ public class Firemaking extends Action {
 				}
 				World.spawnTempGroundObject(new GameObject(fire.getFireId(), ObjectType.SCENERY_INTERACT, 0, tile.getX(), tile.getY(), tile.getPlane()), 592, fire.getLife());
 				if (player != null)
-					player.getSkills().addXp(Constants.FIREMAKING, increasedExperience(player, fire.getExperience()));
+					player.getSkills().addXp(Constants.FIREMAKING, increasedExperience(player, fire.getExperience(), false));
 				entity.setNextFaceTile(tile);
 			}
 		}, 1);

@@ -53,7 +53,7 @@ public abstract class CombatScript {
 				} else {
 					NPC n = (NPC) target;
 					if (!n.isUnderCombat() || n.canBeAutoRetaliated())
-						n.setTarget(npc);
+						n.setCombatTarget(npc);
 				}
 			});
 		}
@@ -80,7 +80,7 @@ public abstract class CombatScript {
 			} else {
 				NPC n = (NPC) target;
 				if (!n.isUnderCombat() || n.canBeAutoRetaliated())
-					n.setTarget(npc);
+					n.setCombatTarget(npc);
 			}
 		});
 		return hit;
@@ -174,7 +174,7 @@ public abstract class CombatScript {
 			}
 			case MAGIC_ATT -> {
 				double defLvl = Math.floor(player.getSkills().getLevel(Constants.DEFENSE) * player.getPrayer().getDefenceMultiplier());
-				defLvl += player.getCombatDefinitions().getAttackStyle().getAttackType() == AttackType.LONG_RANGE || player.getCombatDefinitions().getAttackStyle().getXpType() == XPType.DEFENSIVE ? 3 : player.getCombatDefinitions().getAttackStyle().getXpType() == XPType.CONTROLLED ? 1 : 0;
+				defLvl += player.getCombatDefinitions().getAttackStyle().attackType == AttackType.LONG_RANGE || player.getCombatDefinitions().getAttackStyle().xpType == XPType.DEFENSIVE ? 3 : player.getCombatDefinitions().getAttackStyle().xpType == XPType.CONTROLLED ? 1 : 0;
 				defLvl += 8;
 				defLvl *= 0.3;
 				double magLvl = Math.floor(player.getSkills().getLevel(Constants.MAGIC) * player.getPrayer().getMageMultiplier());
@@ -201,7 +201,7 @@ public abstract class CombatScript {
 				int defLvl = n.getDefenseLevel();
 				int defBonus = n.getDefinitions().getRangeDef();
 				defLvl += 8;
-				yield Math.floor(defLvl * (defBonus + 64));
+				yield (double) (defLvl * (defBonus + 64));
 			}
 			case MAGIC_ATT -> {
 				double defLvl = n.getMagicLevel();

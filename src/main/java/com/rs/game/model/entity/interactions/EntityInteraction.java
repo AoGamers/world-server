@@ -19,7 +19,7 @@ package com.rs.game.model.entity.interactions;
 import com.rs.game.content.Effect;
 import com.rs.game.model.entity.Entity;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Player;
 import com.rs.utils.WorldUtil;
 
@@ -52,18 +52,16 @@ public abstract class EntityInteraction extends Interaction {
 
 	@Override
 	public final boolean start(Entity entity) {
-		entity.setNextFaceEntity(target);
+		entity.faceEntity(target);
 		if (!canStart(entity))
 			return false;
-		if (checkDistance(entity) && checkAll(entity))
-			return true;
-		return false;
-	}
+        return checkDistance(entity) && checkAll(entity);
+    }
 
 	@Override
 	public void stop(Entity entity) {
 		super.stop(entity);
-		entity.setNextFaceEntity(null);
+		entity.stopFaceEntity();
 	}
 
 	@Override
@@ -72,7 +70,7 @@ public abstract class EntityInteraction extends Interaction {
 			if (isWithinDistance(player, target, true)) {
 				interact(player);
 				if (stopFaceOnReached)
-					player.setNextFaceEntity(null);
+					player.stopFaceEntity();
 				if (stopWhenReached) {
 					stop(player);
 					return false;
@@ -89,10 +87,8 @@ public abstract class EntityInteraction extends Interaction {
 		boolean los = entity.lineOfSightTo(target, distance == 0);
 		boolean inRange = WorldUtil.isInRange(entity, target, distance + (addRunSteps ? (target.getRun() ? target.hasWalkSteps() ? 2 : 1 : target.hasWalkSteps() ? 1 : 0) : 0));
 		//boolean collides = WorldUtil.collides(player, target);
-		if (!los || !inRange)
-			return false;
-		return true;
-	}
+        return los && inRange;
+    }
 
 	public final boolean checkDistance(Entity entity) {
 		if (entity.isDead() || entity.hasFinished() || target.isDead() || target.hasFinished())
@@ -108,9 +104,9 @@ public abstract class EntityInteraction extends Interaction {
 		if (WorldUtil.collides(entity, target)) {
 			if (!entity.hasWalkSteps() && !target.hasWalkSteps()) {
 				entity.resetWalkSteps();
-				return entity.calcFollow(target, entity instanceof NPC n ? n.isIntelligentRouteFinder() : true);
+				return entity.calcFollow(target, !(entity instanceof NPC n) || n.isIntelligentRouteFinder());
 			}
-			return target instanceof Player ? true : entity instanceof Player ? target.hasWalkSteps() ? target instanceof NPC ? true : false : entity.calcFollow(target, true) : entity.calcFollow(target, entity instanceof NPC n ? n.isIntelligentRouteFinder() : true);
+			return target instanceof Player || (entity instanceof Player ? target.hasWalkSteps() ? target instanceof NPC : entity.calcFollow(target, true) : entity.calcFollow(target, !(entity instanceof NPC n) || n.isIntelligentRouteFinder()));
 		}
 		if (distance == 0 && !target.hasWalkSteps() && target.getSize() == 1) {
 			Direction dir = Direction.forDelta(target.getX() - entity.getX(), target.getY() - entity.getY());
@@ -123,19 +119,17 @@ public abstract class EntityInteraction extends Interaction {
 					break;
 				default:
 					entity.resetWalkSteps();
-					entity.calcFollow(target, entity.getRun() ? 2 : 1, entity instanceof NPC n ? n.isIntelligentRouteFinder() : true);
+					entity.calcFollow(target, entity.getRun() ? 2 : 1, !(entity instanceof NPC n) || n.isIntelligentRouteFinder());
 					return true;
 				}
 		}
 		if (!isWithinDistance(entity, target, false)) {
-			if (!entity.hasWalkSteps()) {
-				entity.resetWalkSteps();
-				entity.calcFollow(target, entity.getRun() ? 2 : 1, entity instanceof NPC n ? n.isIntelligentRouteFinder() : true);
-			}
+			entity.resetWalkSteps();
+			entity.calcFollow(target, entity.getRun() ? 2 : 1, !(entity instanceof NPC n) || n.isIntelligentRouteFinder());
 		} else {
 			entity.resetWalkSteps();
 			if (distance == 0 && target.getRun() == entity.getRun())
-				entity.calcFollow(target, entity.getRun() ? 2 : 1, entity instanceof NPC n ? n.isIntelligentRouteFinder() : true);
+				entity.calcFollow(target, entity.getRun() ? 2 : 1, !(entity instanceof NPC n) || n.isIntelligentRouteFinder());
 		}
 		return true;
 	}

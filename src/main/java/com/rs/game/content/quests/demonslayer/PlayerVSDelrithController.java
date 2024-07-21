@@ -21,7 +21,7 @@ import com.rs.engine.dialogue.HeadE;
 import com.rs.game.content.skills.magic.Magic;
 import com.rs.game.map.instance.Instance;
 import com.rs.game.model.entity.Entity;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.InstancedController;
 import com.rs.lib.game.Tile;
 import com.rs.utils.music.Genre;
@@ -90,14 +90,12 @@ public class PlayerVSDelrithController extends InstancedController {
 			cs.npcCreate("w2", DARK_WIZARD20, spawnX+2, spawnY+2, 0);
 			cs.npcCreate("w3", DARK_WIZARD20, spawnX-1, spawnY-1, 0);
 			cs.npcCreate("denath", DENATH, spawnX+2, spawnY-1, 0);
-			cs.action(() -> {
-				Stream.of("w1", "w2", "w3", "denath").forEach(label -> {
-					if (!label.equals("denath"))
-						cs.getNPC(label).persistBeyondCutscene();
-					cs.getNPC(label).setRandomWalk(false);
-					cs.getNPC(label).faceTile(Tile.of(cs.getX(spawnX), cs.getY(spawnY), 0));
-				});
-			});
+			cs.action(() -> Stream.of("w1", "w2", "w3", "denath").forEach(label -> {
+                if (!label.equals("denath"))
+                    cs.getNPC(label).persistBeyondCutscene();
+                cs.getNPC(label).setRandomWalk(false);
+                cs.getNPC(label).faceTile(Tile.of(cs.getX(spawnX), cs.getY(spawnY), 0));
+            }));
 			cs.fadeOut(3);
 			cs.dialogue(new Dialogue().addNPC(DENATH, HeadE.EVIL_LAUGH, "Arise, O mighty Delrith! Bring destruction to this soft weak city!"));
 			cs.action(1, () -> Stream.of("w1", "w2", "w3", "denath").forEach(label -> cs.getNPC(label).anim(SPELL1)));
@@ -163,12 +161,12 @@ public class PlayerVSDelrithController extends InstancedController {
 					cs.getNPC(label).setRandomWalk(true);
 					cs.getNPC(label).setForceMultiArea(true);
 					cs.getNPC(label).setForceAggroDistance(20);
-					cs.getNPC(label).setTarget(player);
+					cs.getNPC(label).setCombatTarget(player);
 				});
 				cs.getNPC("delrith").setRandomWalk(true);
 				cs.getNPC("delrith").setForceMultiArea(true);
 				cs.getNPC("delrith").setForceAggroDistance(20);
-				cs.getNPC("delrith").setTarget(player);
+				cs.getNPC("delrith").setCombatTarget(player);
 			});
 		}));
 	}

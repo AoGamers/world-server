@@ -19,14 +19,10 @@ package com.rs.game.content.minigames.domtower;
 import com.rs.cache.loaders.NPCDefinitions;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.game.World;
-import com.rs.game.content.world.unorganized_dialogue.StrangeFace;
 import com.rs.game.map.instance.Instance;
-import com.rs.game.model.entity.ForceTalk;
 import com.rs.game.model.entity.npc.NPC;
 import com.rs.game.model.entity.player.Player;
-import com.rs.game.tasks.Task;
 import com.rs.game.tasks.WorldTasks;
-import com.rs.lib.game.Animation;
 import com.rs.lib.game.Item;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Utils;
@@ -72,14 +68,14 @@ public final class DominionTower {
 	}
 
 	public void growFace() {
-		player.voiceEffect(7913);
+		player.voiceEffect(7913, false);
 		player.simpleDialogue("The face on the wall groans and scowls at you. Perhaps you should", "talk to it first.");
 	}
 
 	public void openModes() {
 		if (!hasRequiriments()) {
 			player.startConversation(new Dialogue().addSimple("You don't have the requirements to play this content, but you can spectate some of the matches" +
-					" taking place if you would like.", () -> {player.getDominionTower().openSpectate();}));
+					" taking place if you would like.", () -> player.getDominionTower().openSpectate()));
 			return;
 		}
 		if (!talkedWithFace) {
@@ -127,13 +123,13 @@ public final class DominionTower {
 
 	public static final class Boss {
 
-		private String name;
-		private String text;
-		private int[] ids;
-		private boolean forceMulti;
-		private Item item;
-		private int voice;
-		private int[] arena;
+		private final String name;
+		private final String text;
+		private final int[] ids;
+		private final boolean forceMulti;
+		private final Item item;
+		private final int voice;
+		private final int[] arena;
 
 		public Boss(String name, String text, int... ids) {
 			this(name, text, -1, false, null, NORMAL_ARENA, ids);
@@ -158,10 +154,17 @@ public final class DominionTower {
 		}
 	}
 
-	private static final Boss[] BOSSES = { new Boss("Elvarg", "Grrrr", 14548), new Boss("Delrith", "Grrrr", -1, false, new Item(2402, 1), NORMAL_ARENA, 14578), new Boss("Evil Chicken", "Bwak bwak bwak", 3375),
-			new Boss("The Black Knight Titan", "Kill kill kill!", 14436), new Boss("Bouncer", "Grrr", 14483),
+	private static final Boss[] BOSSES = {
+			new Boss("Elvarg", "Grrrr", 14548),
+			new Boss("Delrith", "Grrrr", -1, false, new Item(2402, 1), NORMAL_ARENA, 14578),
+			new Boss("Evil Chicken", "Bwak bwak bwak", 3375),
+			new Boss("The Black Knight Titan", "Kill kill kill!", 14436),
+			new Boss("Bouncer", "Grrr", 14483),
 			// custom bosses
-			new Boss("Jad", "Roarrrrrrrrrrrrrrrrrrrrrrrrrr", 2745), new Boss("Kalphite Queen", null, 1158), new Boss("King Black Dragon", "Grrrr", 50), new Boss("Nomad", "You don't stand a chance!", 7985, true, null, NOMAD_ARENA, 8528) };
+			new Boss("Jad", "Roarrrrrrrrrrrrrrrrrrrrrrrrrr", 2745),
+			new Boss("Kalphite Queen", null, 1158),
+			new Boss("King Black Dragon", "Grrrr", 50),
+			new Boss("Nomad", "You don't stand a chance!", 7985, true, null, NOMAD_ARENA, 8528) };
 
 	private void startEnduranceMode() {
 		if (progress == 256) {
@@ -186,7 +189,7 @@ public final class DominionTower {
 	}
 
 	private void teleportToArena(int mode) {
-		player.setNextFaceTile(Tile.of(getBaseX() + 11, getBaseY() + 29, 0));
+		player.faceTile(Tile.of(getBaseX() + 11, getBaseY() + 29, 0));
 		player.getControllerManager().startController(new DomTowerController(mode));
 		player.unlock();
 		player.tele(Tile.of(getBaseX() + 10, getBaseY() + 29, 2));
@@ -194,16 +197,12 @@ public final class DominionTower {
 	}
 
 	public String getStartFightText(int message) {
-		switch (message) {
-		case 0:
-			return "Kick my ass!";
-		case 1:
-			return "Please don't hit my face";
-		case 2:
-			return "Argh!";
-		default:
-			return "Bring it on!";
-		}
+        return switch (message) {
+            case 0 -> "Kick my ass!";
+            case 1 -> "Please don't hit my face";
+            case 2 -> "Argh!";
+            default -> "Bring it on!";
+        };
 	}
 
 	public int getNextBossIndex() {
@@ -215,68 +214,61 @@ public final class DominionTower {
 	public void startFight(final NPC[] bosses) {
 		for (NPC boss : bosses) {
 			boss.setCantInteract(true);
-			boss.setNextFaceTile(Tile.of(boss.getX() - 1, boss.getY(), 0));
+			boss.faceTile(Tile.of(boss.getX() - 1, boss.getY(), 0));
 		}
 		player.lock();
 		player.tele(Tile.of(getBaseX() + 25, getBaseY() + 32, 2));
-		player.setNextFaceTile(Tile.of(getBaseX() + 26, getBaseY() + 32, 0));
+		player.faceTile(Tile.of(getBaseX() + 26, getBaseY() + 32, 0));
 		final int index = getNextBossIndex();
-		WorldTasks.schedule(new Task() {
-
-			private int count;
-
-			@Override
-			public void run() {
-				if (count == 0) {
-					player.getInterfaceManager().sendOverlay(1172);
-					player.getPackets().setIFHidden(1172, 2, true);
-					player.getPackets().setIFHidden(1172, 7, true);
-					player.getPackets().setIFText(1172, 4, player.getDisplayName());
-					player.getVars().setVar(1241, 1);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 25), player.getSceneY(getBaseY() + 38), 1800);
-					player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 25), player.getSceneY(getBaseY() + 29), 800);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 38), 1800, 6, 6);
-				} else if (count == 1)
-					player.setNextForceTalk(new ForceTalk(getStartFightText(Utils.getRandomInclusive(1))));
-				else if (count == 3) {
-					player.getPackets().setIFHidden(1172, 2, false);
-					player.getPackets().setIFHidden(1172, 5, true);
-					player.getPackets().setIFText(1172, 6, BOSSES[index].name);
-					player.getVars().setVar(1241, 0);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 1800);
-					player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 1800, 6, 6);
-				} else if (count == 4) {
-					if (BOSSES[index].text != null)
-						bosses[0].setNextForceTalk(new ForceTalk(BOSSES[index].text));
-					if (BOSSES[index].voice != -1)
-						player.voiceEffect(BOSSES[index].voice);
-				} else if (count == 6) {
-					player.getControllerManager().sendInterfaces();
-					player.getInterfaceManager().sendInterface(1172);
-					player.getPackets().setIFHidden(1172, 2, true);
-					player.getPackets().setIFHidden(1172, 5, true);
-					player.getPackets().setIFText(1172, 8, "Fight!");
-					player.getPackets().setIFHidden(1172, 10, true);
-					player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 36), 0);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 16), 5000);
-					player.voiceEffect(7882);
-				} else if (count == 8) {
-					if (nextBossIndex != -1 && BOSSES[index].item != null)
-						World.addGroundItem(BOSSES[index].item, Tile.of(getBaseX() + 26, getBaseY() + 33, 2));
-					player.closeInterfaces();
-					player.getPackets().sendResetCamera();
-					for (NPC boss : bosses) {
-						boss.setCantInteract(false);
-						boss.setTarget(player);
-					}
-					player.unlock();
-					stop();
+		WorldTasks.scheduleTimer(0, 1, (count) -> {
+			if (count == 0) {
+				player.getInterfaceManager().sendOverlay(1172);
+				player.getPackets().setIFHidden(1172, 2, true);
+				player.getPackets().setIFHidden(1172, 7, true);
+				player.getPackets().setIFText(1172, 4, player.getDisplayName());
+				player.getVars().setVar(1241, 1);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 25), player.getSceneY(getBaseY() + 38), 1800);
+				player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 25), player.getSceneY(getBaseY() + 29), 800);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 38), 1800, 6, 6);
+			} else if (count == 1)
+				player.forceTalk(getStartFightText(Utils.getRandomInclusive(1)));
+			else if (count == 3) {
+				player.getPackets().setIFHidden(1172, 2, false);
+				player.getPackets().setIFHidden(1172, 5, true);
+				player.getPackets().setIFText(1172, 6, BOSSES[index].name);
+				player.getVars().setVar(1241, 0);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 1800);
+				player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 1800, 6, 6);
+			} else if (count == 4) {
+				if (BOSSES[index].text != null)
+					bosses[0].forceTalk(BOSSES[index].text);
+				if (BOSSES[index].voice != -1)
+					player.voiceEffect(BOSSES[index].voice, false);
+			} else if (count == 6) {
+				player.getControllerManager().sendInterfaces();
+				player.getInterfaceManager().sendInterface(1172);
+				player.getPackets().setIFHidden(1172, 2, true);
+				player.getPackets().setIFHidden(1172, 5, true);
+				player.getPackets().setIFText(1172, 8, "Fight!");
+				player.getPackets().setIFHidden(1172, 10, true);
+				player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 36), 0);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 32), player.getSceneY(getBaseY() + 16), 5000);
+				player.voiceEffect(7882, false);
+			} else if (count == 8) {
+				if (nextBossIndex != -1 && BOSSES[index].item != null)
+					World.addGroundItemNoExpire(BOSSES[index].item, Tile.of(getBaseX() + 26, getBaseY() + 33, 2));
+				player.closeInterfaces();
+				player.getPackets().sendResetCamera();
+				for (NPC boss : bosses) {
+					boss.setCantInteract(false);
+					boss.setCombatTarget(player);
 				}
-				count++;
+				player.unlock();
+				return false;
 			}
-
-		}, 0, 1);
+			return true;
+		});
 	}
 
 	public void removeItem() {
@@ -299,38 +291,33 @@ public final class DominionTower {
 		nextBossIndex = -1;
 		player.lock();
 		player.tele(Tile.of(getBaseX() + 35, getBaseY() + 31, 2));
-		player.setNextFaceTile(Tile.of(player.getX() + 1, player.getY(), 0));
+		player.faceTile(Tile.of(player.getX() + 1, player.getY(), 0));
 
-		WorldTasks.schedule(new Task() {
-			int count;
-
-			@Override
-			public void run() {
-				if (count == 0) {
-					player.setNextAnimation(new Animation(836));
-					player.getInterfaceManager().removeOverlay();
-					player.getInterfaceManager().sendInterface(1172);
-					player.getPackets().setIFHidden(1172, 2, true);
-					player.getPackets().setIFHidden(1172, 5, true);
-					player.getPackets().setIFText(1172, 8, "Unlucky, you lost!");
-					player.getPackets().setIFText(1172, 10, "You leave with a dominion factor of: " + dominionFactor);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 2500);
-					player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 2500, 6, 6);
-					player.voiceEffect(7874);
-				} else if (count == 4) {
-					player.setForceMultiArea(false);
-					player.reset();
-					player.setNextAnimation(new Animation(-1));
-					player.closeInterfaces();
-					player.getPackets().sendResetCamera();
-					player.unlock();
-					destroyArena(false, mode);
-					stop();
-				}
-				count++;
+		WorldTasks.scheduleTimer(0, 1, (count) -> {
+			if (count == 0) {
+				player.anim(836);
+				player.getInterfaceManager().removeOverlay();
+				player.getInterfaceManager().sendInterface(1172);
+				player.getPackets().setIFHidden(1172, 2, true);
+				player.getPackets().setIFHidden(1172, 5, true);
+				player.getPackets().setIFText(1172, 8, "Unlucky, you lost!");
+				player.getPackets().setIFText(1172, 10, "You leave with a dominion factor of: " + dominionFactor);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 2500);
+				player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 2500, 6, 6);
+				player.voiceEffect(7874, false);
+			} else if (count == 4) {
+				player.setForceMultiArea(false);
+				player.reset();
+				player.anim(-1);
+				player.closeInterfaces();
+				player.getPackets().sendResetCamera();
+				player.unlock();
+				destroyArena(false, mode);
+				return false;
 			}
-		}, 0, 1);
+			return true;
+		});
 	}
 
 	public void win(int mode) {
@@ -354,36 +341,29 @@ public final class DominionTower {
 		nextBossIndex = -1;
 		player.lock();
 		player.tele(Tile.of(getBaseX() + 35, getBaseY() + 31, 2));
-		player.setNextFaceTile(Tile.of(getBaseX() + 36, getBaseY() + 31, 0));
+		player.faceTile(Tile.of(getBaseX() + 36, getBaseY() + 31, 0));
 
-		WorldTasks.schedule(new Task() {
-
-			private int count;
-
-			@Override
-			public void run() {
-				if (count == 0) {
-					player.getInterfaceManager().removeOverlay();
-					player.getInterfaceManager().sendInterface(1172);
-					player.getPackets().setIFHidden(1172, 2, true);
-					player.getPackets().setIFHidden(1172, 5, true);
-					player.getPackets().setIFText(1172, 8, "Yeah! You won!");
-					player.getPackets().setIFText(1172, 10, "You now have a dominion factor of: " + dominionFactor);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 2500);
-					player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
-					player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 2500, 6, 6);
-					player.voiceEffect(7897);
-				} else if (count == 4) {
-					player.reset();
-					player.closeInterfaces();
-					player.getPackets().sendResetCamera();
-					player.unlock();
-					stop();
-				}
-				count++;
+		WorldTasks.scheduleTimer(0, 1, (count) -> {
+			if (count == 0) {
+				player.getInterfaceManager().removeOverlay();
+				player.getInterfaceManager().sendInterface(1172);
+				player.getPackets().setIFHidden(1172, 2, true);
+				player.getPackets().setIFHidden(1172, 5, true);
+				player.getPackets().setIFText(1172, 8, "Yeah! You won!");
+				player.getPackets().setIFText(1172, 10, "You now have a dominion factor of: " + dominionFactor);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 37), 2500);
+				player.getPackets().sendCameraLook(player.getSceneX(getBaseX() + 35), player.getSceneY(getBaseY() + 28), 800);
+				player.getPackets().sendCameraPos(player.getSceneX(getBaseX() + 42), player.getSceneY(getBaseY() + 37), 2500, 6, 6);
+				player.voiceEffect(7897, false);
+			} else if (count == 4) {
+				player.reset();
+				player.closeInterfaces();
+				player.getPackets().sendResetCamera();
+				player.unlock();
+				return false;
 			}
-		}, 0, 1);
-
+			return true;
+		});
 	}
 
 	/*
@@ -415,7 +395,7 @@ public final class DominionTower {
 	public NPC[] createBosses() {
 		NPC[] bosses = new NPC[BOSSES[getNextBossIndex()].ids.length];
 		for (int i = 0; i < BOSSES[getNextBossIndex()].ids.length; i++)
-			bosses[i] = World.spawnNPC(BOSSES[getNextBossIndex()].ids[i], Tile.of(getBaseX() + 37 + (i * 2), getBaseY() + 31, 2), -1, true, true);
+			bosses[i] = World.spawnNPC(BOSSES[getNextBossIndex()].ids[i], Tile.of(getBaseX() + 37 + (i * 2), getBaseY() + 31, 2), true, true);
 		return bosses;
 	}
 
@@ -445,7 +425,7 @@ public final class DominionTower {
 		player.getInterfaceManager().setFullscreenInterface(96, 1173);
 		player.getPackets().setIFText(1173, 25, BOSSES[getNextBossIndex()].name); // current
 		player.getPackets().setIFText(1173, 38, String.valueOf(progress + 1)); // current
-		player.getPackets().setIFText(1173, 52, "None. Good luck :o."); // current
+		player.getPackets().setIFText(1173, 52, "None. Good luck!"); // current
 		player.getPackets().setIFText(1173, 29, String.valueOf(dominionFactor)); // current
 		player.getPackets().setIFText(1173, 31, dominionFactor == MAX_FACTOR ? "" : String.valueOf(getBossesTotalLevel() * 10)); // on
 		// win
@@ -483,7 +463,7 @@ public final class DominionTower {
 			player.startConversation(new StrangeFace(player));
 		else {
 			if (!fromDialogue)
-				player.voiceEffect(7893);
+				player.voiceEffect(7893, false);
 			player.getInterfaceManager().sendInterface(1160);
 		}
 	}
@@ -493,7 +473,7 @@ public final class DominionTower {
 			talkToFace();
 			return;
 		}
-		player.voiceEffect(7893);
+		player.voiceEffect(7893, false);
 		player.getInterfaceManager().sendInterface(1156);
 	}
 
@@ -509,14 +489,14 @@ public final class DominionTower {
 		progress = 0;
 		giveRewards(dominionFactor);
 		player.sendMessage("<col=ffffff>You have " + player.getDominionTower().getKilledBossesCount() + " boss kills.");
-		player.sendMessage("<col=ffffff>500 are required to obtain dominion gloves (swifts, goliaths, spellcasters.");
+		player.sendMessage("<col=ffffff>500 are required to obtain dominion gloves (swifts, goliaths, spellcasters).");
 		dominionFactor = 0;
 	}
 
 	public void giveRewards(int dominionFactor) {
 		Item[] rewards;
 		int random = Utils.getRandomInclusive(100);
-		if (random < 15 && player.getDominionTower().getKilledBossesCount() >= 450)
+		if (random < 15 && player.getDominionTower().getKilledBossesCount() >= 500)
 			rewards = new Item[] { commonRewards[Utils.getRandomInclusive(commonRewards.length - 1)], commonRewards[Utils.getRandomInclusive(commonRewards.length - 1)], commonRewards[Utils.getRandomInclusive(commonRewards.length - 1)],
 					mediumRewards[Utils.getRandomInclusive(mediumRewards.length - 1)] };
 		else
@@ -528,7 +508,7 @@ public final class DominionTower {
                 player.getBank().addItem(item, false);
                 player.sendMessage("Your reward have been sent to your bank.");
             } else {
-                World.addGroundItem(item, player.getTile(), player);
+                World.addGroundItemNoExpire(item, player.getTile(), player);
                 player.sendMessage("You don't have bank space, so your reward has been dropped on the ground.");
             }
 

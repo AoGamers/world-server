@@ -61,6 +61,7 @@ public enum SlayerMonsters {
 	DESERT_STRYKEWYRM(9465, 77),
 	AQUANITE(9172, 78),
 	NECHRYAEL(1613, 80),
+	JADINKO_BABY(13820, 80),
 	SPIRITUAL_MAGE(6221, 83),
 	SPIRITUAL_MAGE2(6231, 83),
 	SPIRITUAL_MAGE3(6257, 83),
@@ -73,7 +74,7 @@ public enum SlayerMonsters {
 	ICE_STRYKEWYRM(9463, 93),
 	GANODERMIC_BEAST(14696, 95);
 
-	private static Map<String, SlayerMonsters> monsters = new HashMap<>();
+	private static final Map<String, SlayerMonsters> monsters = new HashMap<>();
 
 	public static SlayerMonsters forId(int id) {
 		return monsters.get(NPCDefinitions.getDefs(id).getName());
@@ -84,8 +85,8 @@ public enum SlayerMonsters {
 			monsters.put(NPCDefinitions.getDefs(monster.id).getName(), monster);
 	}
 
-	private int id;
-	private int req;
+	private final int id;
+	private final int req;
 
 	private SlayerMonsters(int id, int req) {
 		this.id = id;

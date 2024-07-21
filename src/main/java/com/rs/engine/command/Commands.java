@@ -34,6 +34,7 @@ import com.rs.lib.game.Rights;
 import com.rs.lib.game.Tile;
 import com.rs.lib.util.Logger;
 import com.rs.lib.util.Utils;
+import kotlin.Pair;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,13 +43,13 @@ import java.util.Set;
 
 public final class Commands {
 
-	private static Map<Rights, Map<String , Command>> COMMANDS = new HashMap<>();
-	private static Map<Rights, Set<Command>> UNIQUE_COMMANDS = new HashMap<>();
+	private static final Map<Rights, Map<String , Command>> COMMANDS = new HashMap<>();
+	private static final Map<Rights, Set<Command>> UNIQUE_COMMANDS = new HashMap<>();
 
 	static {
 		for (Rights r : Rights.values()) {
-			COMMANDS.put(r, new HashMap<String, Command>());
-			UNIQUE_COMMANDS.put(r, new HashSet<Command>());
+			COMMANDS.put(r, new HashMap<>());
+			UNIQUE_COMMANDS.put(r, new HashSet<>());
 		}
 	}
 
@@ -90,8 +91,7 @@ public final class Commands {
 			return false;
 
 		String[] args = new String[cmd.length - 1];
-		for (int i = 1; i < cmd.length; i++)
-			args[i - 1] = cmd[i];
+        System.arraycopy(cmd, 1, args, 0, cmd.length - 1);
 
 		for (int i = Rights.values().length-1;i >= 0;i--) {
 			if (player.getRights().ordinal() < Rights.values()[i].ordinal())
@@ -205,11 +205,11 @@ public final class Commands {
 			return true;
 
 		case "loadouts":
-			String loadouts = "";
+			StringBuilder loadouts = new StringBuilder();
 			for (String keys : p.getSavingAttributes().keySet())
 				if (keys.contains("loadoutinv"))
-					loadouts += keys.replace("loadoutinv", "") + ", ";
-			p.sendMessage(loadouts);
+					loadouts.append(keys.replace("loadoutinv", "")).append(", ");
+			p.sendMessage(loadouts.toString());
 			return true;
 
 		case "resetbrew":
@@ -222,10 +222,6 @@ public final class Commands {
 			p.getKeldagrimBrewery().updateVars();
 			p.getPhasmatysBrewery().ferment();
 			p.getPhasmatysBrewery().updateVars();
-			return true;
-
-		case "proj":
-			World.sendProjectile(Tile.of(p.getX() + 5, p.getY(), p.getPlane()), Tile.of(p.getX() - 5, p.getY(), p.getPlane()), Integer.valueOf(args[1]), 40, 40, 0, 0.2, 0, 0);
 			return true;
 
 		case "house":

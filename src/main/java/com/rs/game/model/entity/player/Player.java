@@ -25,6 +25,7 @@ import com.rs.cache.loaders.ObjectType;
 import com.rs.db.WorldDB;
 import com.rs.engine.book.Book;
 import com.rs.engine.cutscene.Cutscene;
+import com.rs.engine.cutscenekt.CutscenePresenter;
 import com.rs.engine.dialogue.Conversation;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
@@ -32,6 +33,7 @@ import com.rs.engine.dialogue.Options;
 import com.rs.engine.dialogue.statements.SimpleStatement;
 import com.rs.engine.miniquest.Miniquest;
 import com.rs.engine.miniquest.MiniquestManager;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.engine.quest.Quest;
 import com.rs.engine.quest.QuestManager;
 import com.rs.game.World;
@@ -46,13 +48,11 @@ import com.rs.game.content.clans.ClansManager;
 import com.rs.game.content.combat.CombatDefinitions;
 import com.rs.game.content.death.DeathOfficeController;
 import com.rs.game.content.death.GraveStone;
-import com.rs.game.content.holidayevents.christmas.christ19.Christmas2019.Location;
-import com.rs.game.content.interfacehandlers.TransformationRing;
+
 import com.rs.game.content.minigames.domtower.DominionTower;
 import com.rs.game.content.minigames.duel.DuelRules;
 import com.rs.game.content.minigames.herblorehabitat.HabitatFeature;
 import com.rs.game.content.minigames.treasuretrails.TreasureTrailsManager;
-import com.rs.game.content.minigames.wguild.WarriorsGuild;
 import com.rs.game.content.pets.Pet;
 import com.rs.game.content.pets.PetManager;
 import com.rs.game.content.skills.construction.House;
@@ -87,7 +87,6 @@ import com.rs.game.model.entity.Hit;
 import com.rs.game.model.entity.Hit.HitLook;
 import com.rs.game.model.entity.interactions.PlayerCombatInteraction;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.*;
 import com.rs.game.model.entity.player.managers.*;
 import com.rs.game.model.entity.player.managers.InterfaceManager.ScreenMode;
 import com.rs.game.model.entity.player.managers.InterfaceManager.Sub;
@@ -127,6 +126,8 @@ import com.rs.utils.record.Recorder;
 import com.rs.utils.reflect.ReflectionAnalysis;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import kotlin.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -148,6 +149,7 @@ public class Player extends Entity {
 	public transient int chatType;
 
 	private long timePlayed = 0;
+	private transient long timePlayedThisSession = 0;
 	private long timeLoggedOut;
 
 	private transient HashMap<Integer, ReflectionAnalysis> reflectionAnalyses = new HashMap<>();
@@ -170,6 +172,8 @@ public class Player extends Entity {
 
 	private DungManager dungManager;
 
+	private boolean trulyHidden;
+
 	public transient long tolerance = 0;
 	public transient long idleTime = 0;
 	public transient long dyingTime = 0;
@@ -177,11 +181,9 @@ public class Player extends Entity {
 	public transient boolean disconnected = false;
 	private transient int pvpCombatLevelThreshhold = -1;
 	private transient String[] playerOptions = new String[10];
-	private transient Set<Sound> sounds = new HashSet<Sound>();
+	private transient Set<Sound> sounds = new HashSet<>();
 
 	private Instance instancedArea;
-
-	private int hw07Stage;
 	public transient Runnable onPacketCutsceneFinish;
 
 	public void refreshChargeTimer() {
@@ -231,6 +233,7 @@ public class Player extends Entity {
 	private transient InterfaceManager interfaceManager;
 	private transient HintIconsManager hintIconsManager;
 	private transient CutsceneManager cutsceneManager;
+	public transient CutscenePresenter cutscenePresenter;
 	private transient Trade trade;
 	private transient DuelRules lastDuelRules;
 	private transient Pet pet;
@@ -322,32 +325,30 @@ public class Player extends Entity {
 	private transient int uuid;
 	private String lastIP;
 	private ArrayList<String> ipAddresses;
-	@SuppressWarnings("unused")
-	private long creationDate;
-	private Appearance appearence;
-	private Inventory inventory;
-	private Equipment equipment;
-	private Skills skills;
-	private CombatDefinitions combatDefinitions;
-	private PrayerManager prayer;
-	private Bank bank;
+    private final Appearance appearence;
+	private final Inventory inventory;
+	private final Equipment equipment;
+	private final Skills skills;
+	private final CombatDefinitions combatDefinitions;
+	private final PrayerManager prayer;
+	private final Bank bank;
 	private int starter;
-	private ControllerManager controllerManager;
-	private MusicsManager musicsManager;
-	private EmotesManager emotesManager;
-	private DominionTower dominionTower;
+	private final ControllerManager controllerManager;
+	private final MusicsManager musicsManager;
+	private final EmotesManager emotesManager;
+	private final DominionTower dominionTower;
 	private Familiar summFamiliar;
-	private AuraManager auraManager;
+	private final AuraManager auraManager;
 	private PetManager petManager;
 	private BossTask bossTask;
-	private QuestManager questManager;
+	private final QuestManager questManager;
 	private MiniquestManager miniquestManager;
-	private TreasureTrailsManager treasureTrailsManager;
+	private final TreasureTrailsManager treasureTrailsManager;
 	private Map<Integer, Offer> geOffers = new HashMap<>();
 
 	public int reaperPoints;
 
-	private boolean wickedHoodTalismans[];
+	private boolean[] wickedHoodTalismans;
 	private boolean hasUsedOmniTalisman;
 	private boolean hasUsedElementalTalisman;
 
@@ -393,9 +394,6 @@ public class Player extends Entity {
 	private TaskMonster[] taskBlocks;
 	public int slayerPoints = 0;
 	public int consecutiveTasks = 0;
-
-	private int[] warriorPoints = new int[6];
-
 	private transient boolean cantWalk;
 
 	private Map<PatchLocation, FarmPatch> patches;
@@ -595,7 +593,7 @@ public class Player extends Entity {
 		herbicideSettings = new HashSet<>();
 		ipList = new HashSet<>();
 		machineMap = new HashMap<>();
-		creationDate = System.currentTimeMillis();
+        long creationDate = System.currentTimeMillis();
 		resetLodestones();
 	}
 
@@ -636,6 +634,7 @@ public class Player extends Entity {
 		varManager.setSession(session);
 		sounds = new HashSet<>();
 		cutsceneManager = new CutsceneManager(this);
+		cutscenePresenter = new CutscenePresenter();
 		trade = new Trade(this);
 		// loads player on saved instances
 		appearence.setPlayer(this);
@@ -691,8 +690,7 @@ public class Player extends Entity {
 			machineMap.remove(new ArrayList<>(machineMap.keySet()).get(Utils.random(machineMap.keySet().size())));
 		if (machineInformation != null)
 			machineMap.put(machineInformation.hashCode(), machineInformation);
-		return;
-	}
+    }
 
 	public boolean[] getPrayerBook() {
 		return prayerBook;
@@ -841,14 +839,15 @@ public class Player extends Entity {
 		stopAll(stopWalk, stopInterface, true);
 	}
 
-	// as walk done clientsided
 	public void stopAll(boolean stopWalk, boolean stopInterfaces, boolean stopActions) {
-		TransformationRing.triggerDeactivation(this);
-		setRouteEvent(null);
+
 		if (stopInterfaces)
 			closeInterfaces();
-		if (stopWalk)
+		if (stopWalk) {
+			setRouteEvent(null);
+			walkRequest = null;
 			resetWalkSteps();
+		}
 		if (stopActions) {
 			getActionManager().forceStop();
 			getInteractionManager().forceStop();
@@ -939,10 +938,11 @@ public class Player extends Entity {
 				finish(0);
 			processPackets();
 			cutsceneManager.process();
+			cutscenePresenter.tick();
 			super.processEntity();
 			if (hasStarted() && isIdle() && !hasRights(Rights.ADMIN) && !getNSV().getB("idleLogImmune")) {
 				if (getInteractionManager().getInteraction() instanceof PlayerCombatInteraction combat) {
-					if (!(combat.getAction().getTarget() instanceof Player))
+					if (!(combat.getAction().target instanceof Player))
 						idleLog();
 				} else
 					logout(true);
@@ -951,6 +951,7 @@ public class Player extends Entity {
 				finish(0);
 
 			timePlayed++;
+			timePlayedThisSession++;
 			timeLoggedOut = System.currentTimeMillis();
 
 			if (getTickCounter() % FarmPatch.FARMING_TICK == 0)
@@ -1047,7 +1048,10 @@ public class Player extends Entity {
 								}
 								break;
 							}
-							getEquipment().setSlot(i, new Item(deg.getBrokenId(), item.getAmount()));
+							if (deg.getBrokenId() == -1)
+								getEquipment().setSlot(i, null);
+							else
+								getEquipment().setSlot(i, new Item(deg.getBrokenId(), item.getAmount()));
 							getAppearance().generateAppearanceData();
 							sendMessage("<col=FF0000>Your " + ItemDefinitions.getDefs(item.getId()).getName() + " has fully degraded!");
 						} else {
@@ -1144,10 +1148,8 @@ public class Player extends Entity {
 
 	@Override
 	public void setRun(boolean run) {
-		if (run != getRun()) {
-			super.setRun(run);
-			updateMovementType = true;
-		}
+		super.setRun(run);
+		updateMovementType = true;
 		sendRunButtonConfig();
 	}
 
@@ -1285,11 +1287,16 @@ public class Player extends Entity {
 				getControllerManager().startController(new TutorialIslandController());
 			else
 				setStarter(1);
-			if (!getUsername().startsWith("cli_bot")) {
-				PlayerLook.openCharacterCustomizing(this);
-				startConversation(new GamemodeSelection(this));
-			} else
-				setChosenAccountType(true);
+			PlayerLook.openCharacterCustomizing(this);
+			startConversation(new GamemodeSelection(this));
+		}
+		if (getUsername().startsWith("cli_bot")) {
+			if (getControllerManager().isIn(TutorialIslandController.class)) {
+				tele(Settings.getConfig().getPlayerStartTile());
+				getControllerManager().forceStop();
+			}
+			setChosenAccountType(true);
+			setStarter(1);
 		}
 		//getPackets().write(new UpdateRichPresence("state", "Logged in as " + getDisplayName()));
 		PluginManager.handle(new LoginEvent(this));
@@ -1315,10 +1322,8 @@ public class Player extends Entity {
 		if (getInventory().containsOneItem(itemIds) || getEquipment().containsOneItem(itemIds))
 			return true;
 		Familiar familiar = getFamiliar();
-		if (familiar != null && ((familiar.getInventory() != null && familiar.containsOneItem(itemIds) || familiar.isFinished())))
-			return true;
-		return false;
-	}
+        return familiar != null && ((familiar.getInventory() != null && familiar.containsOneItem(itemIds) || familiar.isFinished()));
+    }
 
 	public void processWeeklyTasks() {
 		if (Utils.getTodayDate() >= weeklyDate) {
@@ -1581,42 +1586,31 @@ public class Player extends Entity {
 	}
 
 	public String getPlayerOption(ClientPacket packet) {
-		switch(packet) {
-		case PLAYER_OP1:
-			return playerOptions[0];
-		case PLAYER_OP2:
-			return playerOptions[1];
-		case PLAYER_OP3:
-			return playerOptions[2];
-		case PLAYER_OP4:
-			return playerOptions[3];
-		case PLAYER_OP5:
-			return playerOptions[4];
-		case PLAYER_OP6:
-			return playerOptions[5];
-		case PLAYER_OP7:
-			return playerOptions[6];
-		case PLAYER_OP8:
-			return playerOptions[7];
-		case PLAYER_OP9:
-			return playerOptions[8];
-		case PLAYER_OP10:
-			return playerOptions[9];
-		default:
-			return "null";
-		}
+        return switch (packet) {
+            case PLAYER_OP1 -> playerOptions[0];
+            case PLAYER_OP2 -> playerOptions[1];
+            case PLAYER_OP3 -> playerOptions[2];
+            case PLAYER_OP4 -> playerOptions[3];
+            case PLAYER_OP5 -> playerOptions[4];
+            case PLAYER_OP6 -> playerOptions[5];
+            case PLAYER_OP7 -> playerOptions[6];
+            case PLAYER_OP8 -> playerOptions[7];
+            case PLAYER_OP9 -> playerOptions[8];
+            case PLAYER_OP10 -> playerOptions[9];
+            default -> "null";
+        };
 	}
 
 	@Override
 	public void checkMultiArea() {
 		if (!started)
 			return;
-		boolean isAtMultiArea = isForceMultiArea() ? true : World.isMultiArea(getTile());
+		boolean isAtMultiArea = isForceMultiArea() || World.isMultiArea(getTile());
 		if (isAtMultiArea && !isAtMultiArea()) {
-			setAtMultiArea(isAtMultiArea);
+			setAtMultiArea(true);
 			getPackets().sendVarc(616, 1);
 		} else if (!isAtMultiArea && isAtMultiArea()) {
-			setAtMultiArea(isAtMultiArea);
+			setAtMultiArea(false);
 			getPackets().sendVarc(616, 0);
 		}
 	}
@@ -1738,6 +1732,8 @@ public class Player extends Entity {
 		if (getPrayer().active(Prayer.RAPID_RENEWAL))
 			toRegen += 4;
 		if (getEquipment().getGlovesId() == 11133)
+			toRegen *= 2;
+		if (getAuraManager().isActivated(AuraManager.Aura.REGENERATION))
 			toRegen *= 2;
 		if ((getHitpoints() + toRegen) > getMaxHitpoints())
 			toRegen = getMaxHitpoints() - getHitpoints();
@@ -2017,7 +2013,7 @@ public class Player extends Entity {
 
 	@Override
 	public void handlePreHit(Hit hit) {
-		TransformationRing.triggerDeactivation(this);
+
 
 		if (hit.getLook() != HitLook.MELEE_DAMAGE && hit.getLook() != HitLook.RANGE_DAMAGE && hit.getLook() != HitLook.MAGIC_DAMAGE)
 			return;
@@ -2035,7 +2031,7 @@ public class Player extends Entity {
 			return;
 
 		if (hasEffect(Effect.STAFF_OF_LIGHT_SPEC) && hit.getLook() == HitLook.MELEE_DAMAGE) {
-			hit.setDamage((int) (hit.getDamage() * 0.5));
+			hit.soakDamage(0.5);
 			spotAnim(2320);
 		}
 		if (prayer.hasPrayersOn() && hit.getDamage() != 0)
@@ -2047,8 +2043,7 @@ public class Player extends Entity {
 					hit.setDamage((int) (hit.getDamage() * source.getMagePrayerMultiplier()));
 					if (deflectedDamage > 0 && Math.random() < 0.6) {
 						source.applyHit(new Hit(this, deflectedDamage, HitLook.REFLECTED_DAMAGE));
-						setNextSpotAnim(new SpotAnim(2228));
-						setNextAnimation(new Animation(12573));
+						sync(12573, 2228);
 					}
 				}
 			} else if (hit.getLook() == HitLook.RANGE_DAMAGE) {
@@ -2059,8 +2054,7 @@ public class Player extends Entity {
 					hit.setDamage((int) (hit.getDamage() * source.getRangePrayerMultiplier()));
 					if (deflectedDamage > 0 && Math.random() < 0.6) {
 						source.applyHit(new Hit(this, deflectedDamage, HitLook.REFLECTED_DAMAGE));
-						setNextSpotAnim(new SpotAnim(2229));
-						setNextAnimation(new Animation(12573));
+						sync(12573, 2229);
 					}
 				}
 			} else if (hit.getLook() == HitLook.MELEE_DAMAGE)
@@ -2071,38 +2065,33 @@ public class Player extends Entity {
 					hit.setDamage((int) (hit.getDamage() * source.getMeleePrayerMultiplier()));
 					if (deflectedDamage > 0 && Math.random() < 0.6) {
 						source.applyHit(new Hit(this, deflectedDamage, HitLook.REFLECTED_DAMAGE));
-						setNextSpotAnim(new SpotAnim(2230));
-						setNextAnimation(new Animation(12573));
+						sync(12573, 2230);
 					}
 				}
-		if (hit.getDamage() >= 200)
-			if (hit.getLook() == HitLook.MELEE_DAMAGE) {
-				int reducedDamage = hit.getDamage() * combatDefinitions.getBonus(Bonus.ABSORB_MELEE) / 100;
-				if (reducedDamage > 0) {
-					hit.setDamage(hit.getDamage() - reducedDamage);
-					hit.setSoaking(new Hit(source, reducedDamage, HitLook.ABSORB_DAMAGE));
-				}
-			} else if (hit.getLook() == HitLook.RANGE_DAMAGE) {
-				int reducedDamage = hit.getDamage() * combatDefinitions.getBonus(Bonus.ABSORB_RANGE) / 100;
-				if (reducedDamage > 0) {
-					hit.setDamage(hit.getDamage() - reducedDamage);
-					hit.setSoaking(new Hit(source, reducedDamage, HitLook.ABSORB_DAMAGE));
-				}
-			} else if (hit.getLook() == HitLook.MAGIC_DAMAGE) {
-				int reducedDamage = hit.getDamage() * combatDefinitions.getBonus(Bonus.ABSORB_MAGIC) / 100;
-				if (reducedDamage > 0) {
-					hit.setDamage(hit.getDamage() - reducedDamage);
-					hit.setSoaking(new Hit(source, reducedDamage, HitLook.ABSORB_DAMAGE));
-				}
+		if (hit.getDamage() >= 200) {
+			Bonus bonus = switch(hit.getLook()) {
+				case MELEE_DAMAGE -> Bonus.ABSORB_MELEE;
+				case RANGE_DAMAGE -> Bonus.ABSORB_RANGE;
+				default -> Bonus.ABSORB_MAGIC;
+			};
+			int reducedDamage = hit.getDamage() * combatDefinitions.getBonus(bonus) / 100;
+			if (reducedDamage > 0) {
+				hit.setDamage(hit.getDamage() - reducedDamage);
+				hit.addSoaking(reducedDamage);
 			}
+		}
+		if (hit.getDamage() > 0 && auraManager.isActivated(AuraManager.Aura.AEGIS) && Utils.skillSuccess(skills.getLevel(Skills.DEFENSE), 15, 128)) {
+			hit.soakDamage(0.10);
+			spotAnim(2180);
+		}
 		int shieldId = equipment.getShieldId();
 		if (shieldId == 13742) {
 			if (Utils.getRandomInclusive(100) <= 70)
-				hit.setDamage((int) (hit.getDamage() * 0.75));
+				hit.soakDamage(0.25);
 		} else if (shieldId == 13740) { // divine
 			int drain = (int) (Math.ceil(hit.getDamage() * 0.3) / 2);
 			if (prayer.getPoints() >= drain) {
-				hit.setDamage((int) (hit.getDamage() * 0.70));
+				hit.soakDamage(0.3);
 				prayer.drainPrayer(drain);
 			}
 		}
@@ -2143,6 +2132,7 @@ public class Player extends Entity {
 			if (getPrayer().active(Prayer.SOUL_SPLIT)) {
 				if (hit.getDamage() == 0)
 					return;
+				soundEffect(8113, true);
 				switch(hit.getLook()) {
 				case MELEE_DAMAGE:
 				case RANGE_DAMAGE:
@@ -2159,7 +2149,7 @@ public class Player extends Entity {
 
 	@Override
 	public void handlePostHit(Hit hit) {
-
+		super.handlePostHit(hit);
 	}
 
 	public void safeDeath(Tile respawnTile) {
@@ -2226,7 +2216,7 @@ public class Player extends Entity {
 		if (isHasNearbyInstancedChunks())
 			lastTile = getRandomGraveyardTile();
 		final Tile deathTile = lastTile;
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int loop;
 
 			@Override
@@ -2256,7 +2246,7 @@ public class Player extends Entity {
 	public void retribution(Entity source) {
 		setNextSpotAnim(new SpotAnim(437));
 		for (Direction dir : Direction.values())
-			World.sendSpotAnim(Tile.of(getX() - dir.getDx(), getY() - dir.getDy(), getPlane()), new SpotAnim(438, 20, 10, dir.getId()));
+			World.sendSpotAnim(Tile.of(getX() - dir.dx, getY() - dir.dy, getPlane()), new SpotAnim(438, 20, 10, dir.id));
 		if (isAtMultiArea()) {
 			for (Player player : queryNearbyPlayersByTileRange(1, player -> !player.isDead() && player.isCanPvp() && player.withinDistance(getTile(), 1) || getControllerManager().canHit(player)))
 				player.applyHit(new Hit(this, Utils.getRandomInclusive((int) (skills.getLevelForXp(Constants.PRAYER) * 2.5)), HitLook.TRUE_DAMAGE));
@@ -2266,10 +2256,16 @@ public class Player extends Entity {
 			source.applyHit(new Hit(this, Utils.getRandomInclusive((int) (skills.getLevelForXp(Constants.PRAYER) * 2.5)), HitLook.TRUE_DAMAGE));
 	}
 
+	public boolean withinDistance(Player other, int distance) {
+		if (other.trulyHidden && other != this)
+			return false;
+		return super.withinDistance(other.getTile(), distance);
+	}
+
 	public void wrath(Entity source) {
 		for (Direction dir : Direction.values())
-			World.sendProjectile(this, Tile.of(getX() + (dir.getDx()*2), getY() + (dir.getDy()*2), getPlane()), 2261, 0, 0, 15, 0.4, 35, 15,
-				proj -> World.sendSpotAnim(proj.getToTile(), new SpotAnim(2260)));
+			World.sendProjectile(this, Tile.of(getX() + (dir.dx *2), getY() + (dir.dy *2), getPlane()), 2261, new Pair<>(0, 0), 15, 10, 35, 0,
+					proj -> World.sendSpotAnim(proj.getDestination(), new SpotAnim(2260)));
 		setNextSpotAnim(new SpotAnim(2259));
 		WorldTasks.schedule(() -> {
 			if (isAtMultiArea()) {
@@ -2283,19 +2279,21 @@ public class Player extends Entity {
 	}
 
 	public Tile getRandomGraveyardTile() {
-		return Tile.of(Tile.of(2745, 3474, 0), 4);
+		return Tile.of(Tile.of(2900, 3537, 0), 4);
 	}
 
 	public void sendPVEItemsOnDeath(Player killer, boolean dropItems) {
 		Integer[][] slots = GraveStone.getItemSlotsKeptOnDeath(this, true, dropItems, prayer.isProtectingItem());
-		sendPVEItemsOnDeath(killer, Tile.of(getTile()), Tile.of(getTile()), true, slots);
+		sendPVEItemsOnDeath(killer, Tile.of(getTile()), true, slots);
 	}
 
-	public void sendPVEItemsOnDeath(Player killer, Tile deathTile, Tile respawnTile, boolean noGravestone, Integer[][] slots) {
-		if (hasRights(Rights.ADMIN) || Settings.getConfig().isDebug())
+	public void sendPVEItemsOnDeath(Player killer, Tile deathTile, boolean noGravestone, Integer[][] slots) {
+		if ((Settings.getConfig().isDebug() && !hasRights(Rights.ADMIN)) || (!Settings.getConfig().isDebug() && hasRights(Rights.ADMIN)))
 			return;
 		auraManager.removeAura();
 		Item[][] items = GraveStone.getItemsKeptOnDeath(this, slots);
+		if (summFamiliar != null)
+			summFamiliar.sendDeath(this);
 		inventory.reset();
 		equipment.reset();
 		appearence.generateAppearanceData();
@@ -2359,6 +2357,8 @@ public class Player extends Entity {
 			containedItems.remove(lastItem);
 			lastItem = new Item(1, 1);
 		}
+		if (summFamiliar != null)
+			summFamiliar.sendDeath(killer);
 		inventory.reset();
 		equipment.reset();
 		WorldDB.getPlayers().save(this);
@@ -2392,7 +2392,7 @@ public class Player extends Entity {
 			List<Item> foodItems = new ArrayList<>();
 			List<Item> trophyItems = new ArrayList<>();
 			for (Item item : droppedItems) {
-				if (Foods.isConsumable(item) || Potions.Potion.POTS.keySet().contains(item.getId()) || item.getId() == 24444)
+				if (Foods.isConsumable(item) || Potion.POTS.containsKey(item.getId()) || item.getId() == 24444)
 					foodItems.add(item);
 				else
 					trophyItems.add(item);
@@ -2848,8 +2848,6 @@ public class Player extends Entity {
 	}
 
 	public MoveType getMovementType() {
-		if (getTemporaryMoveType() != null)
-			return getTemporaryMoveType();
 		return moveType;
 	}
 
@@ -3141,10 +3139,8 @@ public class Player extends Entity {
 	}
 
 	public void sendGodwarsKill(NPC npc) {
-		boolean dropKey = false;
-		if (Utils.getRandomInclusive(500) <= 10 && npc.getDefinitions().combatLevel <= 134)
-			dropKey = true;
-		if (npc.getId() >= 6247 && npc.getId() <= 6259) {
+		boolean dropKey = Utils.getRandomInclusive(500) <= 10 && npc.getDefinitions().combatLevel <= 134;
+        if (npc.getId() >= 6247 && npc.getId() <= 6259) {
 			((GodwarsController) getControllerManager().getController()).sendKill(GodwarsController.SARADOMIN);
 			if (dropKey)
 				World.addGroundItem(new Item(20124, 1), Tile.of(npc.getCoordFaceX(npc.getSize()), npc.getCoordFaceY(npc.getSize()), npc.getPlane()), this, false, 60);
@@ -3170,8 +3166,7 @@ public class Player extends Entity {
 		}
 		if (npc.getId() >= 13447 && npc.getId() <= 13459) {
 			((GodwarsController) getControllerManager().getController()).sendKill(GodwarsController.ZAROS);
-			return;
-		}
+        }
 	}
 
 	public void openBook(Book book) {
@@ -3190,17 +3185,9 @@ public class Player extends Entity {
 	}
 
 	public void useLadder(int anim, final Tile tile) {
-		lock();
-		setNextAnimation(new Animation(anim));
-		getTasks().scheduleTimer(tick -> {
-			if (tick == 1)
-				tele(tile);
-			if (tick == 2) {
-				unlock();
-				return false;
-			}
-			return true;
-		});
+		lock(2);
+		anim(anim);
+		getTasks().schedule(1, () -> tele(tile));
 	}
 
 	public void sendMessage(String mes, boolean canBeFiltered) {
@@ -3216,10 +3203,10 @@ public class Player extends Entity {
 	}
 
 	public void sendMessage(String... mes) {
-		String text = "";
+		StringBuilder text = new StringBuilder();
 		for (String str : mes)
-			text += str + "<br>";
-		getPackets().sendGameMessage(text);
+			text.append(str).append("<br>");
+		getPackets().sendGameMessage(text.toString());
 	}
 
 	public Date getDateJoined() {
@@ -3255,10 +3242,8 @@ public class Player extends Entity {
 	}
 
 	public boolean hasYellTitle() {
-		if (getYellTitle() == null || getYellTitle().isEmpty())
-			return false;
-		return true;
-	}
+        return getYellTitle() != null && !getYellTitle().isEmpty();
+    }
 
 	public String getYellTitle() {
 		return yellTitle;
@@ -3411,7 +3396,7 @@ public class Player extends Entity {
 		return wickedHoodTalismans;
 	}
 
-	public void setWickedHoodTalismans(boolean wickedHoodTalismans[]) {
+	public void setWickedHoodTalismans(boolean[] wickedHoodTalismans) {
 		this.wickedHoodTalismans = wickedHoodTalismans;
 	}
 
@@ -3602,7 +3587,7 @@ public class Player extends Entity {
 				tilesUnlocked = new HashSet<>();
 				tilesAvailable = 50;
 			}
-			int tileHash = getTile().transform(dir.getDx(), dir.getDy()).getTileHash();
+			int tileHash = getTile().transform(dir.dx, dir.dy).getTileHash();
 			if (!tilesUnlocked.contains(tileHash)) {
 				if (tilesAvailable <= 0)
 					return false;
@@ -3741,7 +3726,7 @@ public class Player extends Entity {
 		Tools tool = Tools.forId(itemId);
 		if (tool == null)
 			return false;
-		if (toolbelt.get(tool) != null && toolbelt.get(tool) <= tool.getValue(itemId)) {
+		if (toolbelt.get(tool) != null && toolbelt.get(tool) >= tool.getValue(itemId)) {
 			sendMessage("You already have this tool on your belt.");
 			return false;
 		}
@@ -3756,10 +3741,8 @@ public class Player extends Entity {
 		Tools tool = Tools.forId(itemId);
 		if (tool == null)
 			return false;
-		if (tool.contains(getToolValue(tool), itemId))
-			return true;
-		return false;
-	}
+        return tool.contains(getToolValue(tool), itemId);
+    }
 
 	public int getToolValue(Tools tool) {
 		if ((toolbelt == null) || (toolbelt.get(tool) == null))
@@ -3784,10 +3767,8 @@ public class Player extends Entity {
 	}
 
 	public boolean isOnTask(TaskMonster monster) {
-		if (getSlayer().getTask() != null && getSlayer().getTask().getMonster() == monster)
-			return true;
-		return false;
-	}
+        return getSlayer().getTask() != null && getSlayer().getTask().getMonster() == monster;
+    }
 
 	public void addWalkSteps(Tile toTile, int maxSteps, boolean clip) {
 		addWalkSteps(toTile.getX(), toTile.getY(), maxSteps, clip);
@@ -3804,36 +3785,6 @@ public class Player extends Entity {
 		});
 	}
 
-	public int[] getWarriorPoints() {
-		if (warriorPoints == null || warriorPoints.length != 6)
-			warriorPoints = new int[6];
-		return warriorPoints;
-	}
-
-	public void setWarriorPoints(int index, int pointsDifference) {
-		if (warriorPoints == null || warriorPoints.length != 6)
-			warriorPoints = new int[6];
-
-		warriorPoints[index] += pointsDifference;
-		if (warriorPoints[index] < 0) {
-			Controller controller = getControllerManager().getController();
-			if (controller == null || !(controller instanceof WarriorsGuild guild))
-				return;
-			guild.inCyclopse = false;
-			tele(WarriorsGuild.CYCLOPS_LOBBY);
-			warriorPoints[index] = 0;
-		} else if (warriorPoints[index] > 65535)
-			warriorPoints[index] = 65535;
-		refreshWarriorPoints(index);
-	}
-
-	public void refreshWarriorPoints(int index) {
-		if (warriorPoints == null || warriorPoints.length != 6)
-			warriorPoints = new int[6];
-
-		getVars().setVarBit(index + 8662, warriorPoints[index]);
-	}
-
 	public Brewery getKeldagrimBrewery() {
 		if (keldagrimBrewery == null)
 			keldagrimBrewery = new Brewery(true);
@@ -3846,43 +3797,6 @@ public class Player extends Entity {
 			phasmatysBrewery = new Brewery(false);
 		phasmatysBrewery.setPlayer(this);
 		return phasmatysBrewery;
-	}
-
-	private int easter20Stage = 0;
-
-	public int getEaster20Stage() {
-		return easter20Stage;
-	}
-
-	public void setEaster20Stage(int easter20Stage) {
-		this.easter20Stage = easter20Stage;
-	}
-
-	private int christ19Stage = 0;
-	private Location christ19Loc = null;
-
-	public Location getChrist19Loc() {
-		return christ19Loc;
-	}
-
-	public void setChrist19Loc(Location christ19Loc) {
-		this.christ19Loc = christ19Loc;
-	}
-
-	public int getChrist19Stage() {
-		return christ19Stage;
-	}
-
-	public void setChrist19Stage(int christ19Stage) {
-		this.christ19Stage = christ19Stage;
-	}
-
-	public int getHw07Stage() {
-		return hw07Stage;
-	}
-
-	public void setHw07Stage(int hw07Stage) {
-		this.hw07Stage = hw07Stage;
 	}
 
 	public boolean isRunBlocked() {
@@ -3986,56 +3900,8 @@ public class Player extends Entity {
 		return timePlayed;
 	}
 
-	public Map<StorableItem, Item> getLeprechaunStorage() {
-		if (leprechaunStorage == null)
-			leprechaunStorage = new HashMap<>();
-		return leprechaunStorage;
-	}
-
-	public int getNumInLeprechaun(StorableItem item) {
-		return leprechaunStorage.get(item) == null ? 0 : leprechaunStorage.get(item).getAmount();
-	}
-
-	public void storeLeprechaunItem(StorableItem item, int itemId, int amount) {
-		Item curr = leprechaunStorage.get(item);
-		if (curr == null) {
-			if (amount > item.maxAmount)
-				amount = item.maxAmount;
-			if (amount > getInventory().getNumberOf(itemId))
-				amount = getInventory().getNumberOf(itemId);
-			if (amount <= 0)
-				return;
-			curr = new Item(itemId, amount);
-			getInventory().deleteItem(itemId, amount);
-		} else {
-			if ((curr.getAmount()+amount) > item.maxAmount)
-				amount = item.maxAmount - curr.getAmount();
-			if (amount > getInventory().getNumberOf(itemId))
-				amount = getInventory().getNumberOf(itemId);
-			if (amount <= 0)
-				return;
-			curr.setAmount(curr.getAmount() + amount);
-			getInventory().deleteItem(itemId, amount);
-		}
-		leprechaunStorage.put(item, curr);
-		item.updateVars(this);
-	}
-
-	public void takeLeprechaunItem(StorableItem item, int amount) {
-		Item curr = leprechaunStorage.get(item);
-		if (curr == null)
-			return;
-		if (amount > curr.getAmount())
-			amount = curr.getAmount();
-		if (amount > getInventory().getFreeSlots())
-			amount = getInventory().getFreeSlots();
-		curr.setAmount(curr.getAmount() - amount);
-		getInventory().addItem(curr.getId(), amount);
-		if (curr.getAmount() == 0)
-			leprechaunStorage.remove(item);
-		else
-			leprechaunStorage.put(item, curr);
-		item.updateVars(this);
+	public long getTimePlayedThisSession() {
+		return timePlayedThisSession;
 	}
 
 	public int getUuid() {
@@ -4071,6 +3937,14 @@ public class Player extends Entity {
 
 	public void setLsp(int lsp) {
 		this.lsp = lsp;
+	}
+
+	public boolean isTrulyHidden() {
+		return trulyHidden;
+	}
+
+	public void setTrulyHidden(boolean trulyHidden) {
+		this.trulyHidden = trulyHidden;
 	}
 
 	public void promptSetYellColor() {
@@ -4219,51 +4093,35 @@ public class Player extends Entity {
 		getAppearance().generateAppearanceData();
 	}
 
-	public Sound playSound(Sound sound) {
+	public Sound addSound(Sound sound) {
 		if (sound.getId() == -1)
 			return null;
 		sounds.add(sound);
 		return sound;
 	}
 
-	private Sound playSound(int soundId, int delay, SoundType type) {
-		return playSound(new Sound(soundId, delay, type));
+	private Sound addSound(int soundId, int delay, SoundType type) {
+		return addSound(new Sound(soundId, delay, type));
 	}
 
 	public void jingle(int jingleId, int delay) {
-		playSound(jingleId, delay, SoundType.JINGLE);
+		addSound(jingleId, delay, SoundType.JINGLE);
 	}
 
 	public void jingle(int jingleId) {
-		playSound(jingleId, 0, SoundType.JINGLE);
+		addSound(jingleId, 0, SoundType.JINGLE);
 	}
 
 	public void musicTrack(int trackId, int delay, int volume) {
-		playSound(trackId, delay, SoundType.MUSIC).volume(volume);
+		addSound(trackId, delay, SoundType.MUSIC).volume(volume);
 	}
 
 	public void musicTrack(int trackId, int delay) {
-		playSound(trackId, delay, SoundType.MUSIC);
+		addSound(trackId, delay, SoundType.MUSIC);
 	}
 
 	public void musicTrack(int trackId) {
 		musicTrack(trackId, 100);
-	}
-
-	public void soundEffect(int soundId, int delay) {
-		playSound(soundId, delay, SoundType.EFFECT);
-	}
-
-	public void soundEffect(int soundId) {
-		soundEffect(soundId, 0);
-	}
-
-	public void voiceEffect(int voiceId, int delay) {
-		playSound(voiceId, delay, SoundType.VOICE);
-	}
-
-	public void voiceEffect(int voiceId) {
-		voiceEffect(voiceId, 0);
 	}
 
 	public Map<Integer, MachineInformation> getMachineMap() {
@@ -4287,6 +4145,12 @@ public class Player extends Entity {
 		}
 	}
 
+	public Map<StorableItem, Item> getLeprechaunStorage() {
+		if (leprechaunStorage == null)
+			leprechaunStorage = new HashMap<>();
+		return leprechaunStorage;
+	}
+
 	public Recorder getRecorder() {
 		return recorder;
 	}
@@ -4299,8 +4163,8 @@ public class Player extends Entity {
 		return isQuestComplete(quest, null);
 	}
 
-	public boolean isMiniquestComplete(Miniquest quest, String actionString) {
-		return getMiniquestManager().isComplete(quest, actionString);
+	public boolean isMiniquestComplete(Miniquest quest, String actionString, boolean outputReqs) {
+		return getMiniquestManager().isComplete(quest, actionString, outputReqs);
 	}
 
 	public boolean isQuestStarted(Quest quest) {
@@ -4311,13 +4175,16 @@ public class Player extends Entity {
 		return getMiniquestStage(quest) > 0;
 	}
 	public boolean isMiniquestComplete(Miniquest quest) {
-		return isMiniquestComplete(quest, null);
+		return isMiniquestComplete(quest, null, false);
+	}
+	public boolean isMiniquestComplete(Miniquest quest, boolean outputReqs) {
+		return isMiniquestComplete(quest, null, outputReqs);
 	}
 
 	public void delayLock(int ticks, Runnable task) {
 		lock();
 		WorldTasks.delay(ticks, task);
-		WorldTasks.delay(ticks+1, () -> unlock());
+		WorldTasks.delay(ticks+1, this::unlock);
 	}
 
 	public void playPacketCutscene(int id, Runnable onFinish) {
@@ -4359,5 +4226,19 @@ public class Player extends Entity {
     }
 	public void setMiniquestStage(Miniquest quest, int stage) {
 		getMiniquestManager().setStage(quest, stage);
+	}
+
+	@Override
+	public String toString() {
+		return "["+getDisplayName() + " @ (" + getX() + "," + getY() + "," + getPlane()+")]";
+	}
+
+    @NotNull
+    public String genderTerm(@NotNull String male, @NotNull String female) {
+        return getAppearance().isMale() ? male : female;
+    }
+
+	public void completeQuest(@NotNull Quest quest) {
+		getQuestManager().completeQuest(quest);
 	}
 }

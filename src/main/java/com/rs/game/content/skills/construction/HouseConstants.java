@@ -405,20 +405,20 @@ public class HouseConstants {
 
 		//Treasure chest
 		OAKTREASURECHEST(9839, 18804, 48, 120, new Item(8778, 2)),
-		TEAKTREASURECHEST(9840, 18805, 66, 180, new Item(8780, 2)),
-		MAHOGANYTREASURECHEST(9841, 18806, 84, 240, new Item(8782, 2)),
+		TEAKTREASURECHEST(9840, 18806, 66, 180, new Item(8780, 2)),
+		MAHOGANYTREASURECHEST(9841, 18808, 84, 240, new Item(8782, 2)),
 		//Armour case
 		OAKARMOURCASE(9826, 18778, 46, 180, new Item(8778, 3)),
-		TEAKARMOURCASE(9827, 18779, 64, 270, new Item(8780, 3)),
-		MAHOGANYARMOURCASE(9828, 18780,  82, 420, new Item(8782, 3)),
+		TEAKARMOURCASE(9827, 18780, 64, 270, new Item(8780, 3)),
+		MAHOGANYARMOURCASE(9828, 18782,  82, 420, new Item(8782, 3)),
 		//Magic wardrobe
 		OAKMAGICWARDROBE(9829, 18784, 42, 240, new Item(8778, 4)),
-		CARVEDOAKMAGICWARDROBE(9830, 18785, 51, 360, new Item(8778, 6)),
-		TEAKMAGICWARDROBE(9831, 18786, 60, 360, new Item(8780, 4)),
-		CARVEDTEAKMAGICWARDROBE(9832, 18787, 69, 540, new Item(8780, 6)),
-		MAHOGANYMAGICWARDROBE(9833, 18787, 78, 560, new Item(8782, 4)),
-		GILDEDMAGICWARDROBE(9834, 18789, 87, 860, new Item(8784, 1), new Item(8782, 4)),
-		MARBLEMAGICWARDROBE(9835, 18790, 96, 500, new Item(8786, 1)),
+		CARVEDOAKMAGICWARDROBE(9830, 18786, 51, 360, new Item(8778, 6)),
+		TEAKMAGICWARDROBE(9831, 18788, 60, 360, new Item(8780, 4)),
+		CARVEDTEAKMAGICWARDROBE(9832, 18790, 69, 540, new Item(8780, 6)),
+		MAHOGANYMAGICWARDROBE(9833, 18792, 78, 560, new Item(8782, 4)),
+		GILDEDMAGICWARDROBE(9834, 18794, 87, 860, new Item(8784, 1), new Item(8782, 4)),
+		MARBLEMAGICWARDROBE(9835, 18796, 96, 500, new Item(8786, 1)),
 		//Cape rack
 		OAKCAPERACK(9817, 18766, 54, 240, new Item(8778, 4)),
 		TEAKCAPERACK(9818, 18767, 63, 360, new Item(8780, 4)),
@@ -428,12 +428,12 @@ public class HouseConstants {
 		MAGICALCAPERACK(9822, 18771, 99, 1000, new Item(8788, 1)),
 		//Toy box
 		OAKTOYBOX(9836, 18798, 50, 120, new Item(8778, 2)),
-		TEAKTOYBOX(9837, 18799, 968, 180, new Item(8780, 2)),
-		MAHOGANYTOYBOX(9838, 18800, 86, 280, new Item(8782, 2)),
+		TEAKTOYBOX(9837, 18800, 968, 180, new Item(8780, 2)),
+		MAHOGANYTOYBOX(9838, 18802, 86, 280, new Item(8782, 2)),
 		//Costume box
 		OAKCOSTUMEBOX(9823, 18772, 44, 120, new Item(8778, 2)),
-		TEAKCOSTUMEBOX(9824, 18773, 62, 180, new Item(8780, 2)),
-		MAHOGANYCOSTUMEBOX(9825, 18774, 80, 280, new Item(8782, 2)),
+		TEAKCOSTUMEBOX(9824, 18774, 62, 180, new Item(8780, 2)),
+		MAHOGANYCOSTUMEBOX(9825, 18776, 80, 280, new Item(8782, 2)),
 
 		//MENAGERIE
 		SMALLOBELISK(15236, 44837, 41, 676, new Item(8786, 1), new Item(12158, 10), new Item(12163, 10), new Item(12160, 10), new Item(12159, 10), new Item(12183, 1000)),
@@ -642,10 +642,10 @@ public class HouseConstants {
 		BANNER_EASEL(8394, 13718, 66, 510, new Item(OAK_PLANK, 8), new Item(BOLT_OF_CLOTH, 2)),
 		// TOOL MOUNT
 		TOOL_STORE_1(8384, 13699, 15, 120, new Item(OAK_PLANK, 2)),
-		TOOL_STORE_2(8385, 13700, 25, 120, new Item(OAK_PLANK, 4)),
-		TOOL_STORE_3(8386, 13701, 35, 120, new Item(OAK_PLANK, 6)),
-		TOOL_STORE_4(8387, 13702, 44, 120, new Item(OAK_PLANK, 8)),
-		TOOL_STORE_5(8388, 13703, 55, 121, new Item(OAK_PLANK, 10)),
+		TOOL_STORE_2(8385, 13700, 25, 120, new Item(OAK_PLANK, 2)),
+		TOOL_STORE_3(8386, 13701, 35, 120, new Item(OAK_PLANK, 2)),
+		TOOL_STORE_4(8387, 13702, 44, 120, new Item(OAK_PLANK, 2)),
+		TOOL_STORE_5(8388, 13703, 55, 121, new Item(OAK_PLANK, 2)),
 		// CRAFTING TABLE
 		CRAFTING_TABLE(8380, 13709, 16, 240, new Item(OAK_PLANK, 4)),
 		CRAFTING_TABLE_2(8381, 13710, 25, 1, new Item(MOLTEN_GLASS, 1)),
@@ -935,17 +935,14 @@ public class HouseConstants {
 		private int level;
 		private final int chunkX, chunkY;
 		private final boolean showRoof;
-		@SuppressWarnings("unused")
-		// might be useful on future
-		private final int[] doorDirs;
 
-		Room(int price, int level, int chunkX, int chunkY, boolean showRoof, int... doorDirs) {
+        Room(int price, int level, int chunkX, int chunkY, boolean showRoof, int... doorDirs) {
 			this.price = price;
 			this.chunkX = chunkX;
 			this.chunkY = chunkY;
 			this.showRoof = showRoof;
-			this.doorDirs = doorDirs;
-		}
+            // might be useful on future
+        }
 
 		public int getChunkX() {
 			return chunkX;
@@ -978,14 +975,11 @@ public class HouseConstants {
 
 		private final int chunkX;
 		private final int chunkY;
-		@SuppressWarnings("unused")
-		private final int[] dirs;
 
-		Roof(int chunkX, int chunkY, int... dirs) {
+        Roof(int chunkX, int chunkY, int... dirs) {
 			this.chunkX = chunkX;
 			this.chunkY = chunkY;
-			this.dirs = dirs;
-		}
+        }
 
 		public int getChunkX() {
 			return chunkX;

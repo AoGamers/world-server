@@ -50,7 +50,7 @@ public final class NPCSpawns {
 		synchronized (lock) {
 			File file = new File("./data/npcs/addedSpawns.json");
 			ADDED_SPAWNS.add(new NPCSpawn(id, tile, ""+NPCDefinitions.getDefs(id).getName()+" added by " + username));
-			World.spawnNPC(id, tile, -1, true);
+			World.spawnNPC(id, tile);
 			try {
 				JsonFileManager.saveJsonFile(ADDED_SPAWNS, file);
 			} catch (IOException e) {
@@ -61,7 +61,7 @@ public final class NPCSpawns {
 	}
 
 	@ServerStartupEvent(Priority.FILE_IO)
-	public static final void init() throws JsonIOException, IOException {
+	public static void init() throws JsonIOException, IOException {
 		Logger.info(NPCSpawns.class, "init", "Loading NPC spawns...");
 		File[] spawnFiles = new File(PATH).listFiles();
 		for (File f : spawnFiles)

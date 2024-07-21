@@ -21,6 +21,7 @@ import com.rs.cache.loaders.ObjectDefinitions;
 import com.rs.engine.dialogue.Dialogue;
 import com.rs.engine.dialogue.HeadE;
 import com.rs.engine.dialogue.Options;
+import com.rs.engine.dialogue.statements.MakeXStatement;
 import com.rs.engine.quest.Quest;
 import com.rs.game.content.PlayerLook;
 import com.rs.game.content.dnds.shootingstar.ShootingStars;
@@ -37,9 +38,8 @@ import com.rs.game.content.skills.magic.Rune;
 import com.rs.game.content.skills.magic.RuneSet;
 import com.rs.game.content.skills.magic.TeleType;
 import com.rs.game.content.transportation.ItemTeleports;
-import com.rs.game.content.world.unorganized_dialogue.FillingD;
 import com.rs.game.model.entity.npc.NPC;
-import com.rs.game.model.entity.pathing.Direction;
+import com.rs.engine.pathfinder.Direction;
 import com.rs.game.model.entity.player.Controller;
 import com.rs.game.model.entity.player.Player;
 import com.rs.game.model.object.GameObject;
@@ -55,7 +55,7 @@ import com.rs.lib.util.Logger;
 
 public class HouseController extends Controller {
 
-	private transient House house;
+	private final transient House house;
 
 	public HouseController(House house) {
 		this.house = house;
@@ -70,14 +70,14 @@ public class HouseController extends Controller {
 	public boolean sendDeath() {
 		player.lock(7);
 		player.stopAll();
-		WorldTasks.schedule(new Task() {
+		WorldTasks.scheduleLooping(new Task() {
 			int loop;
 
 			@Override
 			public void run() {
 				player.stopAll();
 				if (loop == 0)
-					player.setNextAnimation(new Animation(836));
+					player.anim(836);
 				else if (loop == 1)
 					player.sendMessage("Oh dear, you have died.");
 				else if (loop == 3) {
@@ -96,7 +96,7 @@ public class HouseController extends Controller {
 	@Override
 	public boolean processNPCClick1(NPC npc) {
 		if (npc instanceof ServantNPC servant) {
-			npc.faceEntity(player);
+			npc.faceEntityTile(player);
 			if (!house.isOwner(player)) {
 				player.npcDialogue(npc.getId(), HeadE.CALM_TALK, "Sorry, I only serve my master.");
 				return false;
@@ -110,7 +110,7 @@ public class HouseController extends Controller {
 	@Override
 	public boolean processNPCClick2(NPC npc) {
 		if (npc instanceof ServantNPC servant) {
-			npc.faceEntity(player);
+			npc.faceEntityTile(player);
 			if (!house.isOwner(player)) {
 				player.npcDialogue(npc.getId(), HeadE.CALM_TALK, "The servant ignores your request.");
 				return false;
@@ -124,7 +124,7 @@ public class HouseController extends Controller {
 	@Override
 	public boolean processItemOnNPC(NPC npc, Item item) {
 		if (npc instanceof ServantNPC) {
-			npc.faceEntity(player);
+			npc.faceEntityTile(player);
 			if (!house.isOwner(player)) {
 				player.npcDialogue(npc.getId(), HeadE.CALM_TALK, "The servant ignores your request.");
 				return false;
@@ -413,7 +413,7 @@ public class HouseController extends Controller {
 				return false;
 			}
 			player.lock(2);
-			player.setNextAnimation(new Animation(3658));
+			player.anim(3658);
 			player.getSkills().addXp(Constants.FIREMAKING, 40);
 			final GameObject objectR = new GameObject(object);
 			objectR.setId(object.getId() + 1);
@@ -424,12 +424,16 @@ public class HouseController extends Controller {
 		if (Builds.SINK.containsObject(object)) {
 			Filler fill = FillAction.isFillable(item);
 			if (fill != null)
-				player.startConversation(new FillingD(player, fill));
+				player.startConversation(new Dialogue()
+						.addNext(new MakeXStatement(
+								new int[] { fill.getFilledItem().getId() },
+								player.getInventory().getAmountOf(fill.getEmptyItem().getId())))
+						.addNext(() -> player.getActionManager().setAction(new FillAction(MakeXStatement.getQuantity(player), fill))));
 		} else if (Builds.STOVE.containsObject(object)) {
 			if (item.getId() == 7690) {
 				player.getInventory().deleteItem(7690, 1);
 				player.getInventory().addItem(7691, 1);
-				player.setNextAnimation(new Animation(883));
+				player.anim(883);
 				player.sendMessage("You boil the kettle of water.");
 				return false;
 			}
@@ -565,17 +569,17 @@ public class HouseController extends Controller {
 				public void create() {
 
 					if (portal1 == null)
-						option("1: No portal frame", () -> { player.sendMessage("You must build a portal frame before you can redirect this."); });
+						option("1: No portal frame", () -> player.sendMessage("You must build a portal frame before you can redirect this."));
 					else
 						option("1: " + (ObjectDefinitions.getDefs(portal1.getId()).getName().contains("Portal frame") ? "Nowhere" : ObjectDefinitions.getDefs(portal1.getId()).getName()), p1d);
 
 					if (portal2 == null)
-						option("2: No portal frame", () -> { player.sendMessage("You must build a portal frame before you can redirect this."); });
+						option("2: No portal frame", () -> player.sendMessage("You must build a portal frame before you can redirect this."));
 					else
 						option("2: " + (ObjectDefinitions.getDefs(portal2.getId()).getName().contains("Portal frame") ? "Nowhere" : ObjectDefinitions.getDefs(portal2.getId()).getName()), p2d);
 
 					if (portal3 == null)
-						option("3: No portal frame", () -> { player.sendMessage("You must build a portal frame before you can redirect this."); });
+						option("3: No portal frame", () -> player.sendMessage("You must build a portal frame before you can redirect this."));
 					else
 						option("3: " + (ObjectDefinitions.getDefs(portal3.getId()).getName().contains("Portal frame") ? "Nowhere" : ObjectDefinitions.getDefs(portal3.getId()).getName()), p3d);
 
