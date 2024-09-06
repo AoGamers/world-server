@@ -77,9 +77,9 @@ public final class NPCCombat {
 			}
 		}
 		int maxDistance = npc.getAttackRange();
-		if (!(npc instanceof Nex) && !npc.lineOfSightTo(target, maxDistance == 0))
+		if (!(npc instanceof Nex) && !target.lineOfSightTo(npc, maxDistance == 0))
 			return Math.min(combatDelay, npc.getAttackSpeed()); //probably could return 0 but too scared of side effects
-		boolean los = npc.lineOfSightTo(target, maxDistance == 0);
+		boolean los = target.lineOfSightTo(npc, maxDistance == 0);
 		boolean inRange = WorldUtil.isInRange(npc, target, maxDistance + (npc.hasWalkSteps() && target.hasWalkSteps() ? (npc.getRun() && target.getRun() ? 2 : 1) : 0));
 		//boolean collidesCheck = !npc.isCantFollowUnderCombat() && WorldUtil.collides(npc, target);
 		//add collision check here to enable jagex's cancer NPC walking mechanic
@@ -104,10 +104,9 @@ public final class NPCCombat {
 
 	public void setTarget(Entity target) {
 		this.target = target;
-		npc.setNextFaceEntity(target);
-		if (!checkAll()) {
+		npc.faceEntity(target);
+		if (!checkAll())
 			removeTarget();
-        }
 	}
 
 	public boolean checkAll() {
@@ -165,7 +164,7 @@ public final class NPCCombat {
 
 			maxDistance = npc.isForceFollowClose() ? 0 : npc.getAttackRange();
 			npc.resetWalkSteps();
-			boolean los = npc.lineOfSightTo(target, maxDistance == 0);
+			boolean los = target.lineOfSightTo(npc, maxDistance == 0);
 			boolean inRange = WorldUtil.isInRange(npc.getX(), npc.getY(), size, target.getX(), target.getY(), targetSize, maxDistance);
 			if (!los || !inRange) {
 				npc.calcFollow(target, npc.getRun() ? 2 : 1, npc.isIntelligentRouteFinder());
@@ -189,7 +188,7 @@ public final class NPCCombat {
 
 	public void removeTarget() {
 		target = null;
-		npc.setNextFaceEntity(null);
+		npc.stopFaceEntity();
 	}
 
 	public void reset() {
